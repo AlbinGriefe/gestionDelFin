@@ -1,0 +1,27 @@
+{
+  "version": "0.2",
+  "language": "en,es",
+  "useGitignore": true,
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "package-lock.json",
+    "apps/backend/src/generated",
+    "database/diagrams/*.png"
+  ],
+  "words": [
+    "gestionDelFin",
+    "apocalypse",
+    "drawio",
+    "figma",
+    "storyboard",
+    "tsx",
+    "vite",
+    "Hono",
+    "Valibot",
+    "Playwright",
+    "cspell"
+  ]
+}
