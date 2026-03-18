@@ -1,5 +1,5 @@
 {
-  "name": "gestiondelfin",
+  "name": "@gestiondelfin/workspace",
   "version": "1.0.0",
   "private": true,
   "description": "Monorepo del proyecto gestionDelFin con frontend, backend, Prisma y documentacion.",
@@ -14,14 +14,16 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f mysql",
-    "frontend:install": "npm --prefix apps/frontend install",
-    "backend:install": "npm --prefix apps/backend install",
-    "install:all": "npm run frontend:install && npm run backend:install",
-    "frontend:dev": "npm --prefix apps/frontend run dev",
-    "frontend:build": "npm --prefix apps/frontend run build",
-    "backend:prisma:validate": "npm --prefix apps/backend run prisma:validate",
-    "backend:prisma:sync": "npm --prefix apps/backend run prisma:sync",
-    "backend:prisma:generate": "npm --prefix apps/backend run prisma:generate"
+    "install:all": "npm install",
+    "frontend:dev": "npm run dev -w @gestiondelfin/frontend",
+    "frontend:build": "npm run build -w @gestiondelfin/frontend",
+    "backend:dev": "npm run dev -w @gestiondelfin/backend",
+    "backend:build": "npm run build -w @gestiondelfin/backend",
+    "backend:start": "npm run start -w @gestiondelfin/backend",
+    "backend:typecheck": "npm run typecheck -w @gestiondelfin/backend",
+    "backend:prisma:validate": "npm run prisma:validate -w @gestiondelfin/backend",
+    "backend:prisma:sync": "npm run prisma:sync -w @gestiondelfin/backend",
+    "backend:prisma:generate": "npm run prisma:generate -w @gestiondelfin/backend"
   },
   "keywords": [
     "monorepo",

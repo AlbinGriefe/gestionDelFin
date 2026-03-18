@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "@gestiondelfin/backend",
   "version": "1.0.0",
   "description": "Backend API for gestionDelFin.",
   "main": "dist/src/server.js",
