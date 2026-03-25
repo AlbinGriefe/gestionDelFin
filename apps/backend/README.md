@@ -19,6 +19,11 @@ npm run prisma:sync
 - `POST /api/v1/auth/login`
 - `GET /api/v1/auth/me`
 - `POST /api/v1/auth/logout`
+- `GET /api/v1/persons/catalogs`
+- `GET /api/v1/persons`
+- `GET /api/v1/persons/:personId`
+- `POST /api/v1/persons`
+- `PATCH /api/v1/persons/:personId`
 
 ## Variables minimas
 
@@ -68,4 +73,5 @@ El backend ya resuelve autenticacion, pero la base de datos del proyecto todavia
 
 - La API ya incluye autenticacion con JWT y control de sesion por inactividad.
 - La expiracion por inactividad usa el tiempo del servidor y puede parametrizarse.
+- `persons` ya es el primer modulo de negocio real y deja trazabilidad en `person_records` y `person_health_records`.
 - El resto de modulos del dominio siguen pendientes de implementacion.

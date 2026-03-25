@@ -15,10 +15,10 @@
 - Login, lectura de sesion y cierre de sesion
 - Middleware de autenticacion para rutas protegidas
 - Manejo centralizado de errores y validaciones
+- Modulo `persons` con listado, detalle, alta, actualizacion, catalogos y trazabilidad en `person_records`
 
 ## Siguiente etapa
 
-- CRUD de personas
 - CRUD de campamentos
 - Gestion de inventario y alertas
 - Traslados entre campamentos
