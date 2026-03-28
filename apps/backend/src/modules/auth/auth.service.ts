@@ -106,7 +106,8 @@ export class AuthService {
     const sessionTimeoutMinutes =
       await authRepository.getSessionTimeoutMinutes();
     const sessionId = randomUUID();
-    const expiresAt = addMinutes(getServerNow(), sessionTimeoutMinutes);
+    const now = getServerNow();
+    const expiresAt = addMinutes(now, sessionTimeoutMinutes);
 
     await authRepository.createSession({
       userId: user.id_user,
@@ -115,6 +116,7 @@ export class AuthService {
       ipAddress,
       expiresAt,
     });
+    await authRepository.updateUserLastLogin(user.id_user, now);
 
     const accessToken = signAccessToken({
       userId: user.id_user,
@@ -129,7 +131,7 @@ export class AuthService {
       tokenType: "Bearer",
       expiresInHours: env.JWT_EXPIRES_IN_HOURS,
       sessionTimeoutMinutes,
-      serverTime: getServerNow().toISOString(),
+      serverTime: now.toISOString(),
       user: buildPublicUserProfile(user),
     };
   }

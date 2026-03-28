@@ -19,11 +19,43 @@ npm run prisma:sync
 - `POST /api/v1/auth/login`
 - `GET /api/v1/auth/me`
 - `POST /api/v1/auth/logout`
+- `GET /api/v1/camps`
+- `GET /api/v1/camps/:campId`
+- `POST /api/v1/camps`
+- `PATCH /api/v1/camps/:campId`
+- `GET /api/v1/expeditions/catalogs`
+- `GET /api/v1/expeditions`
+- `GET /api/v1/expeditions/:expeditionId`
+- `POST /api/v1/expeditions`
+- `PATCH /api/v1/expeditions/:expeditionId/state`
+- `GET /api/v1/inventory/catalogs`
+- `GET /api/v1/inventory`
+- `GET /api/v1/inventory/:storageId`
+- `POST /api/v1/inventory/adjustments`
+- `PATCH /api/v1/inventory/:storageId/thresholds`
+- `GET /api/v1/sessions`
+- `GET /api/v1/sessions/current`
+- `GET /api/v1/sessions/:sessionId`
+- `PATCH /api/v1/sessions/:sessionId/revoke`
+- `GET /api/v1/settings/public`
+- `GET /api/v1/settings`
+- `GET /api/v1/settings/:key`
+- `PUT /api/v1/settings/:key`
+- `GET /api/v1/transfers/catalogs`
+- `GET /api/v1/transfers`
+- `GET /api/v1/transfers/:transferId`
+- `POST /api/v1/transfers`
+- `PATCH /api/v1/transfers/:transferId/state`
 - `GET /api/v1/persons/catalogs`
 - `GET /api/v1/persons`
 - `GET /api/v1/persons/:personId`
 - `POST /api/v1/persons`
 - `PATCH /api/v1/persons/:personId`
+- `GET /api/v1/users/catalogs`
+- `GET /api/v1/users`
+- `GET /api/v1/users/:userId`
+- `POST /api/v1/users`
+- `PATCH /api/v1/users/:userId`
 
 ## Variables minimas
 
@@ -73,5 +105,12 @@ El backend ya resuelve autenticacion, pero la base de datos del proyecto todavia
 
 - La API ya incluye autenticacion con JWT y control de sesion por inactividad.
 - La expiracion por inactividad usa el tiempo del servidor y puede parametrizarse.
+- `camps` ya permite administrar campamentos y consultar metricas operativas base.
+- `inventory` ya permite consultar stock, ajustar cantidades y gestionar umbrales minimos/maximos.
+- `sessions` ya permite consultar sesiones autenticadas y revocarlas manualmente.
+- `settings` ya permite exponer configuraciones publicas y administrar parametros como el timeout de sesion.
+- `transfers` ya permite solicitar traslados y avanzar estados con efectos sobre inventario y campamento de personas.
+- `expeditions` ya permite planificar salidas, iniciarlas, retornarlas o marcarlas fallidas, y acreditar recursos encontrados al inventario del campamento.
 - `persons` ya es el primer modulo de negocio real y deja trazabilidad en `person_records` y `person_health_records`.
+- `users` ya permite administrar cuentas, roles, vinculacion con personas y revocacion de sesiones sensibles.
 - El resto de modulos del dominio siguen pendientes de implementacion.

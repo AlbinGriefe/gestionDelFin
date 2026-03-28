@@ -38,3 +38,5 @@ Thumbs.db
 
 # Local tooling
 .pdfenv/
+.venv/
+.venv-*/

@@ -14,6 +14,25 @@ infra/        Archivos de infraestructura
 tests/        Pruebas y notas de testing
 ```
 
+## Criterio de organizacion
+
+Para este proyecto, el esquema monorepo si es la opcion mas conveniente.
+
+Motivos principales:
+
+- frontend y backend evolucionan juntos y comparten el mismo dominio funcional;
+- la documentacion, la base de datos y la infraestructura forman parte del mismo entregable;
+- facilita correr scripts desde una sola raiz y evita duplicar configuracion del equipo;
+- permite justificar mejor la arquitectura en la defensa del proyecto.
+
+Reglas del repo:
+
+- `apps/frontend` y `apps/backend` son las unicas aplicaciones del monorepo.
+- `database`, `docs`, `infra` y `tests` son carpetas de apoyo al proyecto, no apps separadas.
+- `node_modules/@gestiondelfin/*` contiene enlaces de workspace creados por npm, no copias del codigo.
+- Las dependencias se instalan solo en la raiz del proyecto.
+- Las carpetas vacias, tooling local y artefactos temporales no deben mantenerse en el repo.
+
 ## Requisitos
 
 - Node.js 20 o superior
@@ -123,9 +142,7 @@ npm run dev
 ### 3. Frontend
 
 ```powershell
-cd apps/frontend
-npm install
-npm run dev
+npm run frontend:dev
 ```
 
 ## Prisma

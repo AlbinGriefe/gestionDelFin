@@ -54,6 +54,17 @@ export class AuthRepository {
     });
   }
 
+  async updateUserLastLogin(userId: number, loggedAt: Date) {
+    return prisma.users.update({
+      where: {
+        id_user: userId,
+      },
+      data: {
+        usr_last_login_at: loggedAt,
+      },
+    });
+  }
+
   async findSessionByToken(sessionToken: string) {
     return prisma.user_sessions.findUnique({
       where: { uss_token: sessionToken },
