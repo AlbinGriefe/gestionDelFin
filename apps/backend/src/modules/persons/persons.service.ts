@@ -641,6 +641,7 @@ export class PersonsService {
 
     const updatedPerson = await personsRepository.updatePerson({
       personId,
+      campId: existingPerson.id_camp,
       data: updateData,
       closeCurrentHealthRecord: healthChanged,
       newHealthRecord: nextHealthId

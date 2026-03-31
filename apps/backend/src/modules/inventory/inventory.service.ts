@@ -380,6 +380,7 @@ export class InventoryService {
 
     const updatedStorage = await inventoryRepository.updateInventoryThresholds({
       storageId,
+      actorUserId: actor.id,
       thresholds: {
         ...(input.stg_min_quantity !== undefined
           ? { stg_min_quantity: Number(input.stg_min_quantity.toFixed(2)) }
