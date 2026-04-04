@@ -1,9 +1,16 @@
 import prisma, { Prisma } from "../../lib/prisma.js";
 import type {
-  InventoryAdjustmentInput,
   InventoryListFilters,
   InventoryThresholdsInput,
 } from "./inventory.types.js";
+
+function toPrismaJsonValue(value: unknown) {
+  if (value === undefined || value === null) {
+    return Prisma.JsonNull;
+  }
+
+  return value as Prisma.InputJsonValue;
+}
 
 const inventorySummaryInclude = {
   camps: true,
@@ -186,7 +193,7 @@ export class InventoryRepository {
     delta: number;
     actorUserId: number;
   }) {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const existingStorage = await tx.storage.findFirst({
         where: {
           id_camp: input.campId,
@@ -247,6 +254,19 @@ export class InventoryRepository {
         },
       });
 
+      await tx.events.create({
+        data: {
+          id_user: input.actorUserId,
+          id_camp: input.campId,
+          evt_entity: "storage",
+          evt_entity_id: storage.id_storage,
+          evt_action: "adjustment",
+          evt_old_value: toPrismaJsonValue({ quantity: previousQuantity }),
+          evt_new_value: toPrismaJsonValue({ quantity: input.newQuantity }),
+          evt_description: input.reason,
+        },
+      });
+
       return tx.storage.findUniqueOrThrow({
         where: {
           id_storage: storage.id_storage,
@@ -259,21 +279,44 @@ export class InventoryRepository {
   async updateInventoryThresholds(input: {
     storageId: number;
     thresholds: InventoryThresholdsInput;
+    actorUserId: number;
   }) {
-    return prisma.storage.update({
-      where: {
-        id_storage: input.storageId,
-      },
-      data: {
-        ...(input.thresholds.stg_min_quantity !== undefined
-          ? { stg_min_quantity: input.thresholds.stg_min_quantity }
-          : {}),
-        ...(input.thresholds.stg_max_quantity !== undefined
-          ? { stg_max_quantity: input.thresholds.stg_max_quantity }
-          : {}),
-        stg_last_updated_at: new Date(),
-      },
-      include: inventoryDetailInclude,
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const storage = await tx.storage.update({
+        where: {
+          id_storage: input.storageId,
+        },
+        data: {
+          ...(input.thresholds.stg_min_quantity !== undefined
+            ? { stg_min_quantity: input.thresholds.stg_min_quantity }
+            : {}),
+          ...(input.thresholds.stg_max_quantity !== undefined
+            ? { stg_max_quantity: input.thresholds.stg_max_quantity }
+            : {}),
+          stg_last_updated_at: new Date(),
+        },
+        include: inventoryDetailInclude,
+      });
+
+      await tx.events.create({
+        data: {
+          id_user: input.actorUserId,
+          id_camp: storage.id_camp,
+          evt_entity: "storage",
+          evt_entity_id: storage.id_storage,
+          evt_action: "thresholds_updated",
+          evt_new_value: toPrismaJsonValue({
+            stg_min_quantity: Number(storage.stg_min_quantity),
+            stg_max_quantity:
+              storage.stg_max_quantity !== null
+                ? Number(storage.stg_max_quantity)
+                : null,
+          }),
+          evt_description: "Inventory thresholds updated.",
+        },
+      });
+
+      return storage;
     });
   }
 }

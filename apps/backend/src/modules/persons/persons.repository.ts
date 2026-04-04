@@ -175,7 +175,7 @@ export class PersonsRepository {
     healthRecord?: PersonHealthRecordInput;
     auditEvents: PersonAuditEventInput[];
   }) {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const person = await tx.persons.create({
         data: input.data,
       });
@@ -193,6 +193,8 @@ export class PersonsRepository {
         });
       }
 
+      const campId = input.data.id_camp as number;
+
       for (const event of input.auditEvents) {
         await tx.person_records.create({
           data: {
@@ -202,6 +204,19 @@ export class PersonsRepository {
             prr_notes: event.notes ?? null,
             prr_old_value: toPrismaJsonValue(event.oldValue),
             prr_new_value: toPrismaJsonValue(event.newValue),
+          },
+        });
+
+        await tx.events.create({
+          data: {
+            id_user: event.userId ?? null,
+            id_camp: campId,
+            evt_entity: "persons",
+            evt_entity_id: person.id_person,
+            evt_action: event.eventType,
+            evt_old_value: toPrismaJsonValue(event.oldValue),
+            evt_new_value: toPrismaJsonValue(event.newValue),
+            evt_description: event.notes ?? null,
           },
         });
       }
@@ -217,12 +232,13 @@ export class PersonsRepository {
 
   async updatePerson(input: {
     personId: number;
+    campId: number;
     data: Prisma.personsUncheckedUpdateInput;
     closeCurrentHealthRecord: boolean;
     newHealthRecord?: PersonHealthRecordInput;
     auditEvents: PersonAuditEventInput[];
   }) {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       if (Object.keys(input.data).length > 0) {
         await tx.persons.update({
           where: {
@@ -267,6 +283,19 @@ export class PersonsRepository {
             prr_notes: event.notes ?? null,
             prr_old_value: toPrismaJsonValue(event.oldValue),
             prr_new_value: toPrismaJsonValue(event.newValue),
+          },
+        });
+
+        await tx.events.create({
+          data: {
+            id_user: event.userId ?? null,
+            id_camp: input.campId,
+            evt_entity: "persons",
+            evt_entity_id: input.personId,
+            evt_action: event.eventType,
+            evt_old_value: toPrismaJsonValue(event.oldValue),
+            evt_new_value: toPrismaJsonValue(event.newValue),
+            evt_description: event.notes ?? null,
           },
         });
       }
