@@ -3,7 +3,6 @@ import { Router } from "express";
 import prisma from "../../../lib/prisma.js";
 import { authRouter } from "../../../modules/auth/auth.routes.js";
 import { campsRouter } from "../../../modules/camps/camps.routes.js";
-import { dailyProcessesRouter } from "../../../modules/daily-processes/daily-processes.routes.js";
 import { eventsRouter } from "../../../modules/events/events.routes.js";
 import { professionsRouter } from "../../../modules/professions/professions.routes.js";
 import { authService } from "../../../modules/auth/auth.service.js";
@@ -42,7 +41,6 @@ apiV1Router.get("/health", async (request, response, next) => {
 
 apiV1Router.use("/auth", authRouter);
 apiV1Router.use("/camps", campsRouter);
-apiV1Router.use("/daily-processes", dailyProcessesRouter);
 apiV1Router.use("/events", eventsRouter);
 apiV1Router.use("/professions", professionsRouter);
 apiV1Router.use("/expeditions", expeditionsRouter);
