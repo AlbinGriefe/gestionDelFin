@@ -35,3 +35,8 @@ test-results/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local tooling
+.pdfenv/
+.venv/
+.venv-*/
