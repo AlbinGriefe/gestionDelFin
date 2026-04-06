@@ -66,17 +66,22 @@ function signAccessToken(input: {
 }
 
 function verifyAccessToken(token: string) {
-  const decoded = jwt.verify(token, env.JWT_SECRET);
+  try {
+    const decoded = jwt.verify(token, env.JWT_SECRET);
 
-  if (typeof decoded === "string") {
-    throw new AppError(401, "Invalid authentication token.", "INVALID_TOKEN");
+    if (typeof decoded === "string") {
+      throw new AppError(401, "Invalid authentication token.", "INVALID_TOKEN");
+    }
+
+    if (!decoded.sub || typeof decoded.sub !== "string" || !decoded.sid) {
+      throw new AppError(401, "Invalid authentication token.", "INVALID_TOKEN");
+    }
+
+    return decoded as AuthTokenPayload;
+
+  } catch (error) {
+    throw new AppError(401, "Invalid or expired token.", "INVALID_TOKEN");
   }
-
-  if (!decoded.sub || typeof decoded.sub !== "string" || !decoded.sid) {
-    throw new AppError(401, "Invalid authentication token.", "INVALID_TOKEN");
-  }
-
-  return decoded as AuthTokenPayload;
 }
 
 export class AuthService {
