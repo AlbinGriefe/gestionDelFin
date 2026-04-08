@@ -27,3 +27,47 @@ export interface ProfessionSummary {
   campId: number | null;
   isActive: boolean;
 }
+
+
+export interface ProfessionCoverageEntry {
+  profession: ProfessionSummary;
+  totalPersons: number;
+  activeWorkers: number;
+  outOfCamp: number;
+  temporarilyAssigned: number;
+  needsCoverage: boolean;
+}
+
+export interface ProfessionCoverageResult {
+  campId: number;
+  campName: string;
+  professions: ProfessionCoverageEntry[];
+  totalNeedingCoverage: number;
+}
+
+export interface TemporaryReassignmentInput {
+  targetProfessionId: number;
+  personIds: number[];
+  notes?: string;
+}
+
+export interface RevertReassignmentInput {
+  personIds: number[];
+  notes?: string;
+}
+
+export interface ReassignmentResultEntry {
+  personId: number;
+  fullName: string;
+  previousProfessionId: number;
+  previousProfessionName: string;
+  newProfessionId: number;
+  newProfessionName: string;
+  isTemporary: boolean;
+}
+
+export interface ReassignmentResult {
+  reassigned: ReassignmentResultEntry[];
+  skipped: { personId: number; reason: string }[];
+  warnings: string[];
+}

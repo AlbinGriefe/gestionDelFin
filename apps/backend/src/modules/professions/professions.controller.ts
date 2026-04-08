@@ -2,9 +2,12 @@ import type { NextFunction, Request, Response } from "express";
 
 import { createSuccessResponse } from "../../shared/responses/api-response.js";
 import {
+  coverageQuerySchema,
   createProfessionSchema,
   listProfessionsQuerySchema,
   professionIdParamSchema,
+  revertReassignmentSchema,
+  temporaryReassignmentSchema,
   updateProfessionSchema,
 } from "./professions.schemas.js";
 import { professionsService } from "./professions.service.js";
@@ -79,6 +82,60 @@ export async function updateProfessionController(
     const body = await updateProfessionSchema.parseAsync(request.body);
     const result = await professionsService.updateProfession(
       professionId,
+      body,
+      getAuthenticatedUser(request),
+    );
+
+    response.status(200).json(createSuccessResponse(result, request.requestId));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getProfessionCoverageController(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    const { campId } = await coverageQuerySchema.parseAsync(request.query);
+    const result = await professionsService.getProfessionCoverage(
+      campId,
+      getAuthenticatedUser(request),
+    );
+
+    response.status(200).json(createSuccessResponse(result, request.requestId));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function temporaryReassignmentController(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    const body = await temporaryReassignmentSchema.parseAsync(request.body);
+    const result = await professionsService.temporaryReassignment(
+      body,
+      getAuthenticatedUser(request),
+    );
+
+    response.status(200).json(createSuccessResponse(result, request.requestId));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function revertReassignmentController(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    const body = await revertReassignmentSchema.parseAsync(request.body);
+    const result = await professionsService.revertReassignment(
       body,
       getAuthenticatedUser(request),
     );
