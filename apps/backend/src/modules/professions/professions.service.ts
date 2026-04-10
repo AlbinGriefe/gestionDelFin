@@ -1,10 +1,25 @@
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
-import { professionsRepository } from "./professions.repository.js";
+import {
+  applyBulkProfessionChange,
+  countWorkablePersonsInProfession,
+  findAllActiveProfessionsForCamp,
+  findCampWithPersonsForCoverage,
+  findLastTemporaryRecord,
+  findPersonsForReassignment,
+  findPersonsOutOfCampForCoverage,
+  findTemporarilyAssignedPersonIds,
+  professionsRepository,
+} from "./professions.repository.js";
 import type {
+  ProfessionCoverageEntry,
+  ProfessionCoverageResult,
   ProfessionListFilters,
   ProfessionSummary,
   ProfessionWriteInput,
+  ReassignmentResult,
+  RevertReassignmentInput,
+  TemporaryReassignmentInput,
 } from "./professions.types.js";
 
 function isSystemAdministrator(user: AuthenticatedUser) {
@@ -247,6 +262,330 @@ export class ProfessionsService {
     });
 
     return mapProfession(updated);
+  }
+
+  async getProfessionCoverage(
+    campId: number,
+    actor: AuthenticatedUser,
+  ): Promise<ProfessionCoverageResult> {
+    if (!isSystemAdministrator(actor) && actor.campId !== campId) {
+      throw new AppError(
+        403,
+        "You can only view coverage for your assigned camp.",
+        "PROFESSIONS_COVERAGE_FORBIDDEN_CAMP",
+      );
+    }
+
+    const camp = await findCampWithPersonsForCoverage(campId);
+
+    if (!camp) {
+      throw new AppError(404, "Camp not found.", "PROFESSIONS_CAMP_NOT_FOUND");
+    }
+
+    const [outOfCampIds, temporaryIds, allProfessions] = await Promise.all([
+      findPersonsOutOfCampForCoverage(campId),
+      findTemporarilyAssignedPersonIds(campId),
+      findAllActiveProfessionsForCamp(campId),
+    ]);
+
+    const professionMap = new Map<
+      number,
+      {
+        profession: ProfessionSummary;
+        totalPersons: number;
+        activeWorkers: number;
+        outOfCamp: number;
+        temporarilyAssigned: number;
+      }
+    >();
+
+    for (const profession of allProfessions) {
+      professionMap.set(profession.id_profession, {
+        profession: mapProfession(profession),
+        totalPersons: 0,
+        activeWorkers: 0,
+        outOfCamp: 0,
+        temporarilyAssigned: 0,
+      });
+    }
+
+    for (const person of camp.persons) {
+      const profId = person.id_profession;
+
+      if (!professionMap.has(profId)) {
+        professionMap.set(profId, {
+          profession: mapProfession(person.professions),
+          totalPersons: 0,
+          activeWorkers: 0,
+          outOfCamp: 0,
+          temporarilyAssigned: 0,
+        });
+      }
+
+      const entry = professionMap.get(profId)!;
+      entry.totalPersons++;
+
+      const isOut = outOfCampIds.has(person.id_person);
+      const canWork =
+        !person.id_person_health || (person.person_health?.phs_can_work ?? true);
+      const isTemp = temporaryIds.has(person.id_person);
+
+      if (isOut) {
+        entry.outOfCamp++;
+      } else if (canWork) {
+        entry.activeWorkers++;
+      }
+
+      if (isTemp) {
+        entry.temporarilyAssigned++;
+      }
+    }
+
+    const professions: ProfessionCoverageEntry[] = Array.from(
+      professionMap.values(),
+    ).map((entry) => ({
+      ...entry,
+      needsCoverage: entry.activeWorkers === 0,
+    }));
+
+    professions.sort((a, b) =>
+      a.profession.name.localeCompare(b.profession.name),
+    );
+
+    return {
+      campId,
+      campName: camp.cmp_name,
+      professions,
+      totalNeedingCoverage: professions.filter((entry) => entry.needsCoverage).length,
+    };
+  }
+
+  async temporaryReassignment(
+    input: TemporaryReassignmentInput,
+    actor: AuthenticatedUser,
+  ): Promise<ReassignmentResult> {
+    ensureCanManageProfessions(actor);
+
+    const targetProfession = await professionsRepository.findProfessionById(
+      input.targetProfessionId,
+    );
+
+    if (!targetProfession) {
+      throw new AppError(
+        404,
+        "Target profession not found.",
+        "PROFESSIONS_TARGET_NOT_FOUND",
+      );
+    }
+
+    if (!targetProfession.pfs_is_active) {
+      throw new AppError(
+        400,
+        "Target profession is not active.",
+        "PROFESSIONS_TARGET_INACTIVE",
+      );
+    }
+
+    const campId = actor.campId;
+
+    const [persons, outOfCampIds, workableInTarget] = await Promise.all([
+      findPersonsForReassignment(input.personIds, campId),
+      findPersonsOutOfCampForCoverage(campId),
+      countWorkablePersonsInProfession(input.targetProfessionId, campId),
+    ]);
+
+    const foundIds = new Set<number>();
+    for (const p of persons) foundIds.add(p.id_person);
+
+    const reassigned: ReassignmentResult["reassigned"] = [];
+    const skipped: ReassignmentResult["skipped"] = [];
+    const warnings: string[] = [];
+
+    for (const personId of input.personIds) {
+      if (!foundIds.has(personId)) {
+        skipped.push({ personId, reason: "Person not found in your camp." });
+      }
+    }
+
+    if (workableInTarget > 0) {
+      warnings.push(
+        `Target profession already has ${workableInTarget} active worker(s). Reassignment may not be necessary.`,
+      );
+    }
+
+    const changes: Parameters<typeof applyBulkProfessionChange>[0]["changes"] = [];
+
+    for (const person of persons) {
+      if (!person.prn_is_accepted || !person.prn_is_active) {
+        skipped.push({
+          personId: person.id_person,
+          reason: "Person is not active or not accepted.",
+        });
+        continue;
+      }
+
+      const canWork =
+        !person.id_person_health || (person.person_health?.phs_can_work ?? true);
+
+      if (!canWork) {
+        skipped.push({
+          personId: person.id_person,
+          reason: "Person cannot work due to current health status.",
+        });
+        continue;
+      }
+
+      if (outOfCampIds.has(person.id_person)) {
+        skipped.push({
+          personId: person.id_person,
+          reason: "Person is currently out of camp (expedition or transfer).",
+        });
+        continue;
+      }
+
+      if (person.id_profession === input.targetProfessionId) {
+        skipped.push({
+          personId: person.id_person,
+          reason: "Person already belongs to the target profession.",
+        });
+        continue;
+      }
+
+      changes.push({
+        personId: person.id_person,
+        oldProfessionId: person.id_profession,
+        newProfessionId: input.targetProfessionId,
+        isTemporary: true,
+        notes: input.notes?.trim() ?? "Temporary profession reassignment.",
+      });
+
+      reassigned.push({
+        personId: person.id_person,
+        fullName: `${person.prn_name} ${person.prn_lastname}`.trim(),
+        previousProfessionId: person.id_profession,
+        previousProfessionName: person.professions.pfs_name,
+        newProfessionId: input.targetProfessionId,
+        newProfessionName: targetProfession.pfs_name,
+        isTemporary: true,
+      });
+    }
+
+    if (changes.length > 0) {
+      await applyBulkProfessionChange({
+        campId,
+        actorUserId: actor.id,
+        changes,
+      });
+    }
+
+    return { reassigned, skipped, warnings };
+  }
+
+  async revertReassignment(
+    input: RevertReassignmentInput,
+    actor: AuthenticatedUser,
+  ): Promise<ReassignmentResult> {
+    ensureCanManageProfessions(actor);
+
+    const campId = actor.campId;
+    const persons = await findPersonsForReassignment(input.personIds, campId);
+
+    const foundIds = new Set<number>();
+    for (const p of persons) foundIds.add(p.id_person);
+
+    const reassigned: ReassignmentResult["reassigned"] = [];
+    const skipped: ReassignmentResult["skipped"] = [];
+
+    for (const personId of input.personIds) {
+      if (!foundIds.has(personId)) {
+        skipped.push({ personId, reason: "Person not found in your camp." });
+      }
+    }
+
+    const changes: Parameters<typeof applyBulkProfessionChange>[0]["changes"] = [];
+
+    for (const person of persons) {
+      const lastTempRecord = await findLastTemporaryRecord(person.id_person);
+
+      if (!lastTempRecord) {
+        skipped.push({
+          personId: person.id_person,
+          reason: "No temporary reassignment record found for this person.",
+        });
+        continue;
+      }
+
+      const tempNewValue = lastTempRecord.prr_new_value as Record<string, unknown> | null;
+      const tempProfessionId = tempNewValue?.id_profession as number | undefined;
+
+      if (tempProfessionId !== person.id_profession) {
+        skipped.push({
+          personId: person.id_person,
+          reason:
+            "Person's current profession does not match their last temporary assignment. They may have been manually reassigned.",
+        });
+        continue;
+      }
+
+      const oldValue = lastTempRecord.prr_old_value as Record<string, unknown> | null;
+      const originalProfessionId = oldValue?.id_profession as number | undefined;
+
+      if (!originalProfessionId) {
+        skipped.push({
+          personId: person.id_person,
+          reason: "Could not determine original profession from audit record.",
+        });
+        continue;
+      }
+
+      const originalProfession = await professionsRepository.findProfessionById(
+        originalProfessionId,
+      );
+
+      if (!originalProfession) {
+        skipped.push({
+          personId: person.id_person,
+          reason: `Original profession #${originalProfessionId} no longer exists.`,
+        });
+        continue;
+      }
+
+      if (!originalProfession.pfs_is_active) {
+        skipped.push({
+          personId: person.id_person,
+          reason: `Original profession '${originalProfession.pfs_name}' is no longer active.`,
+        });
+        continue;
+      }
+
+      changes.push({
+        personId: person.id_person,
+        oldProfessionId: person.id_profession,
+        newProfessionId: originalProfessionId,
+        isTemporary: false,
+        notes: input.notes?.trim() ?? "Reverted to original profession.",
+      });
+
+      reassigned.push({
+        personId: person.id_person,
+        fullName: `${person.prn_name} ${person.prn_lastname}`.trim(),
+        previousProfessionId: person.id_profession,
+        previousProfessionName: person.professions.pfs_name,
+        newProfessionId: originalProfessionId,
+        newProfessionName: originalProfession.pfs_name,
+        isTemporary: false,
+      });
+    }
+
+    if (changes.length > 0) {
+      await applyBulkProfessionChange({
+        campId,
+        actorUserId: actor.id,
+        changes,
+      });
+    }
+
+    return { reassigned, skipped, warnings: [] };
   }
 }
 
