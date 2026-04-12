@@ -14,6 +14,7 @@ import { settingsRouter } from "../../../modules/settings/settings.routes.js";
 import { transfersRouter } from "../../../modules/transfers/transfers.routes.js";
 import { usersRouter } from "../../../modules/users/users.routes.js";
 import { createSuccessResponse } from "../../../shared/responses/api-response.js";
+import { dailyProcessesRouter } from "../../../modules/daily-processes/daily-processes.routes.js";
 
 const apiV1Router = Router();
 
@@ -50,5 +51,5 @@ apiV1Router.use("/sessions", sessionsRouter);
 apiV1Router.use("/settings", settingsRouter);
 apiV1Router.use("/transfers", transfersRouter);
 apiV1Router.use("/users", usersRouter);
-
+apiV1Router.use("/daily-processes", dailyProcessesRouter);
 export { apiV1Router };

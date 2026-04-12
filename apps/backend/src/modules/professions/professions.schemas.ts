@@ -94,6 +94,21 @@ export const createProfessionSchema = z.object({
   pfs_is_active: z.boolean().optional().default(true),
 });
 
+export const coverageQuerySchema = z.object({
+  campId: z.preprocess(parseOptionalInteger, z.number().int().positive()),
+});
+
+export const temporaryReassignmentSchema = z.object({
+  targetProfessionId: z.number().int().positive(),
+  personIds: z.array(z.number().int().positive()).min(1).max(50),
+  notes: z.preprocess(emptyStringToUndefined, z.string().trim().max(255).optional()),
+});
+
+export const revertReassignmentSchema = z.object({
+  personIds: z.array(z.number().int().positive()).min(1).max(50),
+  notes: z.preprocess(emptyStringToUndefined, z.string().trim().max(255).optional()),
+});
+
 export const updateProfessionSchema = z
   .object({
     pfs_name: z.preprocess(
