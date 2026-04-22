@@ -1,8 +1,11 @@
-import LoginForm from "./modules/auth/components/LoginForm";
-
 function App() {
 
-  return <LoginForm />;
+  return (
+    <div>
+
+    </div>
+
+  );
 }
 
 export default App;
