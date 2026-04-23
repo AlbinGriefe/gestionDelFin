@@ -4,6 +4,7 @@ import type { UserSummary, UserWriteInput } from "../modules/users/types/user.ty
 import ListUsers from "../modules/users/components/UsersList";
 import UserForm from "../modules/users/components/UserForm";
 import UserDetailSearch from "../modules/users/components/UserDetailSearch";
+import styles from "./UsersPage.module.css";
 
 export default function UsersPage() {
     const { catalogs, loadCatalogs, createUser, updateUser } = useUsers();
@@ -39,9 +40,10 @@ export default function UsersPage() {
     };
 
     return (
-        <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h1 style={{ fontSize: 18, fontWeight: 500 }}>Usuarios</h1>
+        <div style={{ padding: "24px 32px", background: "#f9f9f7" }}>
+            <h1>Gestión de Usuarios</h1>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: 24 }}>
+
                 <button
                     onClick={handleCreate}
                     style={{
@@ -61,7 +63,11 @@ export default function UsersPage() {
 
             <UserDetailSearch />
 
-            <ListUsers onEdit={handleEdit} />
+
+            <div className={styles.cardStyle}>
+                <div className={styles.sectionHeaderStyle}>Lista de usuarios</div>
+                <ListUsers onEdit={handleEdit} />
+            </div>
 
             {modalOpen && catalogs && (
                 <UserForm

@@ -1,0 +1,94 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+}
+
+.input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #111;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #378ADD;
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.inputWrapper .input {
+    padding-right: 70px;
+}
+
+.showPasswordBtn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 12px;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+}
+
+.showPasswordBtn:hover {
+    color: #111;
+}
+
+.submitBtn {
+    width: 100%;
+    padding: 9px;
+    background: #185FA5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.submitBtn:hover {
+    background: #0C447C;
+}
+
+.submitBtn:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+}
+
+.error {
+    font-size: 12px;
+    color: #A32D2D;
+    text-align: center;
+    margin-top: 4px;
+}
+
+.success {
+    font-size: 12px;
+    color: #3B6D11;
+    text-align: center;
+    margin-top: 4px;
+}

@@ -3,7 +3,7 @@ import { AuthContext } from "./auth.context";
 import { tokenStorage } from "../../../shared/api/tokenStorage";
 import { authApi } from "../api/auth.api";
 import type { AuthenticatedUser, SessionConfig } from "../types/auth.types";
-import { registerLogout, triggerLogout } from "../../../shared/services/authService";
+import { registerLogout } from "../../../shared/services/authService";
 
 type User = AuthenticatedUser;
 
@@ -34,7 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     tokenStorage.remove();
                     setUser(null);
                     setSessionConfig(null);
-                    await triggerLogout();
                 } else {
                     console.error("Error cargando sesión:", error);
                     tokenStorage.remove();

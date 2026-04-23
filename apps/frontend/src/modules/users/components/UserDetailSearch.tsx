@@ -76,7 +76,7 @@ function GeneralTab({ user }: { user: UserDetail }) {
     );
 }
 
-function SesionesTab({ user }: { user: UserDetail }) {
+function SesionsTab({ user }: { user: UserDetail }) {
     if (user.recentSessions.length === 0) {
         return <p className={styles.empty}>Sin sesiones recientes.</p>;
     }
@@ -107,7 +107,7 @@ function SesionesTab({ user }: { user: UserDetail }) {
     );
 }
 
-function EventosTab({ user }: { user: UserDetail }) {
+function EventsTab({ user }: { user: UserDetail }) {
     if (user.recentEvents.length === 0) {
         return <p className={styles.empty}>Sin eventos recientes.</p>;
     }
@@ -153,8 +153,8 @@ function UserDetailTabs({ user }: { user: UserDetail }) {
                 ))}
             </div>
             {activeTab === "general" && <GeneralTab user={user} />}
-            {activeTab === "sesiones" && <SesionesTab user={user} />}
-            {activeTab === "eventos" && <EventosTab user={user} />}
+            {activeTab === "sesiones" && <SesionsTab user={user} />}
+            {activeTab === "eventos" && <EventsTab user={user} />}
         </>
     );
 }

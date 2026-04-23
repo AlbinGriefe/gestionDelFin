@@ -2,8 +2,8 @@ import { tokenStorage } from './tokenStorage';
 import type { ApiResponse } from './apiResponse';
 import { ApiError } from './apiError';
 import type { ApiErrorCode } from './apiError';
-import { toast } from '../services/toastService';
 import { triggerLogout } from '../services/authService';
+import { toast } from "sonner";
 import { mapErrorToMessage } from '../errors/errorMapper';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -21,7 +21,6 @@ export async function httpClient<T>(
     let response: Response;
 
     try {
-
         response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers: {
@@ -32,8 +31,7 @@ export async function httpClient<T>(
         });
 
     } catch (error) {
-
-        toast("Error de conexión con el servidor", "error");
+        toast.error("Error de conexión con el servidor");
         throw error;
     }
 
@@ -43,7 +41,7 @@ export async function httpClient<T>(
         tokenStorage.remove();
 
         if (hadToken) {
-            toast("Sesión expirada, inicia sesión nuevamente", "error");
+            toast.error("Sesión expirada, inicia sesión nuevamente");
             await triggerLogout();
         }
 
@@ -55,7 +53,7 @@ export async function httpClient<T>(
     try {
         result = await response.json();
     } catch {
-        toast("Respuesta inválida del servidor", "error");
+        toast.error("Respuesta inválida del servidor");
         throw new Error("Invalid JSON response");
     }
 
@@ -68,7 +66,7 @@ export async function httpClient<T>(
         const error = new ApiError(code, message);
 
         if (options.showError !== false) {
-            toast(mapErrorToMessage(error), "error");
+            toast.error(mapErrorToMessage(error));
         }
 
         throw error;

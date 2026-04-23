@@ -1,91 +1,84 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
-import { mapErrorToMessage } from "../../../shared/errors/errorMapper";
+import styles from "./LoginForm.module.css";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [onSucces, setOnSuccess] = useState("");
-  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setError("");
-    setOnSuccess("");
+    setSuccess("");
+
+    if (!identity.trim()) return toast.error("Ingresa tu correo o nombre de usuario.");
+    if (!password.trim()) return toast.error("Ingresa tu contraseña.");
 
     try {
-      await login(email, password);
-
-      setOnSuccess("Login exitoso");
-
-    } catch (err: unknown) {
-      setError(mapErrorToMessage(err));
+      setLoading(true);
+      await login(identity, password);
+      toast.success("Sesion iniciada");
+      navigate("/home");
+    } catch {
+      toast.error("Correo o contraseña incorrectos.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="email" className="block mb-2 text-sm text-gray-700">
-          Correo Electrónico o Nombre de Usuario
+    <form onSubmit={handleSubmit} className={styles.form}>
+      <div className={styles.formGroup}>
+        <label htmlFor="identity" className={styles.label}>
+          Correo electrónico o nombre de usuario
         </label>
         <input
-          id="email"
+          id="identity"
           type="text"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={identity}
+          onChange={e => setIdentity(e.target.value)}
+          className={styles.input}
           placeholder="usuario@email.com o nombre_usuario"
         />
       </div>
 
-      <div>
-        <label htmlFor="password" className="block mb-2 text-sm text-gray-700">
+      <div className={styles.formGroup}>
+        <label htmlFor="password" className={styles.label}>
           Contraseña
         </label>
-
-        <div className="relative">
+        <div className={styles.inputWrapper}>
           <input
             id="password"
             type={showPassword ? "text" : "password"}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={e => setPassword(e.target.value)}
+            className={styles.input}
             placeholder="••••••••"
           />
-
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-gray-700"
+            className={styles.showPasswordBtn}
+            onClick={() => setShowPassword(prev => !prev)}
           >
             {showPassword ? "Ocultar" : "Mostrar"}
           </button>
-          {error && (
-            <p className="text-red-500 text-sm text-center">
-              {error}
-            </p>
-          )}
-
-          {onSucces && (
-            <p className="text-green-500 text-sm text-center">
-              {onSucces}
-            </p>
-          )}
         </div>
       </div>
+      {success && <p className={styles.success}>{success}</p>}
 
       <button
         type="submit"
-        className="w-full px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+        className={styles.submitBtn}
+        disabled={loading}
       >
-        Iniciar Sesión
+        {loading ? "Iniciando sesión..." : "Iniciar sesión"}
       </button>
     </form>
   );
