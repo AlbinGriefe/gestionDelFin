@@ -2,32 +2,31 @@ import { useState } from "react";
 import { useAuth } from "../context/useAuth";
 import styles from "./LoginForm.module.css";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setError("");
     setSuccess("");
 
-    if (!identity.trim()) return toast.error("Ingresa tu correo o nombre de usuario.");
-    if (!password.trim()) return toast.error("Ingresa tu contraseña.");
+    if (!identity.trim()) return setError("Ingresa tu correo o nombre de usuario.");
+    if (!password.trim()) return setError("Ingresa tu contraseña.");
 
     try {
       setLoading(true);
       await login(identity, password);
-      toast.success("Sesion iniciada");
-      navigate("/home");
+      toast.success("Inicio de sesión exitoso.");
     } catch {
-      toast.error("Correo o contraseña incorrectos.");
+      setError("Correo o contraseña incorrectos.");
     } finally {
       setLoading(false);
     }
@@ -71,6 +70,8 @@ export default function LoginForm() {
           </button>
         </div>
       </div>
+
+      {error && <p className={styles.error}>{error}</p>}
       {success && <p className={styles.success}>{success}</p>}
 
       <button

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./SearchById.module.css";
+import { toast } from "sonner";
 
 interface SearchByIdProps<T> {
     label?: string;
@@ -32,9 +33,8 @@ export default function SearchById<T>({
         try {
             setLoading(true);
             const data = await onSearch(id);
+            toast.success("Registro obtenido con exito");
             setResult(data);
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "No se encontró el registro.");
         } finally {
             setLoading(false);
         }

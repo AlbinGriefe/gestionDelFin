@@ -29,10 +29,11 @@ export async function httpClient<T>(
                 ...options.headers,
             },
         });
-
-    } catch (error) {
-        toast.error("Error de conexión con el servidor");
-        throw error;
+    } catch {
+        if (options.showError !== false) {
+            toast.error("Error de conexión con el servidor");
+        }
+        throw new ApiError("UNKNOWN", "Network error");
     }
 
     if (response.status === 401) {
@@ -41,11 +42,13 @@ export async function httpClient<T>(
         tokenStorage.remove();
 
         if (hadToken) {
-            toast.error("Sesión expirada, inicia sesión nuevamente");
+            if (options.showError !== false) {
+                toast.error("Sesión expirada, inicia sesión nuevamente");
+            }
             await triggerLogout();
         }
 
-        throw new Error("Unauthorized");
+        throw new ApiError("UNAUTHORIZED", "Unauthorized");
     }
 
     let result: ApiResponse<T>;
@@ -53,17 +56,30 @@ export async function httpClient<T>(
     try {
         result = await response.json();
     } catch {
-        toast.error("Respuesta inválida del servidor");
-        throw new Error("Invalid JSON response");
+        if (options.showError !== false) {
+            toast.error("Respuesta inválida del servidor");
+        }
+        throw new ApiError("UNKNOWN", "Invalid JSON response");
     }
 
     if (!result.success) {
-        const message = result.error.message;
-
         let code: ApiErrorCode = "UNKNOWN";
-        if (response.status === 400) code = "BAD_REQUEST";
 
-        const error = new ApiError(code, message);
+        switch (response.status) {
+            case 400:
+                code = "BAD_REQUEST";
+                break;
+            case 404:
+                code = "NOT_FOUND";
+                break;
+            case 401:
+                code = "UNAUTHORIZED";
+                break;
+            default:
+                code = "UNKNOWN";
+        }
+
+        const error = new ApiError(code, result.error.message);
 
         if (options.showError !== false) {
             toast.error(mapErrorToMessage(error));

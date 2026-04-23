@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { UserSummary, UserWriteInput, UsersCatalogs } from "../types/user.types";
 import CatalogSelect, { type CatalogItem } from "../../../components/CatalogSelect";
 import styles from "./UserForm.module.css";
+import { toast } from "sonner";
 
 interface UserFormProps {
     initialData?: UserSummary | null;
@@ -91,9 +92,8 @@ export default function UserForm({ initialData, catalogs, onSubmit, onClose }: U
         try {
             setLoading(true);
             await onSubmit(payload);
+            toast.success("Usuario creado/actualizado con exito");
             onClose();
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
         } finally {
             setLoading(false);
         }
