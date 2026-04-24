@@ -2,8 +2,8 @@ import { tokenStorage } from './tokenStorage';
 import type { ApiResponse } from './apiResponse';
 import { ApiError } from './apiError';
 import type { ApiErrorCode } from './apiError';
-import { toast } from '../services/toastService';
 import { triggerLogout } from '../services/authService';
+import { toast } from "sonner";
 import { mapErrorToMessage } from '../errors/errorMapper';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -21,7 +21,6 @@ export async function httpClient<T>(
     let response: Response;
 
     try {
-
         response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
             headers: {
@@ -30,11 +29,11 @@ export async function httpClient<T>(
                 ...options.headers,
             },
         });
-
-    } catch (error) {
-
-        toast("Error de conexión con el servidor", "error");
-        throw error;
+    } catch {
+        if (options.showError !== false) {
+            toast.error("Error de conexión con el servidor");
+        }
+        throw new ApiError("UNKNOWN", "Network error");
     }
 
     if (response.status === 401) {
@@ -43,11 +42,13 @@ export async function httpClient<T>(
         tokenStorage.remove();
 
         if (hadToken) {
-            toast("Sesión expirada, inicia sesión nuevamente", "error");
+            if (options.showError !== false) {
+                toast.error("Sesión expirada, inicia sesión nuevamente");
+            }
             await triggerLogout();
         }
 
-        throw new Error("Unauthorized");
+        throw new ApiError("UNAUTHORIZED", "Unauthorized");
     }
 
     let result: ApiResponse<T>;
@@ -55,20 +56,33 @@ export async function httpClient<T>(
     try {
         result = await response.json();
     } catch {
-        toast("Respuesta inválida del servidor", "error");
-        throw new Error("Invalid JSON response");
+        if (options.showError !== false) {
+            toast.error("Respuesta inválida del servidor");
+        }
+        throw new ApiError("UNKNOWN", "Invalid JSON response");
     }
 
     if (!result.success) {
-        const message = result.error.message;
-
         let code: ApiErrorCode = "UNKNOWN";
-        if (response.status === 400) code = "BAD_REQUEST";
 
-        const error = new ApiError(code, message);
+        switch (response.status) {
+            case 400:
+                code = "BAD_REQUEST";
+                break;
+            case 404:
+                code = "NOT_FOUND";
+                break;
+            case 401:
+                code = "UNAUTHORIZED";
+                break;
+            default:
+                code = "UNKNOWN";
+        }
+
+        const error = new ApiError(code, result.error.message);
 
         if (options.showError !== false) {
-            toast(mapErrorToMessage(error), "error");
+            toast.error(mapErrorToMessage(error));
         }
 
         throw error;

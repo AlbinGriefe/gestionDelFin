@@ -9,9 +9,16 @@ export function getErrorMessage(code: ApiErrorCode): string {
         case "BAD_REQUEST":
             return "Datos inválidos";
 
+        case "NOT_FOUND":
+            return "No se encontró el registro";
+
         case "UNKNOWN":
-        default:
             return "Ocurrió un error inesperado";
+
+        default: {
+            const _exhaustive: never = code;
+            return _exhaustive;
+        }
     }
 }
 

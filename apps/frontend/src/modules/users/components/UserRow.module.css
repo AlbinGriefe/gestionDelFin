@@ -1,0 +1,94 @@
+.row {
+    cursor: pointer;
+    background-color: #f9f9f7;
+}
+
+.row:hover td {
+    background: #ededeb;
+}
+
+.td {
+    padding: 10px 14px;
+    border-bottom: 0.5px solid #eee;
+    vertical-align: middle;
+}
+
+.badgeActive {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    background: #EAF3DE;
+    color: #3B6D11;
+}
+
+.badgeInactive {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    background: #F1EFE8;
+    color: #5F5E5A;
+}
+
+.toggleBtn {
+    background: none;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chevron {
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+.detailCell {
+    background: #f9f9f7;
+    padding: 12px 14px 14px;
+}
+
+.detailGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    align-items: stretch;
+}
+
+.empty {
+    color: #aaa;
+    font-size: 12px;
+}
+
+.editBtn {
+    background: none;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #185FA5;
+}
+
+.editBtn:hover:not(:disabled) {
+    background: #E6F1FB;
+    border-color: #378ADD;
+}
+
+.editBtn:disabled {
+    color: #aaa;
+    border-color: #eee;
+    cursor: not-allowed;
+}

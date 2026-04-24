@@ -1,0 +1,110 @@
+.wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.trigger {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    color: #111;
+    text-align: left;
+}
+
+.trigger:hover {
+    border-color: #aaa;
+}
+
+.triggerOpen {
+    border-radius: 8px 8px 0 0;
+    border-bottom-color: #eee;
+}
+
+.triggerSelected {
+    border-color: #378ADD;
+    background: #E6F1FB;
+    color: #0C447C;
+}
+
+.placeholder {
+    color: #aaa;
+}
+
+.chevron {
+    display: inline-block;
+    font-size: 10px;
+    color: #aaa;
+    transition: transform 0.2s;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+.panel {
+    width: 100%;
+    border: 0.5px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    background: #f9f9f7;
+    overflow: hidden;
+}
+
+.sectionTitle {
+    font-size: 11px;
+    font-weight: 500;
+    color: #888;
+    padding: 6px 12px;
+    background: #f1efea;
+    border-bottom: 0.5px solid #eee;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 0.5px solid #eee;
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 8px;
+}
+
+.item:last-child {
+    border-bottom: none;
+}
+
+.item:hover {
+    background: #fff;
+}
+
+.itemActive {
+    background: #E6F1FB;
+}
+
+.itemMain {
+    font-size: 13px;
+    font-weight: 500;
+    color: #111;
+}
+
+.itemSub {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.itemMeta {
+    flex-shrink: 0;
+}
