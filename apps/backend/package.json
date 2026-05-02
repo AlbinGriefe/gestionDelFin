@@ -18,7 +18,13 @@
     "prisma:generate": "npx.cmd prisma generate --config prisma/prisma.config.ts",
     "prisma:sync": "npm run prisma:pull && npm run prisma:format && npm run prisma:generate"
   },
-  "keywords": ["express", "prisma", "jwt", "mysql", "api"],
+  "keywords": [
+    "express",
+    "prisma",
+    "jwt",
+    "mysql",
+    "api"
+  ],
   "author": "Equipo gestionDelFin",
   "license": "ISC",
   "type": "module",
