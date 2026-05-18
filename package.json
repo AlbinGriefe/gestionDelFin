@@ -23,7 +23,8 @@
     "backend:typecheck": "npm run typecheck -w @gestiondelfin/backend",
     "backend:prisma:validate": "npm run prisma:validate -w @gestiondelfin/backend",
     "backend:prisma:sync": "npm run prisma:sync -w @gestiondelfin/backend",
-    "backend:prisma:generate": "npm run prisma:generate -w @gestiondelfin/backend"
+    "backend:prisma:generate": "npm run prisma:generate -w @gestiondelfin/backend",
+    "backend:seed": "npm run seed -w @gestiondelfin/backend"
   },
   "keywords": [
     "monorepo",

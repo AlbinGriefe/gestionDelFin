@@ -14,34 +14,15 @@ infra/        Archivos de infraestructura
 tests/        Pruebas y notas de testing
 ```
 
-## Criterio de organizacion
-
-Para este proyecto, el esquema monorepo si es la opcion mas conveniente.
-
-Motivos principales:
-
-- frontend y backend evolucionan juntos y comparten el mismo dominio funcional;
-- la documentacion, la base de datos y la infraestructura forman parte del mismo entregable;
-- facilita correr scripts desde una sola raiz y evita duplicar configuracion del equipo;
-- permite justificar mejor la arquitectura en la defensa del proyecto.
-
-Reglas del repo:
-
-- `apps/frontend` y `apps/backend` son las unicas aplicaciones del monorepo.
-- `database`, `docs`, `infra` y `tests` son carpetas de apoyo al proyecto, no apps separadas.
-- `node_modules/@gestiondelfin/*` contiene enlaces de workspace creados por npm, no copias del codigo.
-- Las dependencias se instalan solo en la raiz del proyecto.
-- Las carpetas vacias, tooling local y artefactos temporales no deben mantenerse en el repo.
-
 ## Requisitos
 
 - Node.js 20 o superior
 - npm
-- Docker Desktop (opcional, para MySQL local)
+- Docker Desktop (para MySQL local)
 
 ## Puesta en marcha
 
-### 0. Instalar dependencias del monorepo
+### 0. Instalar dependencias
 
 Desde la raiz del proyecto:
 
@@ -49,182 +30,122 @@ Desde la raiz del proyecto:
 npm install
 ```
 
-Ese comando resuelve los workspaces definidos en [`package.json`](C:/Users/jcaba/OneDrive/Desktop/Stuff/Cooking/Javascript/gestionDelFin/package.json). El codigo fuente real sigue viviendo en `apps/frontend` y `apps/backend`; lo que aparezca dentro de `node_modules/@gestiondelfin/*` son enlaces creados por npm para el monorepo, no carpetas duplicadas.
-
-Convencion del equipo:
-
-- Ejecutar `npm install` solo en la raiz del proyecto.
-- Ejecutar scripts de cada app desde la raiz con los scripts `frontend:*` y `backend:*`.
-- No versionar ni revisar cambios dentro de `node_modules`.
-
-### 1. Base de datos
-
-Desde la raiz del proyecto:
+### 1. Variables de entorno
 
 ```powershell
+# Raiz del proyecto
 copy .env.example .env
-docker compose up -d
+
+# Backend
+copy apps\backend\.env.example apps\backend\.env
 ```
 
-Esto levanta un contenedor MySQL 8 con estas credenciales por defecto:
+Los valores por defecto del `.env.example` funcionan para desarrollo local sin modificaciones.
 
-- Host: `localhost`
-- Port: `3306`
-- Database: `apocalypse_db`
-- User: `app_user`
-- Password: `app_password`
-- Root user: `root`
-- Root password: `root`
-
-La configuracion sale de [`.env.example`](C:/Users/jcaba/OneDrive/Desktop/Stuff/Cooking/Javascript/gestionDelFin/.env.example) y de [`docker-compose.yml`](C:/Users/jcaba/OneDrive/Desktop/Stuff/Cooking/Javascript/gestionDelFin/docker-compose.yml). Si quieren otras credenciales, cambien el archivo `.env` antes de correr `docker compose up -d`.
-
-Importante: el `docker-compose` actual crea la base vacia, pero no importa automaticamente el modelo SQL del proyecto. Despues de levantar MySQL, hay que cargar [`Tercermodelo.sql`](C:/Users/jcaba/OneDrive/Desktop/Stuff/Cooking/MySQL/Tercermodelo.sql).
-
-#### Conexion desde MySQL Workbench
-
-1. Crear una conexion nueva.
-2. Usar `localhost` como host.
-3. Usar `3306` como puerto.
-4. Usar `root` / `root` o `app_user` / `app_password`.
-5. Probar la conexion y guardar.
-
-#### Importar el modelo SQL
-
-Opcion Workbench:
-
-1. Abrir la conexion.
-2. Ir a `Server > Data Import`.
-3. Elegir `Import from Self-Contained File`.
-4. Seleccionar [`Tercermodelo.sql`](C:/Users/jcaba/OneDrive/Desktop/Stuff/Cooking/MySQL/Tercermodelo.sql).
-5. Ejecutar `Start Import`.
-
-Opcion terminal:
+### 2. Base de datos
 
 ```powershell
-docker compose exec -T mysql mysql -uroot -proot apocalypse_db < "C:\Users\jcaba\OneDrive\Desktop\Stuff\Cooking\MySQL\Tercermodelo.sql"
+npm run db:up
 ```
 
-Si la base ya existia y quieren reiniciarla desde cero para volver a importar el SQL:
+Esto levanta un contenedor MySQL 8 con estas credenciales:
+
+| Campo    | Valor           |
+|----------|-----------------|
+| Host     | `localhost`     |
+| Puerto   | `3306`          |
+| Base     | `apocalypse_db` |
+| Usuario  | `app_user`      |
+| Password | `app_password`  |
+
+### 3. Backend — migrar y cargar seed
 
 ```powershell
-docker compose down -v
-docker compose up -d
+npm run backend:prisma:generate
+npm run backend:seed
+npm run backend:dev
 ```
 
-Ese paso borra el volumen de MySQL. Solo usenlo si no necesitan conservar datos.
+El seed crea dos campamentos, cuatro roles y los siguientes usuarios de prueba:
 
-### 2. Backend
+| Usuario      | Contraseña       | Rol                            | Campamento   |
+|--------------|------------------|--------------------------------|--------------|
+| `admin`      | `Admin1234`      | Administrador sistema          | Base Alpha   |
+| `gestion`    | `Gestion1234`    | Gestion recursos               | Base Alpha   |
+| `viajes`     | `Viajes1234`     | Encargado de viajes            | Base Alpha   |
+| `trabajador` | `Trabajador1234` | Trabajador                     | Base Alpha   |
 
-```powershell
-cd apps/backend
-copy .env.example .env
-npm run prisma:sync
-```
+> Las contrasenas del seed estan en `apps/backend/.env` como variables `SEED_*` para que cada uno pueda cambiarlas sin tocar el codigo.
 
-Antes de iniciar la API, revisar que `apps/backend/.env` tenga al menos:
-
-- `DATABASE_URL="mysql://app_user:app_password@localhost:3306/apocalypse_db"`
-- `JWT_SECRET=una-clave-larga-y-segura`
-
-Si la base de datos tiene usuarios con contraseñas en texto plano solo para pruebas locales, se puede usar temporalmente:
-
-```env
-ALLOW_INSECURE_PLAINTEXT_PASSWORDS=true
-```
-
-Con eso listo, pueden arrancar el backend:
-
-```powershell
-cd apps/backend
-npm run dev
-```
-
-### 3. Frontend
+### 4. Frontend
 
 ```powershell
 npm run frontend:dev
 ```
 
-## Prisma
+La app queda disponible en `http://localhost:5173`.
 
-Los comandos de Prisma del backend estan preparados con la configuracion actual del proyecto:
+---
 
-```powershell
-cd apps/backend
-npm run prisma:validate
-npm run prisma:pull
-npm run prisma:format
-npm run prisma:generate
-npm run prisma:sync
-```
+## Criterio de organizacion del monorepo
 
-## Git y colaboracion
+- `apps/frontend` y `apps/backend` son las unicas aplicaciones.
+- `database`, `docs`, `infra` y `tests` son carpetas de apoyo, no apps separadas.
+- Las dependencias se instalan **solo desde la raiz** del proyecto con `npm install`.
+- No versionar `node_modules`, archivos `.env`, ni artefactos de build.
 
-- Este repositorio no debe versionar `node_modules`, archivos `.env`, salidas de build ni artefactos generados.
-- Tener varios `.gitignore` no es un problema en un monorepo; el archivo raiz define reglas generales y los archivos internos pueden agregar reglas especificas por carpeta.
-- Antes de subir cambios, conviene revisar `git status` para confirmar que solo vayan archivos fuente, documentacion y configuracion relevante.
+---
 
 ## Scripts utiles desde la raiz
 
 ```powershell
-npm install
-npm run db:up
-npm run db:logs
-npm run backend:dev
-npm run backend:build
-npm run backend:typecheck
-npm run backend:prisma:sync
-npm run frontend:dev
+npm run db:up                    # Levantar MySQL en Docker
+npm run db:down                  # Apagar el contenedor
+npm run db:logs                  # Ver logs de MySQL
+
+npm run backend:dev              # Backend en modo desarrollo (puerto 3001)
+npm run backend:build            # Compilar backend
+npm run backend:typecheck        # Verificar tipos TypeScript
+npm run backend:prisma:generate  # Generar cliente Prisma
+npm run backend:prisma:sync      # Sincronizar schema desde la BD
+npm run backend:seed             # Cargar datos iniciales
+
+npm run frontend:dev             # Frontend en modo desarrollo (puerto 5173)
+npm run frontend:build           # Compilar frontend
 ```
 
-## Pruebas y verificaciones actuales
+---
 
-Hoy el proyecto todavia no tiene pruebas automatizadas reales con Jest, Vitest o Supertest. Lo que si se puede ejecutar para validar lo implementado es esto:
-
-### Verificacion de Prisma
+## Prisma
 
 ```powershell
 cd apps/backend
-npm run prisma:validate
-npm run prisma:sync
+npm run prisma:validate   # Validar schema
+npm run prisma:pull       # Traer cambios desde la BD
+npm run prisma:format     # Formatear schema
+npm run prisma:generate   # Generar cliente
+npm run prisma:sync       # pull + format + generate en un solo paso
 ```
 
-### Verificacion de TypeScript y build
+---
 
-```powershell
-cd apps/backend
-npm run typecheck
-npm run build
-```
-
-### Prueba manual de la API
+## Verificacion rapida
 
 Con el backend corriendo en `http://localhost:3001`:
 
 ```powershell
 curl http://localhost:3001/api/v1/health
-curl http://localhost:3001/api/v1/auth/session-config
 ```
 
-Deberian responder `200 OK`.
+Debe responder `200 OK`.
 
-### Prueba manual de login
-
-El endpoint existe:
-
-- `POST /api/v1/auth/login`
-
-Pero el script SQL actual no inserta usuarios semilla. Antes de probar login, necesitan crear al menos:
-
-- un registro en `roles`
-- un registro en `persons`
-- un registro en `users`
-
-Body esperado:
+Login de prueba:
 
 ```json
+POST /api/v1/auth/login
 {
-  "identity": "usuario_o_email",
-  "password": "tu_password"
+  "identity": "admin",
+  "password": "Admin1234"
 }
 ```
+
