@@ -16,14 +16,20 @@
     "prisma:pull": "npx.cmd prisma db pull --config prisma/prisma.config.ts",
     "prisma:format": "npx.cmd prisma format --config prisma/prisma.config.ts",
     "prisma:generate": "npx.cmd prisma generate --config prisma/prisma.config.ts",
-    "prisma:sync": "npm run prisma:pull && npm run prisma:format && npm run prisma:generate"
+    "prisma:sync": "npm run prisma:pull && npm run prisma:format && npm run prisma:generate",
+    "seed": "tsx prisma/seed.ts"
   },
-  "keywords": ["express", "prisma", "jwt", "mysql", "api"],
+  "keywords": [
+    "express",
+    "prisma",
+    "jwt",
+    "mysql",
+    "api"
+  ],
   "author": "Equipo gestionDelFin",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
@@ -38,7 +44,8 @@
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.5.0",
     "@prisma/client": "^7.5.0",
-    "bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
