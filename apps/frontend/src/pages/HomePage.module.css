@@ -14,12 +14,12 @@
     background: #fff;
     border: 0.5px solid #000000;
     border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 16;
+    margin-bottom: 16px;
     display: flex;
-    gap: 50px;
+    flex-wrap: wrap;
+    gap: 12px;
     align-items: center;
-    padding: 10px;
+    padding: 12px 16px;
 }
 
 .toolBarButton {
@@ -28,8 +28,9 @@
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 13;
+    font-size: 13px;
     font-weight: 500;
+    white-space: nowrap;
     cursor: pointer;
     transition: transform 0.2s ease;
 }

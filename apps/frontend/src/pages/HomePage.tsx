@@ -48,6 +48,41 @@ export default function MainPage() {
                 Inventario
             </button>
             <button
+                onClick={() => navigate("/professions")}
+                className={styles.toolBarButton}
+                title="Gestionar Profesiones"
+            >
+                Profesiones
+            </button>
+            <button
+                onClick={() => navigate("/sessions")}
+                className={styles.toolBarButton}
+                title="Sesiones activas"
+            >
+                Sesiones
+            </button>
+            <button
+                onClick={() => navigate("/daily-processes")}
+                className={styles.toolBarButton}
+                title="Procesos diarios"
+            >
+                Procesos diarios
+            </button>
+            <button
+                onClick={() => navigate("/expeditions")}
+                className={styles.toolBarButton}
+                title="Gestionar Expediciones"
+            >
+                Expediciones
+            </button>
+            <button
+                onClick={() => navigate("/transfers")}
+                className={styles.toolBarButton}
+                title="Traslados entre campamentos"
+            >
+                Traslados
+            </button>
+            <button
                 id="usrLogout"
                 title="Cerrar sesión"
                 onClick={handleLogout}
