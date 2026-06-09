@@ -2,28 +2,63 @@
 
 ## Decisiones base
 
-- API REST versionada bajo `/api/v1`
-- Express como servidor HTTP
-- Prisma como capa de acceso a datos
-- JWT para autenticacion
-- Sesiones persistidas en la tabla `user_sessions`
-- Hora central basada en el servidor para procesos sensibles
+- API REST versionada bajo `/api/v1`.
+- Express como servidor HTTP.
+- Prisma y MySQL como persistencia.
+- JWT y sesiones persistidas para autenticacion.
+- Hora del servidor para procesos diarios y vencimiento de sesiones.
+- Auditoria tecnica en `events`.
+- Eventos del dominio en `narrative_events`.
 
-## Estado actual
+## Modulos principales
 
-- Healthcheck funcional
-- Login, lectura de sesion y cierre de sesion
-- Middleware de autenticacion para rutas protegidas
-- Manejo centralizado de errores y validaciones
-- Modulo `persons` con listado, detalle, alta, actualizacion, catalogos y trazabilidad en `person_records`
-- Modulo `users` con catalogos, listado, detalle, alta, actualizacion, hashing de contrasena y revocacion de sesiones sensibles
-- Modulo `camps` con listado, detalle operativo, alta, actualizacion y reglas de consistencia para capacidad y estado
-- Modulo `inventory` con consulta de stock, alertas de minimo, ajustes y trazabilidad en `storage_records` y `resources_movements`
-- Modulo `transfers` con solicitud, detalle y flujo de estados con impacto en inventario y traslado de personas entre campamentos
-- Modulo `expeditions` con catalogos, planificacion, flujo de estados y retorno de recursos al inventario mediante `storage_records` y `resources_movements`
-- Modulo `sessions` con consulta de sesiones activas/historicas, lectura de sesion actual y revocacion manual
-- Modulo `settings` con parametros visibles para la interfaz y administracion del timeout de sesion
+- `persons`: registro pendiente, perfil textual, estadisticas e historial.
+- `admission-evaluations`: recomendacion de ingreso y confirmacion humana.
+- `profession-recommendations`: recomendacion de oficio posterior a la admision.
+- `text-ai`: contrato desacoplado, Ollama Qwen opcional y fallback por reglas.
+- `camps`: capacidad, metricas y reglas operativas configurables.
+- `daily-processes`: asignaciones, produccion, penalizaciones, raciones y enfermedad.
+- `care-actions`: curacion medica con consumo de comida.
+- `expeditions`: zonas, probabilidad de exito, recursos y progresion.
+- `transfers`: envios, probabilidad de exito, capacidad y progresion.
+- `narrative-events`: consulta de consecuencias operativas.
+- `events`: auditoria transversal.
 
-## Siguiente etapa
+## IA y degradacion
 
-- Dashboard, reportes, admision con IA y reglas finas de consumo/raciones
+El backend no necesita Ollama para arrancar ni para completar los flujos. Si
+`AI_PROVIDER=ollama` y Ollama no responde, `ResilientTextProvider` utiliza
+`RulesFallbackProvider`. Tambien puede configurarse `AI_PROVIDER=rules` para no
+intentar ninguna conexion externa.
+
+La IA no escribe una decision final:
+
+1. genera una evaluacion o recomendacion;
+2. guarda proveedor, confianza, razones y entrada;
+3. un administrador confirma o corrige;
+4. la decision humana modifica admision u oficio.
+
+Las filas antiguas de `ai_evaluations` se conservan como legado de auditoria,
+pero el backend ya no ejecuta evaluaciones visuales.
+
+## Persistencia
+
+El esquema incorpora estadisticas, progresion idempotente, plantillas de perfil,
+evaluaciones, recomendaciones, reglas de campamento, asignaciones, curaciones,
+eventos narrativos y zonas.
+
+La migracion SQL esta en:
+
+`apps/backend/prisma/prisma/migrations/20260608120000_text_ai_assignments/migration.sql`
+
+Debe respaldarse y baselinearse la base existente antes de ejecutar
+`prisma migrate deploy`, porque la migracion elimina las columnas visuales de
+`persons`.
+
+## Pendientes
+
+- aplicar y probar la migracion sobre una copia de MySQL;
+- pruebas integradas con base real;
+- proveedor cloud opcional;
+- scheduler externo para ejecutar el proceso diario;
+- pantallas frontend de los nuevos modulos.

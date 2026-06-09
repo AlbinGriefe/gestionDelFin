@@ -22,6 +22,7 @@ export interface ExpeditionMemberInput {
 
 export interface ExpeditionCreateInput {
   id_camp?: number;
+  id_exploration_zone?: number | null;
   exs_name: string;
   exs_leaving_date: Date;
   exs_estimated_days?: number;
@@ -63,6 +64,12 @@ export interface ExpeditionCatalogs {
     isActive: boolean;
     campId: number | null;
   }>;
+  explorationZones: Array<{
+    id: number;
+    campId: number;
+    name: string;
+    risk: string;
+  }>;
 }
 
 export interface ExpeditionSummary {
@@ -73,6 +80,11 @@ export interface ExpeditionSummary {
     id: number;
     name: string;
   };
+  explorationZone: {
+    id: number;
+    name: string;
+    risk: string;
+  } | null;
   createdBy: {
     id: number;
     username: string;
@@ -86,6 +98,26 @@ export interface ExpeditionSummary {
   notes: string | null;
   createdAt: string;
   membersCount: number;
+}
+
+export interface ExpeditionMissionOutcome {
+  requestedState: "returned";
+  resolvedState: "returned" | "failed";
+  probability: number;
+  roll: number;
+  baseProbability: number;
+  luckBonusPoints: number;
+  professionBonusPoints: number;
+  valuableProbability: number;
+  valuableRoll: number;
+  valuableTriggered: boolean;
+  failureEventType?: "zombie_attack" | "traveler_loss";
+  hunterRewards: Array<{
+    personId: number;
+    roll: number;
+    probability: number;
+    quantity: number;
+  }>;
 }
 
 export interface ExpeditionDetail extends ExpeditionSummary {

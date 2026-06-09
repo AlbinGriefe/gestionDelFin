@@ -59,7 +59,7 @@ Mueve un grupo de personas temporalmente a una profesión que necesita cobertura
 | Condición | Resultado |
 |-----------|-----------|
 | No pertenece al campamento del actor | `skipped` |
-| `prn_is_accepted = false` o `prn_is_active = false` | `skipped` |
+| `prn_admission_status != accepted` o `prn_is_active = false` | `skipped` |
 | Estado de salud con `phs_can_work = false` (herida/enferma) | `skipped` |
 | Actualmente fuera del campamento (expedición o traslado) | `skipped` |
 | Ya pertenece a la profesión destino | `skipped` |
@@ -115,7 +115,7 @@ Cada cambio genera dos registros:
 
 Una persona cuenta como trabajador activo si cumple **todas** estas condiciones:
 
-1. `prn_is_accepted = true`
+1. `prn_admission_status = accepted`
 2. `prn_is_active = true`
 3. Sin estado de salud asignado **o** `phs_can_work = true`
 4. No está fuera del campamento (sin expedición `in_progress` con salida confirmada sin retorno, ni traslado `in_transit/scheduled` con salida confirmada)

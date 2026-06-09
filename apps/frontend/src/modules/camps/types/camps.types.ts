@@ -42,6 +42,15 @@ export interface CampSummary {
 }
 
 export interface CampDetail extends CampSummary {
+    operationalRules: {
+        admissionRules: unknown;
+        expeditionSuccessProbability: number;
+        transferSuccessProbability: number;
+        diseaseProbability: number;
+        valuableResourceProbability: number;
+        diseaseHealthThreshold: number;
+        updatedAt: string;
+    } | null;
     metrics: {
         acceptedPersons: number;
         activeSessions: number;
@@ -65,6 +74,15 @@ export interface CampDetail extends CampSummary {
         oldValue: unknown;
         newValue: unknown;
     }>;
+}
+
+export type CampOperationalRulesInput = {
+    admissionRules?: Record<string, unknown>;
+    expeditionSuccessProbability?: number;
+    transferSuccessProbability?: number;
+    diseaseProbability?: number;
+    valuableResourceProbability?: number;
+    diseaseHealthThreshold?: number;
 }
 
 export type CampList = {

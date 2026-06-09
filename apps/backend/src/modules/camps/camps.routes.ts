@@ -10,8 +10,13 @@ import {
   getCampByIdController,
   listCampsController,
   updateCampController,
+  updateCampOperationalRulesController,
 } from "./camps.controller.js";
-import { createCampSchema, updateCampSchema } from "./camps.schemas.js";
+import {
+  createCampSchema,
+  updateCampOperationalRulesSchema,
+  updateCampSchema,
+} from "./camps.schemas.js";
 
 const campsRouter = Router();
 
@@ -29,6 +34,12 @@ campsRouter.patch(
   requireRoles("Administrador sistema"),
   validateBody(updateCampSchema),
   updateCampController,
+);
+campsRouter.put(
+  "/:campId/operational-rules",
+  requireRoles("Administrador sistema"),
+  validateBody(updateCampOperationalRulesSchema),
+  updateCampOperationalRulesController,
 );
 
 export { campsRouter };

@@ -1,90 +1,45 @@
 import { z } from "zod";
 
 function emptyStringToUndefined(value: unknown) {
-  if (typeof value === "string" && value.trim() === "") {
-    return undefined;
-  }
-
-  return value;
+  return typeof value === "string" && value.trim() === "" ? undefined : value;
 }
 
 function emptyStringToNull(value: unknown) {
-  if (value === null) {
+  if (value === null || (typeof value === "string" && value.trim() === "")) {
     return null;
   }
-
-  if (typeof value === "string" && value.trim() === "") {
-    return null;
-  }
-
   return value;
 }
 
 function parseOptionalBoolean(value: unknown) {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
-
-  if (typeof value === "boolean") {
-    return value;
-  }
-
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value === "boolean") return value;
   if (typeof value === "string") {
-    const normalized = value.trim().toLocaleLowerCase();
-
-    if (["true", "1", "yes", "si"].includes(normalized)) {
-      return true;
-    }
-
-    if (["false", "0", "no"].includes(normalized)) {
-      return false;
-    }
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "si"].includes(normalized)) return true;
+    if (["false", "0", "no"].includes(normalized)) return false;
   }
-
   return value;
 }
 
 function parseOptionalInteger(value: unknown) {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
-
-  if (typeof value === "number") {
-    return value;
-  }
-
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value === "number") return value;
   if (typeof value === "string") {
     const parsed = Number.parseInt(value, 10);
     return Number.isNaN(parsed) ? value : parsed;
   }
-
   return value;
 }
 
 function parseOptionalDate(value: unknown) {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (value === null || value === "") {
-    return null;
-  }
-
-  if (value instanceof Date) {
-    return value;
-  }
-
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  if (value instanceof Date) return value;
   if (typeof value === "string") {
-    const trimmed = value.trim();
-
-    if (!trimmed) {
-      return null;
-    }
-
-    const parsed = new Date(`${trimmed}T00:00:00.000Z`);
+    const parsed = new Date(`${value.trim()}T00:00:00.000Z`);
     return Number.isNaN(parsed.getTime()) ? value : parsed;
   }
-
   return value;
 }
 
@@ -94,13 +49,7 @@ const optionalPositiveInteger = z.preprocess(
 );
 
 const nullablePositiveInteger = z.preprocess(
-  (value) => {
-    if (value === null || value === "" || value === "null") {
-      return null;
-    }
-
-    return parseOptionalInteger(value);
-  },
+  (value) => (value === null || value === "" ? null : parseOptionalInteger(value)),
   z.number().int().positive().nullable().optional(),
 );
 
@@ -114,9 +63,9 @@ const nullableShortText = z.preprocess(
   z.string().trim().max(255).nullable().optional(),
 );
 
-const nullableUrl = z.preprocess(
+const nullableProfileDescription = z.preprocess(
   emptyStringToNull,
-  z.string().trim().url().max(512).nullable().optional(),
+  z.string().trim().min(20).max(2000).nullable().optional(),
 );
 
 export const personIdParamSchema = z.object({
@@ -137,20 +86,20 @@ export const listPersonsQuerySchema = z.object({
   professionId: optionalPositiveInteger,
   healthId: optionalPositiveInteger,
   accepted: z.preprocess(parseOptionalBoolean, z.boolean().optional()),
+  admissionStatus: z
+    .enum(["pending", "under_review", "observe", "accepted", "rejected"])
+    .optional(),
   active: z.preprocess(parseOptionalBoolean, z.boolean().optional()),
 });
 
 export const createPersonSchema = z.object({
   id_camp: optionalPositiveInteger,
-  id_profession: z.coerce.number().int().positive(),
   id_person_health: nullablePositiveInteger,
   prn_name: z.string().trim().min(1).max(100),
   prn_lastname: z.string().trim().min(1).max(100),
   prn_birth_date: z.preprocess(parseOptionalDate, z.date().nullable().optional()),
   prn_document_number: nullableIdentifierString,
-  prn_photo_url: nullableUrl,
-  prn_identification_card_url: nullableUrl,
-  prn_is_accepted: z.boolean().optional().default(false),
+  prn_profile_description: nullableProfileDescription,
   prn_is_active: z.boolean().optional().default(true),
   prn_admission_notes: nullableShortText,
 });
@@ -158,7 +107,6 @@ export const createPersonSchema = z.object({
 export const updatePersonSchema = z
   .object({
     id_camp: optionalPositiveInteger,
-    id_profession: optionalPositiveInteger,
     id_person_health: nullablePositiveInteger,
     prn_name: z.preprocess(
       emptyStringToUndefined,
@@ -170,18 +118,12 @@ export const updatePersonSchema = z
     ),
     prn_birth_date: z.preprocess(parseOptionalDate, z.date().nullable().optional()),
     prn_document_number: nullableIdentifierString,
-    prn_photo_url: nullableUrl,
-    prn_identification_card_url: nullableUrl,
-    prn_is_accepted: z.boolean().optional(),
+    prn_profile_description: nullableProfileDescription,
     prn_is_active: z.boolean().optional(),
     prn_admission_notes: nullableShortText,
   })
   .superRefine((value, context) => {
-    const hasAnyDefinedValue = Object.values(value).some(
-      (entry) => entry !== undefined,
-    );
-
-    if (!hasAnyDefinedValue) {
+    if (!Object.values(value).some((entry) => entry !== undefined)) {
       context.addIssue({
         code: "custom",
         message: "At least one field must be provided to update a person.",

@@ -137,3 +137,16 @@ export const updateCampSchema = z
       });
     }
   });
+
+export const updateCampOperationalRulesSchema = z.object({
+  admissionRules: z.record(z.string(), z.unknown()).optional().default({
+    minimumHealth: 1,
+    requireProfileDescription: true,
+    requireAvailableCapacity: true,
+  }),
+  expeditionSuccessProbability: z.number().min(0).max(100).optional(),
+  transferSuccessProbability: z.number().min(0).max(100).optional(),
+  diseaseProbability: z.number().min(0).max(100).optional(),
+  valuableResourceProbability: z.number().min(0).max(100).optional(),
+  diseaseHealthThreshold: z.number().min(0).max(100).optional(),
+});

@@ -1,73 +1,68 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicacion React + Vite del proyecto `gestionDelFin`.
 
-Currently, two official plugins are available:
+## Estado actual
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+El frontend ya compila y tiene una base de integracion real con el backend:
 
-## React Compiler
+- autenticacion y manejo de token
+- rutas protegidas y publicas
+- pagina de login
+- pagina inicial autenticada
+- pagina de usuarios
+- capas `api`, `context` y `types` para varios modulos del dominio
 
-The React Compiler is not enabled on this template because of its impact   on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Todavia no se han construido pantallas para la mayoria de esos modulos. Hoy la navegacion visible esta concentrada en:
 
-## Expanding the ESLint configuration
+- `/login`
+- `/home`
+- `/users`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Variables de entorno
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Crear `apps/frontend/.env` a partir de `apps/frontend/.env.example`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Variable requerida:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL=http://localhost:3001/api/v1
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Desde la raiz del monorepo:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+npm run frontend:dev
+npm run frontend:build
 ```
+
+Directo sobre el workspace:
+
+```powershell
+npm run dev -w @gestiondelfin/frontend
+npm run build -w @gestiondelfin/frontend
+```
+
+## Verificaciones realizadas
+
+- `npm run frontend:build`: correcto
+- `npm run dev -w @gestiondelfin/frontend -- --host 127.0.0.1 --port 4173`: correcto en esta revision
+
+Nota:
+
+- en la revision funcional del 2026-05-27, el puerto `5173` no estuvo disponible en el entorno de prueba; Vite si pudo levantar correctamente en `4173`
+
+## Estructura funcional actual
+
+- `src/modules/auth`: login, sesion y proveedor global
+- `src/modules/users`: listado, alta, edicion y detalle
+- `src/modules/*/api|context|types`: integracion preparada para modulos aun sin pantalla
+- `src/routes`: `ProtectedRoute`, `PublicRoute` y `RootRedirect`
+
+## Limitaciones actuales
+
+- no hay dashboard funcional todavia
+- no hay pantallas para `camps`, `persons`, `inventory`, `transfers`, `expeditions`, `events`, `professions`, `sessions`, `settings` ni `daily-processes`
+- el frontend depende de que el backend y la base de datos esten operativos para validar login y CRUD reales

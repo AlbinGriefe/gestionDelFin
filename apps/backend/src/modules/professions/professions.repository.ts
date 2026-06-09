@@ -28,7 +28,7 @@ export async function countWorkablePersonsInProfession(
     where: {
       id_profession: professionId,
       id_camp: campId,
-      prn_is_accepted: true,
+      prn_admission_status: "accepted",
       prn_is_active: true,
       OR: [{ id_person_health: null }, { person_health: { phs_can_work: true } }],
     },
@@ -40,7 +40,7 @@ export async function findCampWithPersonsForCoverage(campId: number) {
     where: { id_camp: campId },
     include: {
       persons: {
-        where: { prn_is_active: true, prn_is_accepted: true },
+        where: { prn_is_active: true, prn_admission_status: "accepted" },
         include: {
           professions: true,
           person_health: true,
@@ -83,7 +83,11 @@ export async function findPersonsOutOfCampForCoverage(campId: number): Promise<S
 export async function findTemporarilyAssignedPersonIds(campId: number): Promise<Set<number>> {
   const records = await prisma.person_records.findMany({
     where: {
-      persons: { id_camp: campId, prn_is_active: true, prn_is_accepted: true },
+      persons: {
+        id_camp: campId,
+        prn_is_active: true,
+        prn_admission_status: "accepted",
+      },
       prr_event_type: "profession_changed",
     },
     orderBy: { prr_created_at: "desc" },

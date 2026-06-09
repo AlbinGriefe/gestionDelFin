@@ -1,6 +1,11 @@
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
+  calculateMissionProbability,
+  rollPercentage,
+  rollSucceeds,
+} from "../operations/mission-probability.js";
+import {
   transfersRepository,
   type TransferDetailRecord,
   type TransferSummaryRecord,
@@ -11,6 +16,7 @@ import type {
   TransferCreateInput,
   TransferDetail,
   TransferListFilters,
+  TransferMissionOutcome,
   TransferSummary,
   TransferStateUpdateInput,
 } from "./transfers.types.js";
@@ -62,6 +68,49 @@ function ensureCampScope(user: AuthenticatedUser, campId: number) {
 
 function buildFullName(name: string, lastname: string) {
   return `${name} ${lastname}`.trim();
+}
+
+function buildTransferOutcome(
+  transfer: TransferDetailRecord,
+): TransferMissionOutcome {
+  const participants = transfer.application_admission_person;
+  const luckValues = participants.flatMap((participant) =>
+    participant.persons.person_stats
+      ? [participant.persons.person_stats.pst_luck]
+      : [],
+  );
+  const professionBonusPoints = participants.reduce(
+    (total, participant) =>
+      total +
+      Number(participant.persons.professions?.pfs_transfer_bonus_pp ?? 0),
+    0,
+  );
+  const calculation = calculateMissionProbability({
+    baseProbability: Number(
+      transfer.camps_transfers_id_origin_campTocamps.camp_operational_rules
+        ?.cor_transfer_success ?? 75,
+    ),
+    luckValues,
+    professionBonusPoints,
+  });
+  const roll = rollPercentage();
+  const successful = rollSucceeds(calculation.probability, roll);
+
+  return {
+    requestedState: "delivered",
+    resolvedState: successful ? "delivered" : "failed",
+    probability: calculation.probability,
+    roll,
+    baseProbability: calculation.baseProbability,
+    luckBonusPoints: calculation.luckBonusPoints,
+    professionBonusPoints: calculation.professionBonusPoints,
+    failureEventType:
+      successful
+        ? undefined
+        : rollPercentage() <= 50
+          ? "zombie_attack"
+          : "traveler_loss",
+  };
 }
 
 function mapTransferSummary(record: TransferSummaryRecord): TransferSummary {
@@ -184,7 +233,14 @@ function ensureTransitionAuthority(
     return;
   }
 
-  const destinyDrivenStates = ["accepted", "declined", "delivered", "returned", "completed"];
+  const destinyDrivenStates = [
+    "accepted",
+    "declined",
+    "delivered",
+    "failed",
+    "returned",
+    "completed",
+  ];
   const originDrivenStates = ["scheduled", "in_transit", "cancelled"];
 
   if (destinyDrivenStates.includes(nextState) && actor.campId !== transfer.id_destiny_camp) {
@@ -212,8 +268,9 @@ function ensureValidTransition(
     pending: ["accepted", "declined", "cancelled"],
     accepted: ["scheduled", "cancelled"],
     scheduled: ["in_transit", "cancelled"],
-    in_transit: ["delivered", "returned"],
+    in_transit: ["delivered", "failed", "returned"],
     delivered: ["completed"],
+    failed: [],
     declined: [],
     returned: [],
     completed: [],
@@ -383,6 +440,25 @@ export class TransfersService {
     const resourceIds = (input.resources ?? []).map((resource) => resource.id_resource);
 
     if (personIds.length > 0) {
+      const destinationCamp = camps.find(
+        (camp) => camp.id_camp === input.id_destiny_camp,
+      )!;
+      const acceptedAtDestination =
+        await transfersRepository.countAcceptedActivePersons(
+          input.id_destiny_camp,
+        );
+      if (
+        destinationCamp.cmp_max_capacity > 0 &&
+        acceptedAtDestination + personIds.length >
+          destinationCamp.cmp_max_capacity
+      ) {
+        throw new AppError(
+          409,
+          "The destination camp does not have enough capacity.",
+          "TRANSFER_DESTINATION_CAPACITY_EXCEEDED",
+        );
+      }
+
       const persons = await transfersRepository.findPersonsByIds(personIds);
 
       if (persons.length !== personIds.length) {
@@ -394,7 +470,10 @@ export class TransfersService {
       }
 
       persons.forEach((person) => {
-        if (!person.prn_is_active || !person.prn_is_accepted) {
+        if (
+          !person.prn_is_active ||
+          person.prn_admission_status !== "accepted"
+        ) {
           throw new AppError(
             400,
             "Transferred people must be active and accepted.",
@@ -483,9 +562,16 @@ export class TransfersService {
     ensureTransitionAuthority(actor, transfer, input.nextState);
     ensureValidTransition(transfer.tfs_state, input.nextState);
 
+    const missionOutcome =
+      input.nextState === "delivered"
+        ? buildTransferOutcome(transfer)
+        : undefined;
+    const resolvedState = missionOutcome?.resolvedState ?? input.nextState;
+
     const updatedTransfer = await transfersRepository.updateTransferState({
       transferId,
-      nextState: input.nextState,
+      nextState: resolvedState,
+      missionOutcome,
       comments: input.comments,
       actorUserId: actor.id,
     });

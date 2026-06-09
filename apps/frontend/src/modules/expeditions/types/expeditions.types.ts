@@ -27,6 +27,7 @@ export type ExpeditionMemberInput = {
 
 export type ExpeditionCreateInput = {
     id_camp?: number;
+    id_exploration_zone?: number | null;
     exs_name: string;
     exs_leaving_date: Date;
     exs_estimated_days?: number;
@@ -68,6 +69,12 @@ export type ExpeditionCatalogs = {
         isActive: boolean;
         campId: number | null;
     }>;
+    explorationZones: Array<{
+        id: number;
+        campId: number;
+        name: string;
+        risk: string;
+    }>;
 }
 
 export interface ExpeditionSummary {
@@ -78,6 +85,11 @@ export interface ExpeditionSummary {
         id: number;
         name: string;
     };
+    explorationZone: {
+        id: number;
+        name: string;
+        risk: string;
+    } | null;
     createdBy: {
         id: number;
         username: string;

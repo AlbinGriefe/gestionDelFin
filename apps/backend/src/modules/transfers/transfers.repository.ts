@@ -1,10 +1,12 @@
 import prisma, { Prisma } from "../../lib/prisma.js";
 import { AppError } from "../../shared/errors/app-error.js";
+import { applyPersonProgression } from "../persons/person-progression.service.js";
 import type {
   TransferAuditEventInput,
   TransferCatalogFilters,
   TransferCreateInput,
   TransferListFilters,
+  TransferMissionOutcome,
   TransferStateUpdateInput,
 } from "./transfers.types.js";
 
@@ -17,7 +19,11 @@ function toPrismaJsonValue(value: unknown) {
 }
 
 const transferSummaryInclude = {
-  camps_transfers_id_origin_campTocamps: true,
+  camps_transfers_id_origin_campTocamps: {
+    include: {
+      camp_operational_rules: true,
+    },
+  },
   camps_transfers_id_destiny_campTocamps: true,
   users_transfers_id_requested_by_userTousers: {
     select: {
@@ -56,11 +62,9 @@ const transferDetailInclude = {
   application_admission_person: {
     include: {
       persons: {
-        select: {
-          id_person: true,
-          prn_name: true,
-          prn_lastname: true,
-          id_camp: true,
+        include: {
+          professions: true,
+          person_stats: true,
         },
       },
     },
@@ -102,7 +106,7 @@ export class TransfersRepository {
           ? {
               id_camp: input.originCampId,
               prn_is_active: true,
-              prn_is_accepted: true,
+              prn_admission_status: "accepted",
             }
           : {
               prn_is_active: false,
@@ -218,6 +222,16 @@ export class TransfersRepository {
     });
   }
 
+  async countAcceptedActivePersons(campId: number) {
+    return prisma.persons.count({
+      where: {
+        id_camp: campId,
+        prn_is_active: true,
+        prn_admission_status: "accepted",
+      },
+    });
+  }
+
   async findResourcesByIds(resourceIds: number[]) {
     return prisma.resources.findMany({
       where: {
@@ -297,6 +311,7 @@ export class TransfersRepository {
   async updateTransferState(input: {
     transferId: number;
     nextState: TransferStateUpdateInput["nextState"];
+    missionOutcome?: TransferMissionOutcome;
     comments?: string | null;
     actorUserId: number;
   }) {
@@ -357,6 +372,27 @@ export class TransfersRepository {
       }
 
       if (input.nextState === "delivered") {
+        const acceptedAtDestination = await tx.persons.count({
+          where: {
+            id_camp: transfer.id_destiny_camp,
+            prn_is_active: true,
+            prn_admission_status: "accepted",
+          },
+        });
+        const incomingPeople = transfer.application_admission_person.length;
+        const maximumCapacity =
+          transfer.camps_transfers_id_destiny_campTocamps.cmp_max_capacity;
+        if (
+          maximumCapacity > 0 &&
+          acceptedAtDestination + incomingPeople > maximumCapacity
+        ) {
+          throw new AppError(
+            409,
+            "The destination camp no longer has enough capacity.",
+            "TRANSFER_DESTINATION_CAPACITY_EXCEEDED",
+          );
+        }
+
         updateData.id_approved_destiny_by_user = input.actorUserId;
         updateData.tfs_arrival_date = now;
 
@@ -405,6 +441,15 @@ export class TransfersRepository {
               prr_notes: `Moved by transfer #${transfer.id_transfer}.`,
             },
           });
+
+          if (personLine.persons.professions?.pfs_can_transfer) {
+            await applyPersonProgression(tx, {
+              personId: personLine.id_person,
+              sourceType: "transfer",
+              referenceKey: `transfer:${transfer.id_transfer}`,
+              actorUserId: input.actorUserId,
+            });
+          }
 
           const linkedUsers = await tx.users.findMany({
             where: {
@@ -481,6 +526,10 @@ export class TransfersRepository {
         });
       }
 
+      if (input.nextState === "failed") {
+        updateData.tfs_return_date = now;
+      }
+
       await tx.transfers.update({
         where: {
           id_transfer: transfer.id_transfer,
@@ -500,10 +549,47 @@ export class TransfersRepository {
           }),
           evt_new_value: toPrismaJsonValue({
             tfs_state: input.nextState,
+            missionOutcome: input.missionOutcome ?? null,
           }),
           evt_description: `Transfer state changed from ${transfer.tfs_state} to ${input.nextState}.`,
         },
       });
+
+      if (input.missionOutcome?.resolvedState === "failed") {
+        await tx.narrative_events.create({
+          data: {
+            id_camp: transfer.id_origin_camp,
+            id_user: input.actorUserId,
+            nre_type: input.missionOutcome.failureEventType ?? "zombie_attack",
+            nre_status: "applied",
+            nre_source_type: "transfer",
+            nre_reference_id: transfer.id_transfer,
+            nre_probability: input.missionOutcome.probability,
+            nre_roll: input.missionOutcome.roll,
+            nre_participants: transfer.application_admission_person.map(
+              (personLine) => ({
+                personId: personLine.id_person,
+                profession: personLine.persons.professions?.pfs_name ?? null,
+              }),
+            ),
+            nre_effects: {
+              resolvedState: "failed",
+              resourcesLost: transfer.application_admission_resources.map(
+                (resourceLine) => ({
+                  resourceId: resourceLine.id_resource,
+                  quantity: Number(resourceLine.aar_quantity),
+                }),
+              ),
+              originCampId: transfer.id_origin_camp,
+              destinyCampId: transfer.id_destiny_camp,
+            },
+            nre_description:
+              input.missionOutcome.failureEventType === "traveler_loss"
+                ? "The shipment failed after contact with the travelers was lost."
+                : "The shipment failed after a zombie attack.",
+          },
+        });
+      }
 
       return tx.transfers.findUniqueOrThrow({
         where: {

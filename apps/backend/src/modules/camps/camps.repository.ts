@@ -27,7 +27,7 @@ const campSummaryInclude = {
     },
     select: {
       id_person: true,
-      prn_is_accepted: true,
+      prn_admission_status: true,
     },
   },
   users: {
@@ -42,6 +42,7 @@ const campSummaryInclude = {
 
 const campDetailInclude = {
   ...campSummaryInclude,
+  camp_operational_rules: true,
   user_sessions: {
     where: {
       uss_is_expired: false,
@@ -171,6 +172,17 @@ export class CampsRepository {
         data: input.data,
       });
 
+      await tx.camp_operational_rules.create({
+        data: {
+          id_camp: camp.id_camp,
+          cor_admission_rules: {
+            minimumHealth: 1,
+            requireProfileDescription: true,
+            requireAvailableCapacity: true,
+          },
+        },
+      });
+
       for (const event of input.auditEvents) {
         await tx.events.create({
           data: {
@@ -231,6 +243,60 @@ export class CampsRepository {
         },
         include: campDetailInclude,
       });
+    });
+  }
+
+  async upsertOperationalRules(input: {
+    campId: number;
+    actorUserId: number;
+    data: Prisma.camp_operational_rulesUncheckedCreateInput;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      const previous = await tx.camp_operational_rules.findUnique({
+        where: { id_camp: input.campId },
+      });
+      const rules = await tx.camp_operational_rules.upsert({
+        where: { id_camp: input.campId },
+        create: input.data,
+        update: {
+          cor_admission_rules: input.data.cor_admission_rules,
+          cor_expedition_success: input.data.cor_expedition_success,
+          cor_transfer_success: input.data.cor_transfer_success,
+          cor_disease_probability: input.data.cor_disease_probability,
+          cor_valuable_probability: input.data.cor_valuable_probability,
+          cor_disease_threshold: input.data.cor_disease_threshold,
+          cor_updated_at: new Date(),
+        },
+      });
+      await tx.events.create({
+        data: {
+          id_user: input.actorUserId,
+          id_camp: input.campId,
+          evt_entity: "camp_operational_rules",
+          evt_entity_id: rules.id_camp_operational_rule,
+          evt_action: previous ? "updated" : "created",
+          evt_old_value: previous
+            ? toPrismaJsonValue({
+                admissionRules: previous.cor_admission_rules,
+                expeditionSuccess: Number(previous.cor_expedition_success),
+                transferSuccess: Number(previous.cor_transfer_success),
+                diseaseProbability: Number(previous.cor_disease_probability),
+                valuableProbability: Number(previous.cor_valuable_probability),
+                diseaseThreshold: Number(previous.cor_disease_threshold),
+              })
+            : Prisma.JsonNull,
+          evt_new_value: toPrismaJsonValue({
+            admissionRules: rules.cor_admission_rules,
+            expeditionSuccess: Number(rules.cor_expedition_success),
+            transferSuccess: Number(rules.cor_transfer_success),
+            diseaseProbability: Number(rules.cor_disease_probability),
+            valuableProbability: Number(rules.cor_valuable_probability),
+            diseaseThreshold: Number(rules.cor_disease_threshold),
+          }),
+          evt_description: "Camp operational rules updated.",
+        },
+      });
+      return rules;
     });
   }
 }

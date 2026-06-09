@@ -10,6 +10,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 characters."),
   JWT_EXPIRES_IN_HOURS: z.coerce.number().int().positive().default(12),
   SESSION_TIMEOUT_MINUTES: z.coerce.number().int().positive().default(20),
+  AI_PROVIDER: z.enum(["ollama", "rules"]).default("ollama"),
+  OLLAMA_BASE_URL: z.string().url().default("http://localhost:11434"),
+  OLLAMA_MODEL: z.string().min(1).default("qwen2.5:3b"),
+  AI_TIMEOUT_MS: z.coerce.number().int().positive().default(180000),
   ALLOW_INSECURE_PLAINTEXT_PASSWORDS: z
     .enum(["true", "false"])
     .default("false")

@@ -1,5 +1,7 @@
-import type { person_records_prr_event_type } from "../../generated/prisma/client.js";
-import type { AuthenticatedUser } from "../auth/auth.types.js";
+import type {
+  person_records_prr_event_type,
+  persons_prn_admission_status,
+} from "../../generated/prisma/client.js";
 
 export interface PersonListFilters {
   page: number;
@@ -9,22 +11,30 @@ export interface PersonListFilters {
   professionId?: number;
   healthId?: number;
   accepted?: boolean;
+  admissionStatus?: persons_prn_admission_status;
   active?: boolean;
 }
 
 export interface PersonWriteInput {
   id_camp?: number;
-  id_profession?: number;
   id_person_health?: number | null;
   prn_name?: string;
   prn_lastname?: string;
   prn_birth_date?: Date | null;
   prn_document_number?: string | null;
-  prn_photo_url?: string | null;
-  prn_identification_card_url?: string | null;
-  prn_is_accepted?: boolean;
+  prn_profile_description?: string | null;
   prn_is_active?: boolean;
   prn_admission_notes?: string | null;
+}
+
+export interface PersonStatsSummary {
+  health: number;
+  maxHealth: number;
+  strength: number;
+  satiety: number;
+  hydration: number;
+  luck: number;
+  level: number;
 }
 
 export interface PersonsCatalogs {
@@ -63,18 +73,20 @@ export interface PersonSummary {
     id: number;
     name: string;
     description: string;
-  };
+  } | null;
   healthStatus: {
     id: number;
     name: string;
     canWork: boolean;
     isTerminal: boolean;
   } | null;
+  stats: PersonStatsSummary | null;
+  profileDescription: string;
+  profileTemplateId: number | null;
+  admissionStatus: persons_prn_admission_status;
+  isAccepted: boolean;
   birthDate: string | null;
   documentNumber: string | null;
-  photoUrl: string | null;
-  identificationCardUrl: string | null;
-  isAccepted: boolean;
   isActive: boolean;
   admissionNotes: string | null;
   linkedUsersCount: number;
@@ -127,11 +139,4 @@ export interface PersonHealthRecordInput {
   id_person_health: number;
   phr_notes?: string | null;
   phr_recorded_by_user_id?: number | null;
-}
-
-export interface PersonMutationContext {
-  actor: AuthenticatedUser;
-  campId: number;
-  professionId: number;
-  healthId: number | null;
 }

@@ -62,6 +62,7 @@ const transferStateEnum = z.enum([
   "scheduled",
   "in_transit",
   "delivered",
+  "failed",
   "returned",
   "completed",
   "cancelled",

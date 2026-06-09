@@ -1,6 +1,12 @@
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
+  calculateMissionProbability,
+  randomInteger,
+  rollPercentage,
+  rollSucceeds,
+} from "../operations/mission-probability.js";
+import {
   expeditionsRepository,
   type ExpeditionDetailRecord,
   type ExpeditionSummaryRecord,
@@ -11,6 +17,7 @@ import type {
   ExpeditionCreateInput,
   ExpeditionDetail,
   ExpeditionListFilters,
+  ExpeditionMissionOutcome,
   ExpeditionStateUpdateInput,
   ExpeditionSummary,
 } from "./expeditions.types.js";
@@ -77,6 +84,13 @@ function mapExpeditionSummary(record: ExpeditionSummaryRecord): ExpeditionSummar
       id: record.camps.id_camp,
       name: record.camps.cmp_name,
     },
+    explorationZone: record.exploration_zones
+      ? {
+          id: record.exploration_zones.id_exploration_zone,
+          name: record.exploration_zones.exz_name,
+          risk: record.exploration_zones.exz_risk,
+        }
+      : null,
     createdBy: {
       id: record.users.id_user,
       username: record.users.usr_username,
@@ -90,6 +104,77 @@ function mapExpeditionSummary(record: ExpeditionSummaryRecord): ExpeditionSummar
     notes: record.exe_notes,
     createdAt: record.exe_created_at.toISOString(),
     membersCount: record._count.expedition_records,
+  };
+}
+
+function buildExpeditionOutcome(
+  expedition: ExpeditionDetailRecord,
+): ExpeditionMissionOutcome {
+  const rules = expedition.camps.camp_operational_rules;
+  const members = expedition.expedition_records;
+  const luckValues = members.flatMap((member) =>
+    member.persons.person_stats
+      ? [member.persons.person_stats.pst_luck]
+      : [],
+  );
+  const mission = calculateMissionProbability({
+    baseProbability: Number(rules?.cor_expedition_success ?? 70),
+    luckValues,
+  });
+  const roll = rollPercentage();
+  const successful = rollSucceeds(mission.probability, roll);
+  const valuableProfessionBonus = members.reduce(
+    (total, member) =>
+      total + Number(member.persons.professions?.pfs_valuable_bonus_pp ?? 0),
+    0,
+  );
+  const valuable = calculateMissionProbability({
+    baseProbability: Number(rules?.cor_valuable_probability ?? 20),
+    luckValues,
+    professionBonusPoints: valuableProfessionBonus,
+  });
+  const valuableRoll = rollPercentage();
+
+  return {
+    requestedState: "returned",
+    resolvedState: successful ? "returned" : "failed",
+    probability: mission.probability,
+    roll,
+    baseProbability: mission.baseProbability,
+    luckBonusPoints: mission.luckBonusPoints,
+    professionBonusPoints: mission.professionBonusPoints,
+    valuableProbability: valuable.probability,
+    valuableRoll,
+    valuableTriggered:
+      successful && rollSucceeds(valuable.probability, valuableRoll),
+    failureEventType:
+      successful
+        ? undefined
+        : rollPercentage() <= 50
+          ? "zombie_attack"
+          : "traveler_loss",
+    hunterRewards: successful
+      ? members.flatMap((member) => {
+          const profession = member.persons.professions;
+          const probability = Number(profession?.pfs_extra_food_chance_pp ?? 0);
+          if (probability <= 0) return [];
+
+          const hunterRoll = rollPercentage();
+          return [
+            {
+              personId: member.id_person,
+              roll: hunterRoll,
+              probability,
+              quantity: rollSucceeds(probability, hunterRoll)
+                ? randomInteger(
+                    profession?.pfs_extra_food_min ?? 0,
+                    profession?.pfs_extra_food_max ?? 0,
+                  )
+                : 0,
+            },
+          ];
+        })
+      : [],
   };
 }
 
@@ -191,6 +276,12 @@ export class ExpeditionsService {
         isActive: resource.rss_is_active,
         campId: null,
       })),
+      explorationZones: result.explorationZones.map((zone) => ({
+        id: zone.id_exploration_zone,
+        campId: zone.id_camp,
+        name: zone.exz_name,
+        risk: zone.exz_risk,
+      })),
     };
   }
 
@@ -282,6 +373,26 @@ export class ExpeditionsService {
       );
     }
 
+    if (input.id_exploration_zone) {
+      const zone = await expeditionsRepository.findExplorationZoneById(
+        input.id_exploration_zone,
+      );
+      if (!zone || !zone.exz_is_active) {
+        throw new AppError(
+          404,
+          "Exploration zone not found or inactive.",
+          "EXPEDITION_ZONE_NOT_FOUND",
+        );
+      }
+      if (zone.id_camp !== campId) {
+        throw new AppError(
+          400,
+          "The exploration zone must belong to the selected camp.",
+          "EXPEDITION_ZONE_CAMP_MISMATCH",
+        );
+      }
+    }
+
     const personIds = input.members.map((member) => member.id_person);
     const resourceIds = input.members.flatMap((member) =>
       member.id_resource ? [member.id_resource] : [],
@@ -297,7 +408,10 @@ export class ExpeditionsService {
     }
 
     persons.forEach((person) => {
-      if (!person.prn_is_active || !person.prn_is_accepted) {
+      if (
+        !person.prn_is_active ||
+        person.prn_admission_status !== "accepted"
+      ) {
         throw new AppError(
           400,
           "Expedition members must be active and accepted.",
@@ -310,6 +424,14 @@ export class ExpeditionsService {
           400,
           "All expedition members must belong to the selected camp.",
           "EXPEDITION_PERSON_CAMP_MISMATCH",
+        );
+      }
+
+      if (!person.professions?.pfs_can_expedition) {
+        throw new AppError(
+          400,
+          "Every expedition member must have an expedition-compatible profession.",
+          "EXPEDITION_PERSON_PROFESSION_INCOMPATIBLE",
         );
       }
     });
@@ -341,6 +463,7 @@ export class ExpeditionsService {
       data: {
         id_camp: campId,
         id_created_by_user: actor.id,
+        id_exploration_zone: input.id_exploration_zone ?? null,
         exs_name: input.exs_name.trim(),
         exs_leaving_date: input.exs_leaving_date,
         exs_estimated_days: input.exs_estimated_days ?? 1,
@@ -359,6 +482,7 @@ export class ExpeditionsService {
           description: "Expedition created.",
           newValue: {
             id_camp: campId,
+            id_exploration_zone: input.id_exploration_zone ?? null,
             exs_name: input.exs_name.trim(),
             exs_leaving_date: input.exs_leaving_date.toISOString(),
             exs_estimated_days: input.exs_estimated_days ?? 1,
@@ -406,9 +530,15 @@ export class ExpeditionsService {
       });
     }
 
+    const missionOutcome =
+      input.nextState === "returned"
+        ? buildExpeditionOutcome(expedition)
+        : undefined;
+    const resolvedState = missionOutcome?.resolvedState ?? input.nextState;
+
     const updatedExpedition = await expeditionsRepository.updateExpeditionState({
       expeditionId,
-      nextState: input.nextState,
+      nextState: resolvedState,
       exe_resources_used:
         input.exe_resources_used !== undefined
           ? Number(input.exe_resources_used.toFixed(2))
@@ -426,6 +556,7 @@ export class ExpeditionsService {
             : undefined,
         notes: member.notes,
       })),
+      missionOutcome,
       notes: input.notes,
       actorUserId: actor.id,
     });

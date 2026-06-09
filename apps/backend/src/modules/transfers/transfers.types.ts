@@ -42,6 +42,17 @@ export interface TransferStateUpdateInput {
   comments?: string | null;
 }
 
+export interface TransferMissionOutcome {
+  requestedState: "delivered";
+  resolvedState: "delivered" | "failed";
+  probability: number;
+  roll: number;
+  baseProbability: number;
+  luckBonusPoints: number;
+  professionBonusPoints: number;
+  failureEventType?: "zombie_attack" | "traveler_loss";
+}
+
 export interface TransferCatalogs {
   camps: Array<{
     id: number;

@@ -31,7 +31,7 @@ const userSummaryInclude = {
       prn_name: true,
       prn_lastname: true,
       prn_document_number: true,
-      prn_is_accepted: true,
+      prn_admission_status: true,
       prn_is_active: true,
     },
   },
@@ -89,7 +89,7 @@ export class UsersRepository {
       prisma.persons.findMany({
         where: {
           prn_is_active: true,
-          prn_is_accepted: true,
+          prn_admission_status: "accepted",
           camps: {
             cmp_status: "active",
           },

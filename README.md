@@ -46,16 +46,18 @@ Reglas del repo:
 Desde la raiz del proyecto:
 
 ```powershell
-npm install
+npm ci
 ```
 
 Ese comando resuelve los workspaces definidos en [`package.json`](C:/Users/jcaba/OneDrive/Desktop/Stuff/Cooking/Javascript/gestionDelFin/package.json). El codigo fuente real sigue viviendo en `apps/frontend` y `apps/backend`; lo que aparezca dentro de `node_modules/@gestiondelfin/*` son enlaces creados por npm para el monorepo, no carpetas duplicadas.
 
 Convencion del equipo:
 
-- Ejecutar `npm install` solo en la raiz del proyecto.
+- Ejecutar `npm ci` como flujo por defecto para instalar el monorepo.
+- Reservar `npm install` para cambios intencionales de dependencias o regeneracion de `package-lock.json`.
 - Ejecutar scripts de cada app desde la raiz con los scripts `frontend:*` y `backend:*`.
 - No versionar ni revisar cambios dentro de `node_modules`.
+- Revisar cualquier cambio en `package-lock.json` como parte explicita del PR.
 
 ### 1. Base de datos
 
@@ -116,15 +118,17 @@ Ese paso borra el volumen de MySQL. Solo usenlo si no necesitan conservar datos.
 ### 2. Backend
 
 ```powershell
-cd apps/backend
-copy .env.example .env
-npm run prisma:sync
+copy apps\backend\.env.example apps\backend\.env
+npm run backend:prisma:sync
 ```
 
 Antes de iniciar la API, revisar que `apps/backend/.env` tenga al menos:
 
 - `DATABASE_URL="mysql://app_user:app_password@localhost:3306/apocalypse_db"`
 - `JWT_SECRET=una-clave-larga-y-segura`
+- `AI_PROVIDER=ollama`
+- `OLLAMA_BASE_URL=http://localhost:11434`
+- `OLLAMA_MODEL=qwen2.5:3b`
 
 Si la base de datos tiene usuarios con contraseñas en texto plano solo para pruebas locales, se puede usar temporalmente:
 
@@ -135,14 +139,20 @@ ALLOW_INSECURE_PLAINTEXT_PASSWORDS=true
 Con eso listo, pueden arrancar el backend:
 
 ```powershell
-cd apps/backend
-npm run dev
+npm run backend:dev
 ```
 
 ### 3. Frontend
 
 ```powershell
+copy apps\frontend\.env.example apps\frontend\.env
 npm run frontend:dev
+```
+
+El frontend requiere:
+
+```env
+VITE_API_URL=http://localhost:3001/api/v1
 ```
 
 ## Prisma
@@ -167,7 +177,7 @@ npm run prisma:sync
 ## Scripts utiles desde la raiz
 
 ```powershell
-npm install
+npm ci
 npm run db:up
 npm run db:logs
 npm run backend:dev
@@ -175,6 +185,8 @@ npm run backend:build
 npm run backend:typecheck
 npm run backend:prisma:sync
 npm run frontend:dev
+npm run audit:prod
+npm run verify:build
 ```
 
 ## Pruebas y verificaciones actuales
@@ -192,9 +204,9 @@ npm run prisma:sync
 ### Verificacion de TypeScript y build
 
 ```powershell
-cd apps/backend
-npm run typecheck
-npm run build
+npm run backend:typecheck
+npm run backend:build
+npm run frontend:build
 ```
 
 ### Prueba manual de la API
@@ -228,3 +240,32 @@ Body esperado:
   "password": "tu_password"
 }
 ```
+
+### Prueba manual del modulo IA textual
+
+Con el backend corriendo:
+
+```powershell
+curl http://localhost:3001/api/v1/admission-evaluations/health
+```
+
+Importante:
+
+- la IA usa descripcion textual y estadisticas, no imagenes;
+- Ollama Qwen es opcional;
+- si Ollama falla, el backend usa reglas deterministas;
+- para desplegar sin instalar modelos, configurar `AI_PROVIDER=rules`.
+
+## Seguridad de dependencias
+
+Para reducir riesgo de supply chain:
+
+- usar `npm ci` por defecto;
+- correr `npm run audit:prod` antes de aceptar cambios de dependencias;
+- no ejecutar `npm audit fix` automaticamente;
+- mantener Dependabot y alertas de malware activas en GitHub.
+
+Documentacion asociada:
+
+- [`docs/operations/functional-review.md`](C:/Users/jcaba/OneDrive/Desktop/Stuff/Cooking/Javascript/gestionDelFin/docs/operations/functional-review.md)
+- [`docs/operations/dependency-security.md`](C:/Users/jcaba/OneDrive/Desktop/Stuff/Cooking/Javascript/gestionDelFin/docs/operations/dependency-security.md)

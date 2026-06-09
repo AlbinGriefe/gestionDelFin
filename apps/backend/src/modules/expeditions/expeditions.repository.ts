@@ -1,10 +1,12 @@
 import prisma, { Prisma } from "../../lib/prisma.js";
 import { AppError } from "../../shared/errors/app-error.js";
+import { applyPersonProgression } from "../persons/person-progression.service.js";
 import type {
   ExpeditionAuditEventInput,
   ExpeditionCatalogFilters,
   ExpeditionCreateInput,
   ExpeditionListFilters,
+  ExpeditionMissionOutcome,
   ExpeditionStateUpdateInput,
 } from "./expeditions.types.js";
 
@@ -29,7 +31,12 @@ function calculateExtraDays(input: {
 }
 
 const expeditionSummaryInclude = {
-  camps: true,
+  camps: {
+    include: {
+      camp_operational_rules: true,
+    },
+  },
+  exploration_zones: true,
   users: {
     select: {
       id_user: true,
@@ -48,11 +55,9 @@ const expeditionDetailInclude = {
   expedition_records: {
     include: {
       persons: {
-        select: {
-          id_person: true,
-          prn_name: true,
-          prn_lastname: true,
-          id_camp: true,
+        include: {
+          professions: true,
+          person_stats: true,
         },
       },
       resources: {
@@ -77,7 +82,7 @@ export type ExpeditionDetailRecord = Prisma.expeditionsGetPayload<{
 
 export class ExpeditionsRepository {
   async listCatalogs(input: ExpeditionCatalogFilters) {
-    const [camps, persons, resources] = await prisma.$transaction([
+    const [camps, persons, resources, explorationZones] = await prisma.$transaction([
       prisma.camps.findMany({
         where: input.campId
           ? {
@@ -96,7 +101,7 @@ export class ExpeditionsRepository {
           ? {
               id_camp: input.campId,
               prn_is_active: true,
-              prn_is_accepted: true,
+              prn_admission_status: "accepted",
             }
           : {
               id_person: -1,
@@ -111,12 +116,26 @@ export class ExpeditionsRepository {
           rss_name: "asc",
         },
       }),
+      prisma.exploration_zones.findMany({
+        where: input.campId
+          ? {
+              id_camp: input.campId,
+              exz_is_active: true,
+            }
+          : {
+              id_exploration_zone: -1,
+            },
+        orderBy: {
+          exz_name: "asc",
+        },
+      }),
     ]);
 
     return {
       camps,
       persons,
       resources,
+      explorationZones,
     };
   }
 
@@ -176,12 +195,23 @@ export class ExpeditionsRepository {
     });
   }
 
+  async findExplorationZoneById(zoneId: number) {
+    return prisma.exploration_zones.findUnique({
+      where: {
+        id_exploration_zone: zoneId,
+      },
+    });
+  }
+
   async findPersonsByIds(personIds: number[]) {
     return prisma.persons.findMany({
       where: {
         id_person: {
           in: personIds,
         },
+      },
+      include: {
+        professions: true,
       },
     });
   }
@@ -200,6 +230,7 @@ export class ExpeditionsRepository {
     data: {
       id_camp: number;
       id_created_by_user: number;
+      id_exploration_zone: number | null;
       exs_name: string;
       exs_leaving_date: Date;
       exs_estimated_days: number;
@@ -257,6 +288,7 @@ export class ExpeditionsRepository {
     exe_resources_returned?: number;
     arrivingDate?: Date | null;
     members?: ExpeditionStateUpdateInput["members"];
+    missionOutcome?: ExpeditionMissionOutcome;
     notes?: string | null;
     actorUserId: number;
   }) {
@@ -341,6 +373,31 @@ export class ExpeditionsRepository {
               actorUserId: input.actorUserId,
             });
           }
+
+          if (record.persons.professions?.pfs_can_expedition) {
+            await applyPersonProgression(tx, {
+              personId: record.id_person,
+              sourceType: "expedition",
+              referenceKey: `expedition:${expedition.id_expedition}`,
+              actorUserId: input.actorUserId,
+            });
+          }
+        }
+
+        const foodResource = await this.findFoodResource(tx);
+        for (const reward of input.missionOutcome?.hunterRewards ?? []) {
+          if (reward.quantity <= 0 || !foodResource) continue;
+
+          await this.adjustStorageForExpeditionReturn(tx, {
+            campId: expedition.id_camp,
+            expeditionId: expedition.id_expedition,
+            expeditionName: expedition.exs_name,
+            resourceId: foodResource.id_resource,
+            personId: reward.personId,
+            quantity: reward.quantity,
+            actorUserId: input.actorUserId,
+          });
+          totalReturned += reward.quantity;
         }
 
         updateData.exs_arriving_date = arrivingDate;
@@ -396,6 +453,82 @@ export class ExpeditionsRepository {
         },
       });
 
+      if (input.missionOutcome?.resolvedState === "failed") {
+        await tx.narrative_events.create({
+          data: {
+            id_camp: expedition.id_camp,
+            id_user: input.actorUserId,
+            nre_type: input.missionOutcome.failureEventType ?? "zombie_attack",
+            nre_status: "applied",
+            nre_source_type: "expedition",
+            nre_reference_id: expedition.id_expedition,
+            nre_probability: input.missionOutcome.probability,
+            nre_roll: input.missionOutcome.roll,
+            nre_participants: expedition.expedition_records.map((record) => ({
+              personId: record.id_person,
+              profession: record.persons.professions?.pfs_name ?? null,
+            })),
+            nre_effects: {
+              resolvedState: "failed",
+              resourcesReturned: 0,
+              zoneId: expedition.id_exploration_zone,
+            },
+            nre_description:
+              input.missionOutcome.failureEventType === "traveler_loss"
+                ? "The expedition failed after losing contact with its travelers."
+                : "The expedition failed after a zombie attack.",
+          },
+        });
+      }
+
+      const successfulHunterRewards =
+        input.missionOutcome?.hunterRewards.filter(
+          (reward) => reward.quantity > 0,
+        ) ?? [];
+      if (
+        input.missionOutcome?.resolvedState === "returned" &&
+        (input.missionOutcome.valuableTriggered ||
+          successfulHunterRewards.length > 0)
+      ) {
+        await tx.narrative_events.create({
+          data: {
+            id_camp: expedition.id_camp,
+            id_user: input.actorUserId,
+            nre_type: "valuable_resources",
+            nre_status: "applied",
+            nre_source_type: "expedition",
+            nre_reference_id: expedition.id_expedition,
+            nre_probability: input.missionOutcome.valuableTriggered
+              ? input.missionOutcome.valuableProbability
+              : Math.max(
+                  ...successfulHunterRewards.map(
+                    (reward) => reward.probability,
+                  ),
+                ),
+            nre_roll: input.missionOutcome.valuableTriggered
+              ? input.missionOutcome.valuableRoll
+              : Math.min(
+                  ...successfulHunterRewards.map((reward) => reward.roll),
+                ),
+            nre_participants: expedition.expedition_records.map((record) => ({
+              personId: record.id_person,
+              profession: record.persons.professions?.pfs_name ?? null,
+            })),
+            nre_effects: {
+              valuableResources: input.missionOutcome.valuableTriggered,
+              hunterFoodRewards: successfulHunterRewards,
+              resourcesReturned: Number(
+                updateData.exe_resources_returned ??
+                  expedition.exe_resources_returned,
+              ),
+              zoneId: expedition.id_exploration_zone,
+            },
+            nre_description:
+              "The expedition returned with an exceptional resource discovery.",
+          },
+        });
+      }
+
       return tx.expeditions.findUniqueOrThrow({
         where: {
           id_expedition: expedition.id_expedition,
@@ -403,6 +536,34 @@ export class ExpeditionsRepository {
         include: expeditionDetailInclude,
       });
     });
+  }
+
+  private async findFoodResource(tx: Prisma.TransactionClient) {
+    const resources = await tx.resources.findMany({
+      where: {
+        rss_is_active: true,
+      },
+      orderBy: {
+        id_resource: "asc",
+      },
+    });
+    const normalize = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+    return (
+      resources.find((resource) => {
+        const name = normalize(resource.rss_name);
+        return (
+          name.includes("comida") ||
+          name.includes("food") ||
+          name.includes("aliment")
+        );
+      }) ?? null
+    );
   }
 
   private async adjustStorageForExpeditionReturn(

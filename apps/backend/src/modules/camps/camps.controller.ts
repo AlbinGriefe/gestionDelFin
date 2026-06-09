@@ -5,6 +5,7 @@ import {
   createCampSchema,
   listCampsQuerySchema,
   updateCampSchema,
+  updateCampOperationalRulesSchema,
 } from "./camps.schemas.js";
 import { campsService } from "./camps.service.js";
 import type { CampListFilters, CampWriteInput } from "./camps.types.js";
@@ -88,6 +89,25 @@ export async function updateCampController(
       getAuthenticatedUser(request),
     );
 
+    response.status(200).json(createSuccessResponse(result, request.requestId));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateCampOperationalRulesController(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    const { campId } = await campIdParamSchema.parseAsync(request.params);
+    const body = await updateCampOperationalRulesSchema.parseAsync(request.body);
+    const result = await campsService.updateOperationalRules(
+      campId,
+      body,
+      getAuthenticatedUser(request),
+    );
     response.status(200).json(createSuccessResponse(result, request.requestId));
   } catch (error) {
     next(error);

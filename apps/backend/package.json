@@ -11,14 +11,21 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/server.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "seed": "tsx prisma/seed.ts",
     "prisma:validate": "npx.cmd prisma validate --config prisma/prisma.config.ts",
     "prisma:pull": "npx.cmd prisma db pull --config prisma/prisma.config.ts",
     "prisma:format": "npx.cmd prisma format --config prisma/prisma.config.ts",
     "prisma:generate": "npx.cmd prisma generate --config prisma/prisma.config.ts",
     "prisma:sync": "npm run prisma:pull && npm run prisma:format && npm run prisma:generate"
   },
-  "keywords": ["express", "prisma", "jwt", "mysql", "api"],
+  "keywords": [
+    "express",
+    "prisma",
+    "jwt",
+    "mysql",
+    "api"
+  ],
   "author": "Equipo gestionDelFin",
   "license": "ISC",
   "type": "module",
@@ -28,12 +35,15 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",
+    "@types/supertest": "^7.2.0",
     "eslint": "^10.0.3",
     "prettier": "^3.8.1",
     "prisma": "^7.5.0",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.5.0",

@@ -5,7 +5,7 @@ export async function findWorkablePersons(campId: number) {
     where: {
       id_camp: campId,
       prn_is_active: true,
-      prn_is_accepted: true,
+      prn_admission_status: "accepted",
       OR: [
         { id_person_health: null },
         { person_health: { phs_can_work: true } },
@@ -14,6 +14,7 @@ export async function findWorkablePersons(campId: number) {
     include: {
       professions: true,
       person_health: true,
+      person_stats: true,
     },
   });
 }
@@ -23,7 +24,12 @@ export async function findActiveCampPersons(campId: number) {
     where: {
       id_camp: campId,
       prn_is_active: true,
-      prn_is_accepted: true,
+      prn_admission_status: "accepted",
+    },
+    include: {
+      professions: true,
+      person_health: true,
+      person_stats: true,
     },
   });
 }
@@ -60,7 +66,58 @@ export async function findTodayDailyProcessEvent(campId: number) {
 }
 
 export async function findCampById(campId: number) {
-  return prisma.camps.findUnique({ where: { id_camp: campId } });
+  return prisma.camps.findUnique({
+    where: { id_camp: campId },
+    include: { camp_operational_rules: true },
+  });
+}
+
+export async function listDailyAssignments(campId: number, date: Date) {
+  return prisma.daily_assignments.findMany({
+    where: { id_camp: campId, das_date: date },
+    include: {
+      persons: {
+        include: { professions: true },
+      },
+    },
+    orderBy: { id_person: "asc" },
+  });
+}
+
+export async function replaceDailyAssignments(input: {
+  campId: number;
+  date: Date;
+  automatic?: boolean;
+  assignments: Array<{
+    personId: number;
+    task: "food_production" | "water_production" | "camp_support";
+    compatible: boolean;
+  }>;
+}) {
+  return prisma.$transaction(async (tx) => {
+    await tx.daily_assignments.deleteMany({
+      where: { id_camp: input.campId, das_date: input.date },
+    });
+    if (input.assignments.length > 0) {
+      await tx.daily_assignments.createMany({
+        data: input.assignments.map((assignment) => ({
+          id_camp: input.campId,
+          id_person: assignment.personId,
+          das_date: input.date,
+          das_task: assignment.task,
+          das_is_automatic: input.automatic ?? false,
+          das_is_compatible: assignment.compatible,
+        })),
+      });
+    }
+    return tx.daily_assignments.findMany({
+      where: { id_camp: input.campId, das_date: input.date },
+      include: {
+        persons: { include: { professions: true } },
+      },
+      orderBy: { id_person: "asc" },
+    });
+  });
 }
 
 export async function findFoodAndWaterResourceIds() {
@@ -150,12 +207,14 @@ export async function applyPersonProduction(
   },
 ) {
   const entries: [number, number][] = [];
+  let foodApplied = 0;
+  let waterApplied = 0;
 
-  if (input.foodAmount > 0 && input.foodResourceId) {
+  if (input.foodAmount !== 0 && input.foodResourceId) {
     entries.push([input.foodResourceId, input.foodAmount]);
   }
 
-  if (input.waterAmount > 0 && input.waterResourceId) {
+  if (input.waterAmount !== 0 && input.waterResourceId) {
     entries.push([input.waterResourceId, input.waterAmount]);
   }
 
@@ -165,7 +224,8 @@ export async function applyPersonProduction(
     });
 
     const previousQty = existing ? Number(existing.stg_quantity) : 0;
-    const newQty = Number((previousQty + delta).toFixed(2));
+    const appliedDelta = Math.max(-previousQty, delta);
+    const newQty = Number((previousQty + appliedDelta).toFixed(2));
 
     const storage = existing
       ? await tx.storage.update({
@@ -203,13 +263,18 @@ export async function applyPersonProduction(
         id_user: input.actorUserId,
         id_person: input.personId,
         rsm_type: "daily_production",
-        rsm_quantity: delta,
+        rsm_quantity: appliedDelta,
         rsm_reason_for_movement: "Daily production",
         rsm_reference_type: "person",
         rsm_movement_date: input.now,
       },
     });
+
+    if (resourceId === input.foodResourceId) foodApplied += appliedDelta;
+    if (resourceId === input.waterResourceId) waterApplied += appliedDelta;
   }
+
+  return { foodApplied, waterApplied };
 }
 
 export async function applyDailyRations(
@@ -231,14 +296,19 @@ export async function applyDailyRations(
     stockBefore: number;
     stockAfter: number;
     isBelowMinimum: boolean;
+    shortfall: number;
   }[] = [];
 
   for (const storageRecord of input.rationableStorage) {
-    const totalConsumed = Number(
+    const requestedConsumption = Number(
       (input.rationPerPerson * input.eligiblePersonCount).toFixed(2),
     );
 
     const stockBefore = Number(storageRecord.stg_quantity);
+    const totalConsumed = Math.min(stockBefore, requestedConsumption);
+    const shortfall = Number(
+      (requestedConsumption - totalConsumed).toFixed(2),
+    );
     const stockAfter = Number((stockBefore - totalConsumed).toFixed(2));
     const minQuantity = Number(storageRecord.stg_min_quantity);
     const isBelowMinimum = stockAfter < minQuantity;
@@ -281,7 +351,31 @@ export async function applyDailyRations(
       stockBefore,
       stockAfter,
       isBelowMinimum,
+      shortfall,
     });
+
+    if (shortfall > 0) {
+      await tx.narrative_events.create({
+        data: {
+          id_camp: input.campId,
+          id_user: input.actorUserId,
+          nre_type: "scarcity",
+          nre_status: "applied",
+          nre_source_type: "daily_process",
+          nre_participants: {
+            eligiblePersonCount: input.eligiblePersonCount,
+          },
+          nre_effects: {
+            resourceId: storageRecord.id_resource,
+            resourceName: storageRecord.resources.rss_name,
+            requestedConsumption,
+            actualConsumption: totalConsumed,
+            shortfall,
+          },
+          nre_description: `Insufficient ${storageRecord.resources.rss_name} for daily rations.`,
+        },
+      });
+    }
   }
 
   return results;
@@ -306,5 +400,15 @@ export async function writeDailyProcessEvent(
       evt_description: "Automatic daily process: production + rations",
       evt_created_at: input.now,
     },
+  });
+}
+
+export async function findSickHealthStatus() {
+  return prisma.person_health.findFirst({
+    where: {
+      phs_is_active_status: true,
+      phs_name: { contains: "Enfer" },
+    },
+    orderBy: { id_person_health: "asc" },
   });
 }

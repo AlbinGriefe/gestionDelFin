@@ -11,6 +11,7 @@ import type {
   CampAuditEventInput,
   CampDetail,
   CampListFilters,
+  CampOperationalRulesInput,
   CampSummary,
   CampWriteInput,
 } from "./camps.types.js";
@@ -45,8 +46,12 @@ function toNullableNumber(value: Prisma.Decimal | number | string | null | undef
   return Number(value);
 }
 
-function countAcceptedPersons(record: { persons: Array<{ prn_is_accepted: boolean }> }) {
-  return record.persons.filter((person) => person.prn_is_accepted).length;
+function countAcceptedPersons(record: {
+  persons: Array<{ prn_admission_status: string }>;
+}) {
+  return record.persons.filter(
+    (person) => person.prn_admission_status === "accepted",
+  ).length;
 }
 
 function calculateUtilizationRate(activePersons: number, capacity: number) {
@@ -116,6 +121,28 @@ function mapCampDetail(
 
   return {
     ...summary,
+    operationalRules: record.camp_operational_rules
+      ? {
+          admissionRules: record.camp_operational_rules.cor_admission_rules,
+          expeditionSuccessProbability: Number(
+            record.camp_operational_rules.cor_expedition_success,
+          ),
+          transferSuccessProbability: Number(
+            record.camp_operational_rules.cor_transfer_success,
+          ),
+          diseaseProbability: Number(
+            record.camp_operational_rules.cor_disease_probability,
+          ),
+          valuableResourceProbability: Number(
+            record.camp_operational_rules.cor_valuable_probability,
+          ),
+          diseaseHealthThreshold: Number(
+            record.camp_operational_rules.cor_disease_threshold,
+          ),
+          updatedAt:
+            record.camp_operational_rules.cor_updated_at.toISOString(),
+        }
+      : null,
     metrics: {
       acceptedPersons: countAcceptedPersons(record),
       activeSessions: record.user_sessions.length,
@@ -386,6 +413,64 @@ export class CampsService {
 
     const recentEvents = await campsRepository.listCampEvents(campId);
     return mapCampDetail(updatedCamp, recentEvents);
+  }
+
+  async updateOperationalRules(
+    campId: number,
+    input: CampOperationalRulesInput,
+    actor: AuthenticatedUser,
+  ) {
+    if (!isSystemAdministrator(actor)) {
+      throw new AppError(
+        403,
+        "Only system administrators can update operational rules.",
+        "CAMP_RULES_ADMIN_REQUIRED",
+      );
+    }
+    const camp = await campsRepository.findCampById(campId);
+    if (!camp) {
+      throw new AppError(404, "Camp not found.", "CAMP_NOT_FOUND");
+    }
+    const current = camp.camp_operational_rules;
+    const rules = await campsRepository.upsertOperationalRules({
+      campId,
+      actorUserId: actor.id,
+      data: {
+        id_camp: campId,
+        cor_admission_rules:
+          (input.admissionRules ??
+            (current?.cor_admission_rules as Record<string, unknown> | null) ?? {
+              minimumHealth: 1,
+              requireProfileDescription: true,
+              requireAvailableCapacity: true,
+            }) as Prisma.InputJsonValue,
+        cor_expedition_success:
+          input.expeditionSuccessProbability ??
+          Number(current?.cor_expedition_success ?? 70),
+        cor_transfer_success:
+          input.transferSuccessProbability ??
+          Number(current?.cor_transfer_success ?? 75),
+        cor_disease_probability:
+          input.diseaseProbability ??
+          Number(current?.cor_disease_probability ?? 25),
+        cor_valuable_probability:
+          input.valuableResourceProbability ??
+          Number(current?.cor_valuable_probability ?? 20),
+        cor_disease_threshold:
+          input.diseaseHealthThreshold ??
+          Number(current?.cor_disease_threshold ?? 25),
+      },
+    });
+    return {
+      campId,
+      admissionRules: rules.cor_admission_rules,
+      expeditionSuccessProbability: Number(rules.cor_expedition_success),
+      transferSuccessProbability: Number(rules.cor_transfer_success),
+      diseaseProbability: Number(rules.cor_disease_probability),
+      valuableResourceProbability: Number(rules.cor_valuable_probability),
+      diseaseHealthThreshold: Number(rules.cor_disease_threshold),
+      updatedAt: rules.cor_updated_at.toISOString(),
+    };
   }
 }
 

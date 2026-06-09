@@ -32,6 +32,7 @@ export interface DailyRationResult {
         stockBefore: number;
         stockAfter: number;
         isBelowMinimum: boolean;
+        shortfall: number;
     }[];
     totals: {
         resourcesProcessed: number;
@@ -52,6 +53,37 @@ export interface RunDailyProcessInput {
     campId?: number;
     force?: boolean;
 }
+
+export type DailyAssignmentTask =
+    | "food_production"
+    | "water_production"
+    | "camp_support";
+
+export type DailyAssignment = {
+    id: number;
+    campId: number;
+    personId: number;
+    fullName: string;
+    profession: {
+        id: number;
+        name: string;
+    } | null;
+    date: string;
+    task: DailyAssignmentTask;
+    isAutomatic: boolean;
+    isCompatible: boolean;
+    wasSuccessful: boolean | null;
+    result: JsonValue | null;
+};
+
+export type DailyAssignmentsInput = {
+    campId: number;
+    date: string;
+    assignments: Array<{
+        personId: number;
+        task: DailyAssignmentTask;
+    }>;
+};
 
 type JsonValue =
     | string

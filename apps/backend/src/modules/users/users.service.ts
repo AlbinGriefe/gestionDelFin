@@ -65,7 +65,7 @@ function mapUserSummary(record: UserSummaryRecord): UserSummary {
             record.persons.prn_lastname,
           ),
           documentNumber: record.persons.prn_document_number,
-          isAccepted: record.persons.prn_is_accepted,
+          isAccepted: record.persons.prn_admission_status === "accepted",
           isActive: record.persons.prn_is_active,
         }
       : null,
@@ -177,7 +177,10 @@ async function resolveValidatedPerson(personId: number | null | undefined, curre
     throw new AppError(404, "Person not found.", "USER_PERSON_NOT_FOUND");
   }
 
-  if (!person.prn_is_active || !person.prn_is_accepted) {
+  if (
+    !person.prn_is_active ||
+    person.prn_admission_status !== "accepted"
+  ) {
     throw new AppError(
       400,
       "The selected person must be active and accepted.",

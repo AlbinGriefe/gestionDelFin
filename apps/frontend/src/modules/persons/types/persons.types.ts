@@ -8,6 +8,16 @@ type person_records_prr_event_type =
     | "camp_changed"
     | "inactivated"
     | "reactivated"
+    | "admission_evaluated"
+    | "stats_changed"
+    | "level_up"
+
+export type PersonAdmissionStatus =
+    | "pending"
+    | "under_review"
+    | "observe"
+    | "accepted"
+    | "rejected"
 
 export type PersonListFilters = {
     page: number;
@@ -17,20 +27,18 @@ export type PersonListFilters = {
     professionId?: number;
     healthId?: number;
     accepted?: boolean;
+    admissionStatus?: PersonAdmissionStatus;
     active?: boolean;
 }
 
 export type PersonWriteInput = {
     id_camp?: number;
-    id_profession?: number;
     id_person_health?: number | null;
     prn_name?: string;
     prn_lastname?: string;
     prn_birth_date?: Date | null;
     prn_document_number?: string | null;
-    prn_photo_url?: string | null;
-    prn_identification_card_url?: string | null;
-    prn_is_accepted?: boolean;
+    prn_profile_description?: string | null;
     prn_is_active?: boolean;
     prn_admission_notes?: string | null;
 }
@@ -71,17 +79,27 @@ export interface PersonSummary {
         id: number;
         name: string;
         description: string;
-    };
+    } | null;
     healthStatus: {
         id: number;
         name: string;
         canWork: boolean;
         isTerminal: boolean;
     } | null;
+    stats: {
+        health: number;
+        maxHealth: number;
+        strength: number;
+        satiety: number;
+        hydration: number;
+        luck: number;
+        level: number;
+    } | null;
+    profileDescription: string;
+    profileTemplateId: number | null;
+    admissionStatus: PersonAdmissionStatus;
     birthDate: string | null;
     documentNumber: string | null;
-    photoUrl: string | null;
-    identificationCardUrl: string | null;
     isAccepted: boolean;
     isActive: boolean;
     admissionNotes: string | null;

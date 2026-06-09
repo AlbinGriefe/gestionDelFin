@@ -7,6 +7,7 @@ type transfers_tfs_state =
     | "scheduled"
     | "in_transit"
     | "delivered"
+    | "failed"
     | "completed"
 
 type transfers_tfs_type = "resources" | "people" | "mixed"

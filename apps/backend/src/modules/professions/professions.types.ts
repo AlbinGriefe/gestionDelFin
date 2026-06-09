@@ -13,6 +13,16 @@ export interface ProfessionWriteInput {
   pfs_collects_resources?: boolean;
   pfs_food_generated_per_day?: number;
   pfs_water_generated_per_day?: number;
+  pfs_can_expedition?: boolean;
+  pfs_can_transfer?: boolean;
+  pfs_production_penalty?: number;
+  pfs_valuable_bonus_pp?: number;
+  pfs_transfer_bonus_pp?: number;
+  pfs_extra_food_chance_pp?: number;
+  pfs_extra_food_min?: number;
+  pfs_extra_food_max?: number;
+  pfs_healing_food_cost?: number;
+  pfs_healing_amount?: number;
   id_camp?: number | null;
   pfs_is_active?: boolean;
 }
@@ -24,6 +34,16 @@ export interface ProfessionSummary {
   collectsResources: boolean;
   foodGeneratedPerDay: number;
   waterGeneratedPerDay: number;
+  canExpedition: boolean;
+  canTransfer: boolean;
+  productionPenalty: number;
+  valuableBonusPoints: number;
+  transferBonusPoints: number;
+  extraFoodChancePoints: number;
+  extraFoodMin: number;
+  extraFoodMax: number;
+  healingFoodCost: number;
+  healingAmount: number;
   campId: number | null;
   isActive: boolean;
 }

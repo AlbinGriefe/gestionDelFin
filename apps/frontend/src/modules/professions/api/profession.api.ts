@@ -18,8 +18,8 @@ async function listProfessions(filters?: ProfessionListFilters) {
     if (filters?.pageSize) params.append("pageSize", String(filters.pageSize));
     if (filters?.search) params.append("search", filters.search);
     if (filters?.campId) params.append("campId", String(filters.campId));
-    if (filters?.collectsResources) params.append("collectsResources", String(filters.collectsResources));
-    if (filters?.active) params.append("active", String(filters.active));
+    if (filters?.collectsResources !== undefined) params.append("collectsResources", String(filters.collectsResources));
+    if (filters?.active !== undefined) params.append("active", String(filters.active));
 
     return httpClient<ProfessionList>(`/professions?${params.toString()}`);
 }
@@ -36,7 +36,7 @@ async function createProfession(data: ProfessionWriteInput) {
 }
 
 async function getProfessionCoverage(campId: number) {
-    return httpClient<ProfessionCoverageResult>(`/professions/coverage/${campId}`)
+    return httpClient<ProfessionCoverageResult>(`/professions/coverage?campId=${campId}`)
 }
 
 async function updateProfession(professionId: number, data: ProfessionWriteInput) {

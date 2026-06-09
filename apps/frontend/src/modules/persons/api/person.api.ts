@@ -20,8 +20,9 @@ async function listPersons(filters?: PersonListFilters) {
     if (filters?.campId) params.append("campId", String(filters.campId));
     if (filters?.professionId) params.append("professionId", String(filters.professionId));
     if (filters?.healthId) params.append("healthId", String(filters.healthId));
-    if (filters?.accepted) params.append("accepted", String(filters.accepted));
-    if (filters?.active) params.append("active", String(filters.active));
+    if (filters?.accepted !== undefined) params.append("accepted", String(filters.accepted));
+    if (filters?.admissionStatus) params.append("admissionStatus", filters.admissionStatus);
+    if (filters?.active !== undefined) params.append("active", String(filters.active));
 
     return httpClient<PersonList>(`/persons?${params.toString()}`);
 }

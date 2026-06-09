@@ -81,25 +81,30 @@ model application_admission_resources {
 }
 
 model camps {
-  id_camp                                    Int                   @id @default(autoincrement())
-  cmp_name                                   String                @unique(map: "uk_camps_name") @db.VarChar(150)
-  cmp_location                               String                @db.VarChar(255)
-  cmp_latitude                               Decimal?              @db.Decimal(10, 7)
-  cmp_longitude                              Decimal?              @db.Decimal(10, 7)
-  cmp_max_capacity                           Int                   @default(0)
-  cmp_status                                 camps_cmp_status      @default(active)
-  cmp_created_at                             DateTime              @default(now()) @db.DateTime(0)
-  cmp_updated_at                             DateTime              @default(now()) @db.DateTime(0)
+  id_camp                                    Int                     @id @default(autoincrement())
+  cmp_name                                   String                  @unique(map: "uk_camps_name") @db.VarChar(150)
+  cmp_location                               String                  @db.VarChar(255)
+  cmp_latitude                               Decimal?                @db.Decimal(10, 7)
+  cmp_longitude                              Decimal?                @db.Decimal(10, 7)
+  cmp_max_capacity                           Int                     @default(0)
+  cmp_status                                 camps_cmp_status        @default(active)
+  cmp_created_at                             DateTime                @default(now()) @db.DateTime(0)
+  cmp_updated_at                             DateTime                @default(now()) @db.DateTime(0)
   events                                     events[]
   expeditions                                expeditions[]
   persons                                    persons[]
   professions                                professions[]
   resources_movements                        resources_movements[]
   storage                                    storage[]
-  transfers_transfers_id_destiny_campTocamps transfers[]           @relation("transfers_id_destiny_campTocamps")
-  transfers_transfers_id_origin_campTocamps  transfers[]           @relation("transfers_id_origin_campTocamps")
+  transfers_transfers_id_destiny_campTocamps transfers[]             @relation("transfers_id_destiny_campTocamps")
+  transfers_transfers_id_origin_campTocamps  transfers[]             @relation("transfers_id_origin_campTocamps")
   user_sessions                              user_sessions[]
   users                                      users[]
+  camp_operational_rules                     camp_operational_rules?
+  care_actions                               care_actions[]
+  daily_assignments                          daily_assignments[]
+  exploration_zones                          exploration_zones[]
+  narrative_events                           narrative_events[]
 }
 
 model events {
@@ -154,12 +159,15 @@ model expeditions {
   exe_resources_returned Decimal               @default(0.00) @db.Decimal(12, 2)
   exe_notes              String?               @db.VarChar(255)
   exe_created_at         DateTime              @default(now()) @db.DateTime(0)
+  id_exploration_zone    Int?
   expedition_records     expedition_records[]
   camps                  camps                 @relation(fields: [id_camp], references: [id_camp], map: "fk_expeditions_camp")
+  exploration_zones      exploration_zones?    @relation(fields: [id_exploration_zone], references: [id_exploration_zone], map: "fk_expeditions_zone")
   users                  users                 @relation(fields: [id_created_by_user], references: [id_user], map: "fk_expeditions_created_by")
 
   @@index([id_camp], map: "idx_expeditions_camp")
   @@index([id_created_by_user], map: "idx_expeditions_created_by")
+  @@index([id_exploration_zone], map: "idx_expeditions_zone")
 }
 
 model person_health {
@@ -210,15 +218,15 @@ model person_records {
 model persons {
   id_person                    Int                            @id @default(autoincrement())
   id_camp                      Int
-  id_profession                Int
+  id_profession                Int?
   id_person_health             Int?
+  id_profile_template          Int?
   prn_name                     String                         @db.VarChar(100)
   prn_lastname                 String                         @db.VarChar(100)
   prn_birth_date               DateTime?                      @db.Date
   prn_document_number          String?                        @db.VarChar(100)
-  prn_photo_url                String?                        @db.VarChar(512)
-  prn_identification_card_url  String?                        @db.VarChar(512)
-  prn_is_accepted              Boolean                        @default(false)
+  prn_profile_description      String                         @db.Text
+  prn_admission_status         persons_prn_admission_status   @default(pending)
   prn_is_active                Boolean                        @default(true)
   prn_admission_notes          String?                        @db.VarChar(255)
   prn_created_at               DateTime                       @default(now()) @db.DateTime(0)
@@ -230,28 +238,233 @@ model persons {
   person_records               person_records[]
   camps                        camps                          @relation(fields: [id_camp], references: [id_camp], map: "fk_persons_camp")
   person_health                person_health?                 @relation(fields: [id_person_health], references: [id_person_health], map: "fk_persons_health")
-  professions                  professions                    @relation(fields: [id_profession], references: [id_profession], map: "fk_persons_profession")
+  professions                  professions?                   @relation(fields: [id_profession], references: [id_profession], map: "fk_persons_profession")
   resources_movements          resources_movements[]
   users                        users[]
+  admission_evaluations        admission_evaluations[]
+  care_actions_as_doctor       care_actions[]                 @relation("care_actions_doctor")
+  care_actions_as_patient      care_actions[]                 @relation("care_actions_patient")
+  daily_assignments            daily_assignments[]
+  person_progressions          person_progressions[]
+  person_stats                 person_stats?
+  profession_recommendations   profession_recommendations[]
+  profile_templates            profile_templates?             @relation(fields: [id_profile_template], references: [id_profile_template], map: "fk_persons_profile_template")
 
   @@index([id_camp], map: "idx_persons_camp")
   @@index([id_person_health], map: "idx_persons_health")
   @@index([id_profession], map: "idx_persons_profession")
+  @@index([id_profile_template], map: "idx_persons_profile_template")
+  @@index([prn_admission_status], map: "idx_persons_admission_status")
 }
 
 model professions {
-  id_profession               Int       @id @default(autoincrement())
-  pfs_name                    String    @unique(map: "uk_professions_name") @db.VarChar(100)
-  pfs_description             String    @db.VarChar(255)
-  pfs_collects_resources      Boolean   @default(false)
-  pfs_food_generated_per_day  Decimal   @default(0.00) @db.Decimal(10, 2)
-  pfs_water_generated_per_day Decimal   @default(0.00) @db.Decimal(10, 2)
+  id_profession               Int                          @id @default(autoincrement())
+  pfs_name                    String                       @unique(map: "uk_professions_name") @db.VarChar(100)
+  pfs_description             String                       @db.VarChar(255)
+  pfs_collects_resources      Boolean                      @default(false)
+  pfs_food_generated_per_day  Decimal                      @default(0.00) @db.Decimal(10, 2)
+  pfs_water_generated_per_day Decimal                      @default(0.00) @db.Decimal(10, 2)
+  pfs_can_expedition          Boolean                      @default(false)
+  pfs_can_transfer            Boolean                      @default(false)
+  pfs_production_penalty      Decimal                      @default(0.00) @db.Decimal(10, 2)
+  pfs_valuable_bonus_pp       Decimal                      @default(0.00) @db.Decimal(5, 2)
+  pfs_transfer_bonus_pp       Decimal                      @default(0.00) @db.Decimal(5, 2)
+  pfs_extra_food_chance_pp    Decimal                      @default(0.00) @db.Decimal(5, 2)
+  pfs_extra_food_min          Int                          @default(0)
+  pfs_extra_food_max          Int                          @default(0)
+  pfs_healing_food_cost       Decimal                      @default(0.00) @db.Decimal(10, 2)
+  pfs_healing_amount          Int                          @default(0)
   id_camp                     Int?
-  pfs_is_active               Boolean   @default(true)
+  pfs_is_active               Boolean                      @default(true)
   persons                     persons[]
-  camps                       camps?    @relation(fields: [id_camp], references: [id_camp], map: "fk_professions_camp")
+  camps                       camps?                       @relation(fields: [id_camp], references: [id_camp], map: "fk_professions_camp")
+  profile_templates           profile_templates[]
+  profession_recommendations  profession_recommendations[] @relation("recommended_profession")
+  selected_recommendations    profession_recommendations[] @relation("selected_profession")
 
   @@index([id_camp], map: "idx_professions_camp")
+}
+
+model profile_templates {
+  id_profile_template    Int          @id @default(autoincrement())
+  id_expected_profession Int?
+  pft_description        String       @db.Text
+  pft_signals            Json
+  pft_is_active          Boolean      @default(true)
+  pft_created_at         DateTime     @default(now()) @db.DateTime(0)
+  persons                persons[]
+  professions            professions? @relation(fields: [id_expected_profession], references: [id_profession], map: "fk_profile_templates_profession")
+
+  @@index([id_expected_profession], map: "idx_profile_templates_profession")
+}
+
+model person_stats {
+  id_person_stat Int      @id @default(autoincrement())
+  id_person      Int      @unique(map: "uk_person_stats_person")
+  pst_health     Int
+  pst_max_health Int
+  pst_strength   Int
+  pst_satiety    Int
+  pst_hydration  Int
+  pst_luck       Int
+  pst_level      Int      @default(1)
+  pst_updated_at DateTime @default(now()) @db.DateTime(0)
+  persons        persons  @relation(fields: [id_person], references: [id_person], onDelete: Cascade, map: "fk_person_stats_person")
+}
+
+model person_progressions {
+  id_person_progression Int                                 @id @default(autoincrement())
+  id_person             Int
+  ppg_source_type       person_progressions_ppg_source_type
+  ppg_reference_key     String                              @db.VarChar(160)
+  ppg_previous_level    Int
+  ppg_new_level         Int
+  ppg_stats_before      Json
+  ppg_stats_after       Json
+  ppg_created_at        DateTime                            @default(now()) @db.DateTime(0)
+  persons               persons                             @relation(fields: [id_person], references: [id_person], onDelete: Cascade, map: "fk_person_progressions_person")
+
+  @@unique([id_person, ppg_reference_key], map: "uk_person_progressions_reference")
+  @@index([id_person], map: "idx_person_progressions_person")
+}
+
+model admission_evaluations {
+  id_admission_evaluation Int                                      @id @default(autoincrement())
+  id_person               Int
+  id_user_reviewer        Int?
+  ade_provider            String                                   @db.VarChar(50)
+  ade_model_name          String?                                  @db.VarChar(100)
+  ade_confidence          Decimal                                  @db.Decimal(5, 4)
+  ade_decision            admission_evaluations_ade_decision
+  ade_reasons             Json
+  ade_input_snapshot      Json
+  ade_raw_response        Json?
+  ade_user_decision       admission_evaluations_ade_user_decision?
+  ade_user_observation    String?                                  @db.VarChar(255)
+  ade_is_final            Boolean                                  @default(false)
+  ade_created_at          DateTime                                 @default(now()) @db.DateTime(0)
+  persons                 persons                                  @relation(fields: [id_person], references: [id_person], onDelete: Cascade, map: "fk_admission_evaluations_person")
+  users                   users?                                   @relation(fields: [id_user_reviewer], references: [id_user], map: "fk_admission_evaluations_reviewer")
+
+  @@index([id_person], map: "idx_admission_evaluations_person")
+  @@index([id_user_reviewer], map: "idx_admission_evaluations_reviewer")
+}
+
+model profession_recommendations {
+  id_profession_recommendation Int          @id @default(autoincrement())
+  id_person                    Int
+  id_recommended_profession    Int
+  id_selected_profession       Int?
+  id_user_reviewer             Int?
+  pfr_provider                 String       @db.VarChar(50)
+  pfr_model_name               String?      @db.VarChar(100)
+  pfr_confidence               Decimal      @db.Decimal(5, 4)
+  pfr_reasons                  Json
+  pfr_alternatives             Json
+  pfr_input_snapshot           Json
+  pfr_raw_response             Json?
+  pfr_user_observation         String?      @db.VarChar(255)
+  pfr_is_final                 Boolean      @default(false)
+  pfr_created_at               DateTime     @default(now()) @db.DateTime(0)
+  persons                      persons      @relation(fields: [id_person], references: [id_person], onDelete: Cascade, map: "fk_profession_recommendations_person")
+  recommended_profession       professions  @relation("recommended_profession", fields: [id_recommended_profession], references: [id_profession], map: "fk_profession_recommendations_recommended")
+  selected_profession          professions? @relation("selected_profession", fields: [id_selected_profession], references: [id_profession], map: "fk_profession_recommendations_selected")
+  users                        users?       @relation(fields: [id_user_reviewer], references: [id_user], map: "fk_profession_recommendations_reviewer")
+
+  @@index([id_person], map: "idx_profession_recommendations_person")
+  @@index([id_recommended_profession], map: "idx_profession_recommendations_recommended")
+  @@index([id_selected_profession], map: "idx_profession_recommendations_selected")
+}
+
+model camp_operational_rules {
+  id_camp_operational_rule Int      @id @default(autoincrement())
+  id_camp                  Int      @unique(map: "uk_camp_operational_rules_camp")
+  cor_admission_rules      Json
+  cor_expedition_success   Decimal  @default(70.00) @db.Decimal(5, 2)
+  cor_transfer_success     Decimal  @default(75.00) @db.Decimal(5, 2)
+  cor_disease_probability  Decimal  @default(25.00) @db.Decimal(5, 2)
+  cor_valuable_probability Decimal  @default(20.00) @db.Decimal(5, 2)
+  cor_disease_threshold    Decimal  @default(25.00) @db.Decimal(5, 2)
+  cor_updated_at           DateTime @default(now()) @db.DateTime(0)
+  camps                    camps    @relation(fields: [id_camp], references: [id_camp], onDelete: Cascade, map: "fk_camp_operational_rules_camp")
+}
+
+model daily_assignments {
+  id_daily_assignment Int                        @id @default(autoincrement())
+  id_camp             Int
+  id_person           Int
+  das_date            DateTime                   @db.Date
+  das_task            daily_assignments_das_task
+  das_is_automatic    Boolean                    @default(false)
+  das_is_compatible   Boolean                    @default(true)
+  das_was_successful  Boolean?
+  das_result          Json?
+  das_created_at      DateTime                   @default(now()) @db.DateTime(0)
+  camps               camps                      @relation(fields: [id_camp], references: [id_camp], onDelete: Cascade, map: "fk_daily_assignments_camp")
+  persons             persons                    @relation(fields: [id_person], references: [id_person], onDelete: Cascade, map: "fk_daily_assignments_person")
+
+  @@unique([id_person, das_date], map: "uk_daily_assignments_person_date")
+  @@index([id_camp, das_date], map: "idx_daily_assignments_camp_date")
+}
+
+model care_actions {
+  id_care_action    Int      @id @default(autoincrement())
+  id_camp           Int
+  id_doctor         Int
+  id_patient        Int
+  id_user           Int
+  cra_food_cost     Decimal  @db.Decimal(10, 2)
+  cra_health_before Int
+  cra_health_after  Int
+  cra_removed_sick  Boolean  @default(false)
+  cra_notes         String?  @db.VarChar(255)
+  cra_created_at    DateTime @default(now()) @db.DateTime(0)
+  camps             camps    @relation(fields: [id_camp], references: [id_camp], map: "fk_care_actions_camp")
+  doctor            persons  @relation("care_actions_doctor", fields: [id_doctor], references: [id_person], map: "fk_care_actions_doctor")
+  patient           persons  @relation("care_actions_patient", fields: [id_patient], references: [id_person], map: "fk_care_actions_patient")
+  users             users    @relation(fields: [id_user], references: [id_user], map: "fk_care_actions_user")
+
+  @@index([id_camp], map: "idx_care_actions_camp")
+  @@index([id_doctor], map: "idx_care_actions_doctor")
+  @@index([id_patient], map: "idx_care_actions_patient")
+}
+
+model narrative_events {
+  id_narrative_event Int                         @id @default(autoincrement())
+  id_camp            Int
+  id_user            Int?
+  nre_type           narrative_events_nre_type
+  nre_status         narrative_events_nre_status @default(applied)
+  nre_source_type    String                      @db.VarChar(50)
+  nre_reference_id   Int?
+  nre_probability    Decimal?                    @db.Decimal(5, 2)
+  nre_roll           Decimal?                    @db.Decimal(5, 2)
+  nre_participants   Json
+  nre_effects        Json
+  nre_description    String                      @db.VarChar(255)
+  nre_created_at     DateTime                    @default(now()) @db.DateTime(0)
+  camps              camps                       @relation(fields: [id_camp], references: [id_camp], onDelete: Cascade, map: "fk_narrative_events_camp")
+  users              users?                      @relation(fields: [id_user], references: [id_user], map: "fk_narrative_events_user")
+
+  @@index([id_camp, nre_created_at], map: "idx_narrative_events_camp_date")
+  @@index([nre_source_type, nre_reference_id], map: "idx_narrative_events_reference")
+}
+
+model exploration_zones {
+  id_exploration_zone Int                        @id @default(autoincrement())
+  id_camp             Int
+  exz_name            String                     @db.VarChar(120)
+  exz_description     String?                    @db.VarChar(255)
+  exz_latitude        Decimal?                   @db.Decimal(10, 7)
+  exz_longitude       Decimal?                   @db.Decimal(10, 7)
+  exz_risk            exploration_zones_exz_risk @default(medium)
+  exz_is_active       Boolean                    @default(true)
+  exz_created_at      DateTime                   @default(now()) @db.DateTime(0)
+  camps               camps                      @relation(fields: [id_camp], references: [id_camp], onDelete: Cascade, map: "fk_exploration_zones_camp")
+  expeditions         expeditions[]
+
+  @@unique([id_camp, exz_name], map: "uk_exploration_zones_camp_name")
+  @@index([id_camp], map: "idx_exploration_zones_camp")
 }
 
 model resource_types {
@@ -405,17 +618,17 @@ model user_sessions {
 }
 
 model users {
-  id_user                                                Int                     @id @default(autoincrement())
+  id_user                                                Int                          @id @default(autoincrement())
   id_person                                              Int?
   id_role                                                Int
   id_camp                                                Int
-  usr_username                                           String                  @unique(map: "uk_users_username") @db.VarChar(70)
-  usr_email                                              String?                 @unique(map: "uk_users_email") @db.VarChar(150)
-  usr_password                                           String                  @db.VarChar(255)
-  usr_is_active                                          Boolean                 @default(true)
-  usr_last_login_at                                      DateTime?               @db.DateTime(0)
-  usr_created_at                                         DateTime                @default(now()) @db.DateTime(0)
-  usr_updated_at                                         DateTime                @default(now()) @db.DateTime(0)
+  usr_username                                           String                       @unique(map: "uk_users_username") @db.VarChar(70)
+  usr_email                                              String?                      @unique(map: "uk_users_email") @db.VarChar(150)
+  usr_password                                           String                       @db.VarChar(255)
+  usr_is_active                                          Boolean                      @default(true)
+  usr_last_login_at                                      DateTime?                    @db.DateTime(0)
+  usr_created_at                                         DateTime                     @default(now()) @db.DateTime(0)
+  usr_updated_at                                         DateTime                     @default(now()) @db.DateTime(0)
   achievement_users                                      achievement_users[]
   ai_evaluations                                         ai_evaluations[]
   events                                                 events[]
@@ -424,14 +637,18 @@ model users {
   person_records                                         person_records[]
   resources_movements                                    resources_movements[]
   storage_records                                        storage_records[]
-  transfers_transfers_id_accepted_by_userTousers         transfers[]             @relation("transfers_id_accepted_by_userTousers")
-  transfers_transfers_id_approved_destiny_by_userTousers transfers[]             @relation("transfers_id_approved_destiny_by_userTousers")
-  transfers_transfers_id_approved_origin_by_userTousers  transfers[]             @relation("transfers_id_approved_origin_by_userTousers")
-  transfers_transfers_id_requested_by_userTousers        transfers[]             @relation("transfers_id_requested_by_userTousers")
+  transfers_transfers_id_accepted_by_userTousers         transfers[]                  @relation("transfers_id_accepted_by_userTousers")
+  transfers_transfers_id_approved_destiny_by_userTousers transfers[]                  @relation("transfers_id_approved_destiny_by_userTousers")
+  transfers_transfers_id_approved_origin_by_userTousers  transfers[]                  @relation("transfers_id_approved_origin_by_userTousers")
+  transfers_transfers_id_requested_by_userTousers        transfers[]                  @relation("transfers_id_requested_by_userTousers")
   user_sessions                                          user_sessions[]
-  camps                                                  camps                   @relation(fields: [id_camp], references: [id_camp], map: "fk_users_camp")
-  persons                                                persons?                @relation(fields: [id_person], references: [id_person], map: "fk_users_person")
-  roles                                                  roles                   @relation(fields: [id_role], references: [id_role], map: "fk_users_role")
+  camps                                                  camps                        @relation(fields: [id_camp], references: [id_camp], map: "fk_users_camp")
+  persons                                                persons?                     @relation(fields: [id_person], references: [id_person], map: "fk_users_person")
+  roles                                                  roles                        @relation(fields: [id_role], references: [id_role], map: "fk_users_role")
+  admission_evaluations                                  admission_evaluations[]
+  care_actions                                           care_actions[]
+  narrative_events                                       narrative_events[]
+  profession_recommendations                             profession_recommendations[]
 
   @@index([id_camp], map: "idx_users_camp")
   @@index([id_person], map: "idx_users_person")
@@ -448,6 +665,63 @@ enum person_records_prr_event_type {
   camp_changed
   inactivated
   reactivated
+  admission_evaluated
+  stats_changed
+  level_up
+}
+
+enum persons_prn_admission_status {
+  pending
+  under_review
+  observe
+  accepted
+  rejected
+}
+
+enum admission_evaluations_ade_decision {
+  accept
+  observe
+  reject
+}
+
+enum admission_evaluations_ade_user_decision {
+  accept
+  observe
+  reject
+}
+
+enum person_progressions_ppg_source_type {
+  daily_assignment
+  expedition
+  transfer
+  care
+}
+
+enum daily_assignments_das_task {
+  food_production
+  water_production
+  camp_support
+}
+
+enum narrative_events_nre_type {
+  disease
+  scarcity
+  zombie_attack
+  valuable_resources
+  traveler_loss
+}
+
+enum narrative_events_nre_status {
+  generated
+  applied
+  resolved
+}
+
+enum exploration_zones_exz_risk {
+  low
+  medium
+  high
+  critical
 }
 
 enum system_settings_sts_value_type {
@@ -521,6 +795,7 @@ enum transfers_tfs_state {
   returned
   completed
   cancelled
+  failed
 }
 
 enum user_sessions_uss_sign_out_reason {

@@ -44,6 +44,16 @@ function serializeProfession(profession: {
   pfs_collects_resources: boolean;
   pfs_food_generated_per_day: unknown;
   pfs_water_generated_per_day: unknown;
+  pfs_can_expedition: boolean;
+  pfs_can_transfer: boolean;
+  pfs_production_penalty: unknown;
+  pfs_valuable_bonus_pp: unknown;
+  pfs_transfer_bonus_pp: unknown;
+  pfs_extra_food_chance_pp: unknown;
+  pfs_extra_food_min: number;
+  pfs_extra_food_max: number;
+  pfs_healing_food_cost: unknown;
+  pfs_healing_amount: number;
   id_camp: number | null;
   pfs_is_active: boolean;
 }) {
@@ -53,6 +63,16 @@ function serializeProfession(profession: {
     pfs_collects_resources: profession.pfs_collects_resources,
     pfs_food_generated_per_day: Number(profession.pfs_food_generated_per_day),
     pfs_water_generated_per_day: Number(profession.pfs_water_generated_per_day),
+    pfs_can_expedition: profession.pfs_can_expedition,
+    pfs_can_transfer: profession.pfs_can_transfer,
+    pfs_production_penalty: Number(profession.pfs_production_penalty),
+    pfs_valuable_bonus_pp: Number(profession.pfs_valuable_bonus_pp),
+    pfs_transfer_bonus_pp: Number(profession.pfs_transfer_bonus_pp),
+    pfs_extra_food_chance_pp: Number(profession.pfs_extra_food_chance_pp),
+    pfs_extra_food_min: profession.pfs_extra_food_min,
+    pfs_extra_food_max: profession.pfs_extra_food_max,
+    pfs_healing_food_cost: Number(profession.pfs_healing_food_cost),
+    pfs_healing_amount: profession.pfs_healing_amount,
     id_camp: profession.id_camp,
     pfs_is_active: profession.pfs_is_active,
   };
@@ -65,6 +85,16 @@ function mapProfession(record: {
   pfs_collects_resources: boolean;
   pfs_food_generated_per_day: unknown;
   pfs_water_generated_per_day: unknown;
+  pfs_can_expedition: boolean;
+  pfs_can_transfer: boolean;
+  pfs_production_penalty: unknown;
+  pfs_valuable_bonus_pp: unknown;
+  pfs_transfer_bonus_pp: unknown;
+  pfs_extra_food_chance_pp: unknown;
+  pfs_extra_food_min: number;
+  pfs_extra_food_max: number;
+  pfs_healing_food_cost: unknown;
+  pfs_healing_amount: number;
   id_camp: number | null;
   pfs_is_active: boolean;
 }): ProfessionSummary {
@@ -75,6 +105,16 @@ function mapProfession(record: {
     collectsResources: record.pfs_collects_resources,
     foodGeneratedPerDay: Number(record.pfs_food_generated_per_day),
     waterGeneratedPerDay: Number(record.pfs_water_generated_per_day),
+    canExpedition: record.pfs_can_expedition,
+    canTransfer: record.pfs_can_transfer,
+    productionPenalty: Number(record.pfs_production_penalty),
+    valuableBonusPoints: Number(record.pfs_valuable_bonus_pp),
+    transferBonusPoints: Number(record.pfs_transfer_bonus_pp),
+    extraFoodChancePoints: Number(record.pfs_extra_food_chance_pp),
+    extraFoodMin: record.pfs_extra_food_min,
+    extraFoodMax: record.pfs_extra_food_max,
+    healingFoodCost: Number(record.pfs_healing_food_cost),
+    healingAmount: record.pfs_healing_amount,
     campId: record.id_camp,
     isActive: record.pfs_is_active,
   };
@@ -168,6 +208,16 @@ export class ProfessionsService {
         pfs_collects_resources: input.pfs_collects_resources ?? false,
         pfs_food_generated_per_day: input.pfs_food_generated_per_day ?? 0,
         pfs_water_generated_per_day: input.pfs_water_generated_per_day ?? 0,
+        pfs_can_expedition: input.pfs_can_expedition ?? false,
+        pfs_can_transfer: input.pfs_can_transfer ?? false,
+        pfs_production_penalty: input.pfs_production_penalty ?? 0,
+        pfs_valuable_bonus_pp: input.pfs_valuable_bonus_pp ?? 0,
+        pfs_transfer_bonus_pp: input.pfs_transfer_bonus_pp ?? 0,
+        pfs_extra_food_chance_pp: input.pfs_extra_food_chance_pp ?? 0,
+        pfs_extra_food_min: input.pfs_extra_food_min ?? 0,
+        pfs_extra_food_max: input.pfs_extra_food_max ?? 0,
+        pfs_healing_food_cost: input.pfs_healing_food_cost ?? 0,
+        pfs_healing_amount: input.pfs_healing_amount ?? 0,
         id_camp: input.id_camp ?? null,
         pfs_is_active: input.pfs_is_active ?? true,
       },
@@ -227,6 +277,35 @@ export class ProfessionsService {
         input.pfs_water_generated_per_day !== undefined
           ? input.pfs_water_generated_per_day
           : Number(existing.pfs_water_generated_per_day),
+      pfs_can_expedition:
+        input.pfs_can_expedition ?? existing.pfs_can_expedition,
+      pfs_can_transfer: input.pfs_can_transfer ?? existing.pfs_can_transfer,
+      pfs_production_penalty:
+        input.pfs_production_penalty !== undefined
+          ? input.pfs_production_penalty
+          : Number(existing.pfs_production_penalty),
+      pfs_valuable_bonus_pp:
+        input.pfs_valuable_bonus_pp !== undefined
+          ? input.pfs_valuable_bonus_pp
+          : Number(existing.pfs_valuable_bonus_pp),
+      pfs_transfer_bonus_pp:
+        input.pfs_transfer_bonus_pp !== undefined
+          ? input.pfs_transfer_bonus_pp
+          : Number(existing.pfs_transfer_bonus_pp),
+      pfs_extra_food_chance_pp:
+        input.pfs_extra_food_chance_pp !== undefined
+          ? input.pfs_extra_food_chance_pp
+          : Number(existing.pfs_extra_food_chance_pp),
+      pfs_extra_food_min:
+        input.pfs_extra_food_min ?? existing.pfs_extra_food_min,
+      pfs_extra_food_max:
+        input.pfs_extra_food_max ?? existing.pfs_extra_food_max,
+      pfs_healing_food_cost:
+        input.pfs_healing_food_cost !== undefined
+          ? input.pfs_healing_food_cost
+          : Number(existing.pfs_healing_food_cost),
+      pfs_healing_amount:
+        input.pfs_healing_amount ?? existing.pfs_healing_amount,
       id_camp: nextCampId,
       pfs_is_active: input.pfs_is_active ?? existing.pfs_is_active,
     };
@@ -311,6 +390,9 @@ export class ProfessionsService {
 
     for (const person of camp.persons) {
       const profId = person.id_profession;
+      if (!profId || !person.professions) {
+        continue;
+      }
 
       if (!professionMap.has(profId)) {
         professionMap.set(profId, {
@@ -416,7 +498,10 @@ export class ProfessionsService {
     const changes: Parameters<typeof applyBulkProfessionChange>[0]["changes"] = [];
 
     for (const person of persons) {
-      if (!person.prn_is_accepted || !person.prn_is_active) {
+      if (
+        person.prn_admission_status !== "accepted" ||
+        !person.prn_is_active
+      ) {
         skipped.push({
           personId: person.id_person,
           reason: "Person is not active or not accepted.",
@@ -447,6 +532,14 @@ export class ProfessionsService {
         skipped.push({
           personId: person.id_person,
           reason: "Person already belongs to the target profession.",
+        });
+        continue;
+      }
+
+      if (!person.id_profession || !person.professions) {
+        skipped.push({
+          personId: person.id_person,
+          reason: "Person does not have a current profession.",
         });
         continue;
       }
@@ -505,6 +598,14 @@ export class ProfessionsService {
     const changes: Parameters<typeof applyBulkProfessionChange>[0]["changes"] = [];
 
     for (const person of persons) {
+      if (!person.id_profession || !person.professions) {
+        skipped.push({
+          personId: person.id_person,
+          reason: "Person does not have a current profession.",
+        });
+        continue;
+      }
+
       const lastTempRecord = await findLastTemporaryRecord(person.id_person);
 
       if (!lastTempRecord) {

@@ -3,13 +3,11 @@ import type {
   PersonAuditEventInput,
   PersonHealthRecordInput,
   PersonListFilters,
+  PersonStatsSummary,
 } from "./persons.types.js";
 
 function toPrismaJsonValue(value: unknown) {
-  if (value === undefined || value === null) {
-    return Prisma.JsonNull;
-  }
-
+  if (value === undefined || value === null) return Prisma.JsonNull;
   return value as Prisma.InputJsonValue;
 }
 
@@ -17,6 +15,8 @@ const personSummaryInclude = {
   camps: true,
   professions: true,
   person_health: true,
+  person_stats: true,
+  profile_templates: true,
   _count: {
     select: {
       users: true,
@@ -37,13 +37,9 @@ const personDetailInclude = {
     },
   },
   person_health_records: {
-    where: {
-      phr_is_current: true,
-    },
+    where: { phr_is_current: true },
     take: 1,
-    orderBy: {
-      phr_start_date: "desc",
-    },
+    orderBy: { phr_start_date: "desc" },
     include: {
       person_health: true,
       users: {
@@ -56,9 +52,7 @@ const personDetailInclude = {
   },
   person_records: {
     take: 10,
-    orderBy: {
-      prr_created_at: "desc",
-    },
+    orderBy: { prr_created_at: "desc" },
     include: {
       users: {
         select: {
@@ -78,37 +72,63 @@ export type PersonDetailRecord = Prisma.personsGetPayload<{
   include: typeof personDetailInclude;
 }>;
 
+async function writeAuditEvents(
+  tx: Prisma.TransactionClient,
+  input: {
+    personId: number;
+    campId: number;
+    events: PersonAuditEventInput[];
+  },
+) {
+  for (const event of input.events) {
+    await tx.person_records.create({
+      data: {
+        id_person: input.personId,
+        id_user: event.userId ?? null,
+        prr_event_type: event.eventType,
+        prr_notes: event.notes ?? null,
+        prr_old_value: toPrismaJsonValue(event.oldValue),
+        prr_new_value: toPrismaJsonValue(event.newValue),
+      },
+    });
+
+    await tx.events.create({
+      data: {
+        id_user: event.userId ?? null,
+        id_camp: input.campId,
+        evt_entity: "persons",
+        evt_entity_id: input.personId,
+        evt_action: event.eventType,
+        evt_old_value: toPrismaJsonValue(event.oldValue),
+        evt_new_value: toPrismaJsonValue(event.newValue),
+        evt_description: event.notes ?? null,
+      },
+    });
+  }
+}
+
 export class PersonsRepository {
   async listCatalogs() {
     const [camps, professions, healthStatuses] = await prisma.$transaction([
-      prisma.camps.findMany({
-        orderBy: {
-          cmp_name: "asc",
-        },
-      }),
+      prisma.camps.findMany({ orderBy: { cmp_name: "asc" } }),
       prisma.professions.findMany({
-        where: {
-          pfs_is_active: true,
-        },
-        orderBy: {
-          pfs_name: "asc",
-        },
+        where: { pfs_is_active: true },
+        orderBy: { pfs_name: "asc" },
       }),
       prisma.person_health.findMany({
-        where: {
-          phs_is_active_status: true,
-        },
-        orderBy: {
-          phs_name: "asc",
-        },
+        where: { phs_is_active_status: true },
+        orderBy: { phs_name: "asc" },
       }),
     ]);
 
-    return {
-      camps,
-      professions,
-      healthStatuses,
-    };
+    return { camps, professions, healthStatuses };
+  }
+
+  async listActiveProfileTemplates() {
+    return prisma.profile_templates.findMany({
+      where: { pft_is_active: true },
+      orderBy: { id_profile_template: "asc" },
+    });
   }
 
   async listPersons(input: {
@@ -116,68 +136,60 @@ export class PersonsRepository {
     filters: PersonListFilters;
   }) {
     const skip = (input.filters.page - 1) * input.filters.pageSize;
-    const take = input.filters.pageSize;
-
     const [items, total] = await prisma.$transaction([
       prisma.persons.findMany({
         where: input.where,
         skip,
-        take,
+        take: input.filters.pageSize,
         orderBy: [{ prn_lastname: "asc" }, { prn_name: "asc" }],
         include: personSummaryInclude,
       }),
-      prisma.persons.count({
-        where: input.where,
-      }),
+      prisma.persons.count({ where: input.where }),
     ]);
 
-    return {
-      items,
-      total,
-    };
+    return { items, total };
   }
 
   async findPersonById(personId: number) {
     return prisma.persons.findUnique({
-      where: {
-        id_person: personId,
-      },
+      where: { id_person: personId },
       include: personDetailInclude,
     });
   }
 
   async findCampById(campId: number) {
     return prisma.camps.findUnique({
-      where: {
-        id_camp: campId,
-      },
-    });
-  }
-
-  async findProfessionById(professionId: number) {
-    return prisma.professions.findUnique({
-      where: {
-        id_profession: professionId,
-      },
+      where: { id_camp: campId },
+      include: { camp_operational_rules: true },
     });
   }
 
   async findHealthStatusById(healthId: number) {
     return prisma.person_health.findUnique({
-      where: {
-        id_person_health: healthId,
-      },
+      where: { id_person_health: healthId },
     });
   }
 
   async createPerson(input: {
     data: Prisma.personsUncheckedCreateInput;
+    stats: PersonStatsSummary;
     healthRecord?: PersonHealthRecordInput;
     auditEvents: PersonAuditEventInput[];
   }) {
-    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const person = await tx.persons.create({
-        data: input.data,
+    return prisma.$transaction(async (tx) => {
+      const person = await tx.persons.create({ data: input.data });
+
+      await tx.person_stats.create({
+        data: {
+          id_person: person.id_person,
+          pst_health: input.stats.health,
+          pst_max_health: input.stats.maxHealth,
+          pst_strength: input.stats.strength,
+          pst_satiety: input.stats.satiety,
+          pst_hydration: input.stats.hydration,
+          pst_luck: input.stats.luck,
+          pst_level: input.stats.level,
+        },
       });
 
       if (input.healthRecord) {
@@ -193,38 +205,14 @@ export class PersonsRepository {
         });
       }
 
-      const campId = input.data.id_camp as number;
-
-      for (const event of input.auditEvents) {
-        await tx.person_records.create({
-          data: {
-            id_person: person.id_person,
-            id_user: event.userId ?? null,
-            prr_event_type: event.eventType,
-            prr_notes: event.notes ?? null,
-            prr_old_value: toPrismaJsonValue(event.oldValue),
-            prr_new_value: toPrismaJsonValue(event.newValue),
-          },
-        });
-
-        await tx.events.create({
-          data: {
-            id_user: event.userId ?? null,
-            id_camp: campId,
-            evt_entity: "persons",
-            evt_entity_id: person.id_person,
-            evt_action: event.eventType,
-            evt_old_value: toPrismaJsonValue(event.oldValue),
-            evt_new_value: toPrismaJsonValue(event.newValue),
-            evt_description: event.notes ?? null,
-          },
-        });
-      }
+      await writeAuditEvents(tx, {
+        personId: person.id_person,
+        campId: person.id_camp,
+        events: input.auditEvents,
+      });
 
       return tx.persons.findUniqueOrThrow({
-        where: {
-          id_person: person.id_person,
-        },
+        where: { id_person: person.id_person },
         include: personDetailInclude,
       });
     });
@@ -238,12 +226,10 @@ export class PersonsRepository {
     newHealthRecord?: PersonHealthRecordInput;
     auditEvents: PersonAuditEventInput[];
   }) {
-    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    return prisma.$transaction(async (tx) => {
       if (Object.keys(input.data).length > 0) {
         await tx.persons.update({
-          where: {
-            id_person: input.personId,
-          },
+          where: { id_person: input.personId },
           data: input.data,
         });
       }
@@ -274,36 +260,14 @@ export class PersonsRepository {
         });
       }
 
-      for (const event of input.auditEvents) {
-        await tx.person_records.create({
-          data: {
-            id_person: input.personId,
-            id_user: event.userId ?? null,
-            prr_event_type: event.eventType,
-            prr_notes: event.notes ?? null,
-            prr_old_value: toPrismaJsonValue(event.oldValue),
-            prr_new_value: toPrismaJsonValue(event.newValue),
-          },
-        });
-
-        await tx.events.create({
-          data: {
-            id_user: event.userId ?? null,
-            id_camp: input.campId,
-            evt_entity: "persons",
-            evt_entity_id: input.personId,
-            evt_action: event.eventType,
-            evt_old_value: toPrismaJsonValue(event.oldValue),
-            evt_new_value: toPrismaJsonValue(event.newValue),
-            evt_description: event.notes ?? null,
-          },
-        });
-      }
+      await writeAuditEvents(tx, {
+        personId: input.personId,
+        campId: input.campId,
+        events: input.auditEvents,
+      });
 
       return tx.persons.findUniqueOrThrow({
-        where: {
-          id_person: input.personId,
-        },
+        where: { id_person: input.personId },
         include: personDetailInclude,
       });
     });

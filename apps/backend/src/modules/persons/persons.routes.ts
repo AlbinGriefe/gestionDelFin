@@ -1,6 +1,9 @@
 import { Router } from "express";
 
-import { authenticate } from "../../api/v1/middlewares/auth.js";
+import {
+  authenticate,
+  requireRoles,
+} from "../../api/v1/middlewares/auth.js";
 import { validateBody } from "../../api/v1/middlewares/validate-body.js";
 import {
   createPersonController,
@@ -17,9 +20,15 @@ personsRouter.use(authenticate);
 personsRouter.get("/catalogs", getPersonsCatalogsController);
 personsRouter.get("/", listPersonsController);
 personsRouter.get("/:personId", getPersonByIdController);
-personsRouter.post("/", validateBody(createPersonSchema), createPersonController);
+personsRouter.post(
+  "/",
+  requireRoles("Administrador sistema"),
+  validateBody(createPersonSchema),
+  createPersonController,
+);
 personsRouter.patch(
   "/:personId",
+  requireRoles("Administrador sistema"),
   validateBody(updatePersonSchema),
   updatePersonController,
 );

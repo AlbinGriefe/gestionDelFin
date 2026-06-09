@@ -1,5 +1,11 @@
 import { httpClient } from '../../../shared/api/httpClient';
-import type { CampListFilters, CampWriteInput, CampDetail, CampList } from '../types/camps.types';
+import type {
+    CampListFilters,
+    CampWriteInput,
+    CampDetail,
+    CampList,
+    CampOperationalRulesInput,
+} from '../types/camps.types';
 
 async function listCamps(filters?: CampListFilters) {
     const params = new URLSearchParams();
@@ -30,9 +36,17 @@ async function updateCamp(campId: number, data: CampWriteInput) {
     })
 }
 
+async function updateOperationalRules(campId: number, data: CampOperationalRulesInput) {
+    return httpClient<CampDetail["operationalRules"]>(`/camps/${campId}/operational-rules`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+    })
+}
+
 export const campsApi = {
     listCamps,
     getCampById,
     createCamp,
     updateCamp,
+    updateOperationalRules,
 }
