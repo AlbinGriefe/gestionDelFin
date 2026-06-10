@@ -4,7 +4,6 @@ import { useAuth } from "./modules/auth/context/useAuth";
 import { IdleManager } from "./modules/auth/components/IdleManager";
 
 function App() {
-
   const { loading } = useAuth();
 
   if (loading) {
@@ -19,10 +18,7 @@ function App() {
     <>
       <IdleManager />
       <AppRoutes />
-      <Toaster
-        position="top-right"
-        duration={3000}
-      />
+      <Toaster position="top-right" duration={3000} />
     </>
   );
 }

@@ -1,15 +1,15 @@
 .detail-field {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
 }
 
 .detail-field-label {
-    font-size: 11px;
-    color: #aaa;
+  font-size: 11px;
+  color: #aaa;
 }
 
 .detail-field-value {
-    font-size: 13px;
-    color: #111;
+  font-size: 13px;
+  color: #111;
 }

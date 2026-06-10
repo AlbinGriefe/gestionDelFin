@@ -242,11 +242,11 @@ export class SettingsService {
       description:
         input.description !== undefined
           ? input.description
-          : existingSetting?.sts_description ?? null,
+          : (existingSetting?.sts_description ?? null),
       isPublic:
         input.isPublic !== undefined
           ? input.isPublic
-          : existingSetting?.sts_is_public ?? false,
+          : (existingSetting?.sts_is_public ?? false),
       actorUserId: actor.id,
     });
 

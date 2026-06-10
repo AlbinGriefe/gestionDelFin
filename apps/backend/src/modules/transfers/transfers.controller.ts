@@ -30,9 +30,9 @@ export async function getTransferCatalogsController(
   next: NextFunction,
 ) {
   try {
-    const filters = await transferCatalogsQuerySchema.parseAsync(
+    const filters = (await transferCatalogsQuerySchema.parseAsync(
       request.query,
-    ) as TransferCatalogFilters;
+    )) as TransferCatalogFilters;
     const result = await transfersService.getCatalogs(
       filters,
       getAuthenticatedUser(request),
@@ -50,9 +50,9 @@ export async function listTransfersController(
   next: NextFunction,
 ) {
   try {
-    const filters = await listTransfersQuerySchema.parseAsync(
+    const filters = (await listTransfersQuerySchema.parseAsync(
       request.query,
-    ) as TransferListFilters;
+    )) as TransferListFilters;
     const result = await transfersService.listTransfers(
       filters,
       getAuthenticatedUser(request),
@@ -70,7 +70,9 @@ export async function getTransferByIdController(
   next: NextFunction,
 ) {
   try {
-    const { transferId } = await transferIdParamSchema.parseAsync(request.params);
+    const { transferId } = await transferIdParamSchema.parseAsync(
+      request.params,
+    );
     const result = await transfersService.getTransferById(
       transferId,
       getAuthenticatedUser(request),
@@ -106,7 +108,9 @@ export async function updateTransferStateController(
   next: NextFunction,
 ) {
   try {
-    const { transferId } = await transferIdParamSchema.parseAsync(request.params);
+    const { transferId } = await transferIdParamSchema.parseAsync(
+      request.params,
+    );
     const body = await updateTransferStateSchema.parseAsync(request.body);
     const result = await transfersService.updateTransferState(
       transferId,

@@ -124,10 +124,10 @@ export class ProfessionsService {
   async listProfessions(filters: ProfessionListFilters) {
     const search = filters.search?.trim();
     const where = {
-      ...(filters.campId !== undefined
-        ? { id_camp: filters.campId }
+      ...(filters.campId !== undefined ? { id_camp: filters.campId } : {}),
+      ...(filters.active !== undefined
+        ? { pfs_is_active: filters.active }
         : {}),
-      ...(filters.active !== undefined ? { pfs_is_active: filters.active } : {}),
       ...(filters.collectsResources !== undefined
         ? { pfs_collects_resources: filters.collectsResources }
         : {}),
@@ -159,7 +159,8 @@ export class ProfessionsService {
   }
 
   async getProfessionById(professionId: number): Promise<ProfessionSummary> {
-    const profession = await professionsRepository.findProfessionById(professionId);
+    const profession =
+      await professionsRepository.findProfessionById(professionId);
 
     if (!profession) {
       throw new AppError(404, "Profession not found.", "PROFESSION_NOT_FOUND");
@@ -168,11 +169,18 @@ export class ProfessionsService {
     return mapProfession(profession);
   }
 
-  async createProfession(input: ProfessionWriteInput, actor: AuthenticatedUser) {
+  async createProfession(
+    input: ProfessionWriteInput,
+    actor: AuthenticatedUser,
+  ) {
     ensureCanManageProfessions(actor);
 
     if (!input.pfs_name) {
-      throw new AppError(400, "A name is required.", "PROFESSION_NAME_REQUIRED");
+      throw new AppError(
+        400,
+        "A name is required.",
+        "PROFESSION_NAME_REQUIRED",
+      );
     }
 
     if (!input.pfs_description) {
@@ -183,7 +191,9 @@ export class ProfessionsService {
       );
     }
 
-    const existing = await professionsRepository.findProfessionByName(input.pfs_name.trim());
+    const existing = await professionsRepository.findProfessionByName(
+      input.pfs_name.trim(),
+    );
 
     if (existing) {
       throw new AppError(
@@ -234,7 +244,8 @@ export class ProfessionsService {
   ) {
     ensureCanManageProfessions(actor);
 
-    const existing = await professionsRepository.findProfessionById(professionId);
+    const existing =
+      await professionsRepository.findProfessionById(professionId);
 
     if (!existing) {
       throw new AppError(404, "Profession not found.", "PROFESSION_NOT_FOUND");
@@ -267,8 +278,10 @@ export class ProfessionsService {
 
     const nextState = {
       pfs_name: input.pfs_name?.trim() ?? existing.pfs_name,
-      pfs_description: input.pfs_description?.trim() ?? existing.pfs_description,
-      pfs_collects_resources: input.pfs_collects_resources ?? existing.pfs_collects_resources,
+      pfs_description:
+        input.pfs_description?.trim() ?? existing.pfs_description,
+      pfs_collects_resources:
+        input.pfs_collects_resources ?? existing.pfs_collects_resources,
       pfs_food_generated_per_day:
         input.pfs_food_generated_per_day !== undefined
           ? input.pfs_food_generated_per_day
@@ -409,7 +422,8 @@ export class ProfessionsService {
 
       const isOut = outOfCampIds.has(person.id_person);
       const canWork =
-        !person.id_person_health || (person.person_health?.phs_can_work ?? true);
+        !person.id_person_health ||
+        (person.person_health?.phs_can_work ?? true);
       const isTemp = temporaryIds.has(person.id_person);
 
       if (isOut) {
@@ -438,7 +452,8 @@ export class ProfessionsService {
       campId,
       campName: camp.cmp_name,
       professions,
-      totalNeedingCoverage: professions.filter((entry) => entry.needsCoverage).length,
+      totalNeedingCoverage: professions.filter((entry) => entry.needsCoverage)
+        .length,
     };
   }
 
@@ -490,18 +505,18 @@ export class ProfessionsService {
     }
 
     if (workableInTarget > 0) {
-      warnings.push(
-        `Target profession already has ${workableInTarget} active worker(s). Reassignment may not be necessary.`,
+      throw new AppError(
+        409,
+        `Target profession already has ${workableInTarget} active worker(s).`,
+        "PROFESSIONS_TARGET_HAS_COVERAGE",
       );
     }
 
-    const changes: Parameters<typeof applyBulkProfessionChange>[0]["changes"] = [];
+    const changes: Parameters<typeof applyBulkProfessionChange>[0]["changes"] =
+      [];
 
     for (const person of persons) {
-      if (
-        person.prn_admission_status !== "accepted" ||
-        !person.prn_is_active
-      ) {
+      if (person.prn_admission_status !== "accepted" || !person.prn_is_active) {
         skipped.push({
           personId: person.id_person,
           reason: "Person is not active or not accepted.",
@@ -510,7 +525,8 @@ export class ProfessionsService {
       }
 
       const canWork =
-        !person.id_person_health || (person.person_health?.phs_can_work ?? true);
+        !person.id_person_health ||
+        (person.person_health?.phs_can_work ?? true);
 
       if (!canWork) {
         skipped.push({
@@ -595,7 +611,8 @@ export class ProfessionsService {
       }
     }
 
-    const changes: Parameters<typeof applyBulkProfessionChange>[0]["changes"] = [];
+    const changes: Parameters<typeof applyBulkProfessionChange>[0]["changes"] =
+      [];
 
     for (const person of persons) {
       if (!person.id_profession || !person.professions) {
@@ -616,8 +633,13 @@ export class ProfessionsService {
         continue;
       }
 
-      const tempNewValue = lastTempRecord.prr_new_value as Record<string, unknown> | null;
-      const tempProfessionId = tempNewValue?.id_profession as number | undefined;
+      const tempNewValue = lastTempRecord.prr_new_value as Record<
+        string,
+        unknown
+      > | null;
+      const tempProfessionId = tempNewValue?.id_profession as
+        | number
+        | undefined;
 
       if (tempProfessionId !== person.id_profession) {
         skipped.push({
@@ -628,8 +650,13 @@ export class ProfessionsService {
         continue;
       }
 
-      const oldValue = lastTempRecord.prr_old_value as Record<string, unknown> | null;
-      const originalProfessionId = oldValue?.id_profession as number | undefined;
+      const oldValue = lastTempRecord.prr_old_value as Record<
+        string,
+        unknown
+      > | null;
+      const originalProfessionId = oldValue?.id_profession as
+        | number
+        | undefined;
 
       if (!originalProfessionId) {
         skipped.push({
@@ -639,9 +666,8 @@ export class ProfessionsService {
         continue;
       }
 
-      const originalProfession = await professionsRepository.findProfessionById(
-        originalProfessionId,
-      );
+      const originalProfession =
+        await professionsRepository.findProfessionById(originalProfessionId);
 
       if (!originalProfession) {
         skipped.push({

@@ -18,7 +18,8 @@ export default function LoginForm() {
     setError("");
     setSuccess("");
 
-    if (!identity.trim()) return setError("Ingresa tu correo o nombre de usuario.");
+    if (!identity.trim())
+      return setError("Ingresa tu correo o nombre de usuario.");
     if (!password.trim()) return setError("Ingresa tu contraseña.");
 
     try {
@@ -42,7 +43,7 @@ export default function LoginForm() {
           id="identity"
           type="text"
           value={identity}
-          onChange={e => setIdentity(e.target.value)}
+          onChange={(e) => setIdentity(e.target.value)}
           className={styles.input}
           placeholder="usuario@email.com o nombre_usuario"
         />
@@ -57,14 +58,14 @@ export default function LoginForm() {
             id="password"
             type={showPassword ? "text" : "password"}
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             className={styles.input}
             placeholder="••••••••"
           />
           <button
             type="button"
             className={styles.showPasswordBtn}
-            onClick={() => setShowPassword(prev => !prev)}
+            onClick={() => setShowPassword((prev) => !prev)}
           >
             {showPassword ? "Ocultar" : "Mostrar"}
           </button>
@@ -74,11 +75,7 @@ export default function LoginForm() {
       {error && <p className={styles.error}>{error}</p>}
       {success && <p className={styles.success}>{success}</p>}
 
-      <button
-        type="submit"
-        className={styles.submitBtn}
-        disabled={loading}
-      >
+      <button type="submit" className={styles.submitBtn} disabled={loading}>
         {loading ? "Iniciando sesión..." : "Iniciar sesión"}
       </button>
     </form>

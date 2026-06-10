@@ -68,13 +68,13 @@ npm run db:up
 
 Credenciales locales predeterminadas:
 
-| Campo | Valor |
-| --- | --- |
-| Host | `localhost` |
-| Puerto | `3306` |
-| Base | `apocalypse_db` |
-| Usuario | `app_user` |
-| Password | `app_password` |
+| Campo    | Valor           |
+| -------- | --------------- |
+| Host     | `localhost`     |
+| Puerto   | `3306`          |
+| Base     | `apocalypse_db` |
+| Usuario  | `app_user`      |
+| Password | `app_password`  |
 
 La base existente debe respaldarse antes de aplicar la migracion ubicada en:
 
@@ -106,12 +106,12 @@ El seed crea:
 
 Usuarios:
 
-| Usuario | Variable de password | Rol |
-| --- | --- | --- |
-| `admin` | `SEED_ADMIN_PASSWORD` | administrador sistema |
-| `gestion` | `SEED_GESTION_PASSWORD` | gestion recursos |
-| `viajes` | `SEED_VIAJES_PASSWORD` | encargado de viajes y comunicacion |
-| `trabajador` | `SEED_TRABAJADOR_PASSWORD` | trabajador |
+| Usuario      | Variable de password       | Rol                                |
+| ------------ | -------------------------- | ---------------------------------- |
+| `admin`      | `SEED_ADMIN_PASSWORD`      | administrador sistema              |
+| `gestion`    | `SEED_GESTION_PASSWORD`    | gestion recursos                   |
+| `viajes`     | `SEED_VIAJES_PASSWORD`     | encargado de viajes y comunicacion |
+| `trabajador` | `SEED_TRABAJADOR_PASSWORD` | trabajador                         |
 
 ### 5. Desarrollo
 

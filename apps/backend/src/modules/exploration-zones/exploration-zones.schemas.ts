@@ -18,7 +18,10 @@ export const createExplorationZoneSchema = z.object({
   description: z.string().trim().max(255).nullable().optional(),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
-  risk: z.enum(["low", "medium", "high", "critical"]).optional().default("medium"),
+  risk: z
+    .enum(["low", "medium", "high", "critical"])
+    .optional()
+    .default("medium"),
   isActive: z.boolean().optional().default(true),
 });
 

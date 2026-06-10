@@ -38,7 +38,9 @@ function serializeCampState(input: {
   };
 }
 
-function toNullableNumber(value: Prisma.Decimal | number | string | null | undefined): number | null {
+function toNullableNumber(
+  value: Prisma.Decimal | number | string | null | undefined,
+): number | null {
   if (value === undefined || value === null) {
     return null;
   }
@@ -87,8 +89,10 @@ function mapCampSummary(record: CampSummaryRecord): CampSummary {
       professions: record._count.professions,
       storageItems: record._count.storage,
       expeditions: record._count.expeditions,
-      outgoingTransfers: record._count.transfers_transfers_id_origin_campTocamps,
-      incomingTransfers: record._count.transfers_transfers_id_destiny_campTocamps,
+      outgoingTransfers:
+        record._count.transfers_transfers_id_origin_campTocamps,
+      incomingTransfers:
+        record._count.transfers_transfers_id_destiny_campTocamps,
     },
     createdAt: record.cmp_created_at.toISOString(),
     updatedAt: record.cmp_updated_at.toISOString(),
@@ -139,8 +143,7 @@ function mapCampDetail(
           diseaseHealthThreshold: Number(
             record.camp_operational_rules.cor_disease_threshold,
           ),
-          updatedAt:
-            record.camp_operational_rules.cor_updated_at.toISOString(),
+          updatedAt: record.camp_operational_rules.cor_updated_at.toISOString(),
         }
       : null,
     metrics: {
@@ -299,11 +302,17 @@ export class CampsService {
       ],
     });
 
-    const recentEvents = await campsRepository.listCampEvents(createdCamp.id_camp);
+    const recentEvents = await campsRepository.listCampEvents(
+      createdCamp.id_camp,
+    );
     return mapCampDetail(createdCamp, recentEvents);
   }
 
-  async updateCamp(campId: number, input: CampWriteInput, actor: AuthenticatedUser) {
+  async updateCamp(
+    campId: number,
+    input: CampWriteInput,
+    actor: AuthenticatedUser,
+  ) {
     const existingCamp = await campsRepository.findCampById(campId);
 
     if (!existingCamp) {
@@ -325,8 +334,7 @@ export class CampsService {
             ? null
             : Number(input.cmp_longitude)
           : toNullableNumber(existingCamp.cmp_longitude),
-      cmp_max_capacity:
-        input.cmp_max_capacity ?? existingCamp.cmp_max_capacity,
+      cmp_max_capacity: input.cmp_max_capacity ?? existingCamp.cmp_max_capacity,
       cmp_status: input.cmp_status ?? existingCamp.cmp_status,
     };
 
@@ -437,13 +445,12 @@ export class CampsService {
       actorUserId: actor.id,
       data: {
         id_camp: campId,
-        cor_admission_rules:
-          (input.admissionRules ??
-            (current?.cor_admission_rules as Record<string, unknown> | null) ?? {
-              minimumHealth: 1,
-              requireProfileDescription: true,
-              requireAvailableCapacity: true,
-            }) as Prisma.InputJsonValue,
+        cor_admission_rules: (input.admissionRules ??
+          (current?.cor_admission_rules as Record<string, unknown> | null) ?? {
+            minimumHealth: 1,
+            requireProfileDescription: true,
+            requireAvailableCapacity: true,
+          }) as Prisma.InputJsonValue,
         cor_expedition_success:
           input.expeditionSuccessProbability ??
           Number(current?.cor_expedition_success ?? 70),

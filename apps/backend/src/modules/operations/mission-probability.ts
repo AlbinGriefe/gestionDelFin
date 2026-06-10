@@ -10,10 +10,7 @@ export function clampProbability(value: number) {
   );
 }
 
-export function calculateLuckBonus(
-  luckValues: number[],
-  maxLuck = MAX_LUCK,
-) {
+export function calculateLuckBonus(luckValues: number[], maxLuck = MAX_LUCK) {
   if (luckValues.length === 0 || maxLuck <= 0) return 0;
 
   const averageLuck =

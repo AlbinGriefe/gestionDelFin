@@ -35,10 +35,6 @@ function isSystemAdministrator(user: AuthenticatedUser) {
 }
 
 function canManageExpeditions(user: AuthenticatedUser) {
-  if (isSystemAdministrator(user)) {
-    return true;
-  }
-
   const normalizedRole = normalizeRoleName(user.roleName);
   return (
     normalizedRole.includes("viaje") ||
@@ -75,7 +71,9 @@ function buildFullName(name: string, lastname: string) {
   return `${name} ${lastname}`.trim();
 }
 
-function mapExpeditionSummary(record: ExpeditionSummaryRecord): ExpeditionSummary {
+function mapExpeditionSummary(
+  record: ExpeditionSummaryRecord,
+): ExpeditionSummary {
   return {
     id: record.id_expedition,
     name: record.exs_name,
@@ -113,9 +111,7 @@ function buildExpeditionOutcome(
   const rules = expedition.camps.camp_operational_rules;
   const members = expedition.expedition_records;
   const luckValues = members.flatMap((member) =>
-    member.persons.person_stats
-      ? [member.persons.person_stats.pst_luck]
-      : [],
+    member.persons.person_stats ? [member.persons.person_stats.pst_luck] : [],
   );
   const mission = calculateMissionProbability({
     baseProbability: Number(rules?.cor_expedition_success ?? 70),
@@ -147,12 +143,11 @@ function buildExpeditionOutcome(
     valuableRoll,
     valuableTriggered:
       successful && rollSucceeds(valuable.probability, valuableRoll),
-    failureEventType:
-      successful
-        ? undefined
-        : rollPercentage() <= 50
-          ? "zombie_attack"
-          : "traveler_loss",
+    failureEventType: successful
+      ? undefined
+      : rollPercentage() <= 50
+        ? "zombie_attack"
+        : "traveler_loss",
     hunterRewards: successful
       ? members.flatMap((member) => {
           const profession = member.persons.professions;
@@ -186,7 +181,10 @@ function mapExpeditionDetail(
 ): ExpeditionDetail {
   const summary = mapExpeditionSummary(record);
   const members = [...record.expedition_records].sort((left, right) =>
-    buildFullName(left.persons.prn_name, left.persons.prn_lastname).localeCompare(
+    buildFullName(
+      left.persons.prn_name,
+      left.persons.prn_lastname,
+    ).localeCompare(
       buildFullName(right.persons.prn_name, right.persons.prn_lastname),
     ),
   );
@@ -196,7 +194,10 @@ function mapExpeditionDetail(
     members: members.map((member) => ({
       id: member.id_expedition_record,
       personId: member.id_person,
-      fullName: buildFullName(member.persons.prn_name, member.persons.prn_lastname),
+      fullName: buildFullName(
+        member.persons.prn_name,
+        member.persons.prn_lastname,
+      ),
       resourceId: member.id_resource,
       resourceName: member.resources?.rss_name ?? null,
       roleInExpedition: member.exr_role_in_expedition,
@@ -247,7 +248,9 @@ export class ExpeditionsService {
     filters: ExpeditionCatalogFilters,
     actor: AuthenticatedUser,
   ): Promise<ExpeditionCatalogs> {
-    const campId = filters.campId ?? (isSystemAdministrator(actor) ? undefined : actor.campId);
+    const campId =
+      filters.campId ??
+      (isSystemAdministrator(actor) ? undefined : actor.campId);
 
     if (campId) {
       ensureCampScope(actor, campId);
@@ -285,12 +288,17 @@ export class ExpeditionsService {
     };
   }
 
-  async listExpeditions(filters: ExpeditionListFilters, actor: AuthenticatedUser) {
+  async listExpeditions(
+    filters: ExpeditionListFilters,
+    actor: AuthenticatedUser,
+  ) {
     if (filters.campId) {
       ensureCampScope(actor, filters.campId);
     }
 
-    const resolvedCampId = filters.campId ?? (isSystemAdministrator(actor) ? undefined : actor.campId);
+    const resolvedCampId =
+      filters.campId ??
+      (isSystemAdministrator(actor) ? undefined : actor.campId);
     const search = filters.search?.trim();
     const where = {
       ...(resolvedCampId ? { id_camp: resolvedCampId } : {}),
@@ -341,7 +349,8 @@ export class ExpeditionsService {
   }
 
   async getExpeditionById(expeditionId: number, actor: AuthenticatedUser) {
-    const expedition = await expeditionsRepository.findExpeditionById(expeditionId);
+    const expedition =
+      await expeditionsRepository.findExpeditionById(expeditionId);
 
     if (!expedition) {
       throw new AppError(404, "Expedition not found.", "EXPEDITION_NOT_FOUND");
@@ -349,11 +358,15 @@ export class ExpeditionsService {
 
     ensureCampScope(actor, expedition.id_camp);
 
-    const recentEvents = await expeditionsRepository.listExpeditionEvents(expeditionId);
+    const recentEvents =
+      await expeditionsRepository.listExpeditionEvents(expeditionId);
     return mapExpeditionDetail(expedition, recentEvents);
   }
 
-  async createExpedition(input: ExpeditionCreateInput, actor: AuthenticatedUser) {
+  async createExpedition(
+    input: ExpeditionCreateInput,
+    actor: AuthenticatedUser,
+  ) {
     ensureExpeditionManager(actor);
 
     const campId = input.id_camp ?? actor.campId;
@@ -408,10 +421,7 @@ export class ExpeditionsService {
     }
 
     persons.forEach((person) => {
-      if (
-        !person.prn_is_active ||
-        person.prn_admission_status !== "accepted"
-      ) {
+      if (!person.prn_is_active || person.prn_admission_status !== "accepted") {
         throw new AppError(
           400,
           "Expedition members must be active and accepted.",
@@ -438,7 +448,8 @@ export class ExpeditionsService {
 
     if (resourceIds.length > 0) {
       const uniqueResourceIds = [...new Set(resourceIds)];
-      const resources = await expeditionsRepository.findResourcesByIds(uniqueResourceIds);
+      const resources =
+        await expeditionsRepository.findResourcesByIds(uniqueResourceIds);
 
       if (resources.length !== uniqueResourceIds.length) {
         throw new AppError(
@@ -505,7 +516,8 @@ export class ExpeditionsService {
   ) {
     ensureExpeditionManager(actor);
 
-    const expedition = await expeditionsRepository.findExpeditionById(expeditionId);
+    const expedition =
+      await expeditionsRepository.findExpeditionById(expeditionId);
 
     if (!expedition) {
       throw new AppError(404, "Expedition not found.", "EXPEDITION_NOT_FOUND");
@@ -536,32 +548,35 @@ export class ExpeditionsService {
         : undefined;
     const resolvedState = missionOutcome?.resolvedState ?? input.nextState;
 
-    const updatedExpedition = await expeditionsRepository.updateExpeditionState({
-      expeditionId,
-      nextState: resolvedState,
-      exe_resources_used:
-        input.exe_resources_used !== undefined
-          ? Number(input.exe_resources_used.toFixed(2))
-          : undefined,
-      exe_resources_returned:
-        input.exe_resources_returned !== undefined
-          ? Number(input.exe_resources_returned.toFixed(2))
-          : undefined,
-      arrivingDate: input.exs_arriving_date,
-      members: input.members?.map((member) => ({
-        ...member,
-        resourcesFound:
-          member.resourcesFound !== undefined
-            ? Number(member.resourcesFound.toFixed(2))
+    const updatedExpedition = await expeditionsRepository.updateExpeditionState(
+      {
+        expeditionId,
+        nextState: resolvedState,
+        exe_resources_used:
+          input.exe_resources_used !== undefined
+            ? Number(input.exe_resources_used.toFixed(2))
             : undefined,
-        notes: member.notes,
-      })),
-      missionOutcome,
-      notes: input.notes,
-      actorUserId: actor.id,
-    });
+        exe_resources_returned:
+          input.exe_resources_returned !== undefined
+            ? Number(input.exe_resources_returned.toFixed(2))
+            : undefined,
+        arrivingDate: input.exs_arriving_date,
+        members: input.members?.map((member) => ({
+          ...member,
+          resourcesFound:
+            member.resourcesFound !== undefined
+              ? Number(member.resourcesFound.toFixed(2))
+              : undefined,
+          notes: member.notes,
+        })),
+        missionOutcome,
+        notes: input.notes,
+        actorUserId: actor.id,
+      },
+    );
 
-    const recentEvents = await expeditionsRepository.listExpeditionEvents(expeditionId);
+    const recentEvents =
+      await expeditionsRepository.listExpeditionEvents(expeditionId);
     return mapExpeditionDetail(updatedExpedition, recentEvents);
   }
 }

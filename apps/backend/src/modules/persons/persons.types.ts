@@ -63,6 +63,7 @@ export interface PersonsCatalogs {
 
 export interface PersonSummary {
   id: number;
+  identifier: string;
   fullName: string;
   camp: {
     id: number;

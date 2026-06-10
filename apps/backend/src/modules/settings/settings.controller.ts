@@ -2,7 +2,10 @@ import type { NextFunction, Request, Response } from "express";
 
 import { createSuccessResponse } from "../../shared/responses/api-response.js";
 import { settingsService } from "./settings.service.js";
-import { settingKeyParamSchema, updateSettingSchema } from "./settings.schemas.js";
+import {
+  settingKeyParamSchema,
+  updateSettingSchema,
+} from "./settings.schemas.js";
 import type { SettingWriteInput } from "./settings.types.js";
 
 function getAuthenticatedUser(request: Request) {
@@ -33,7 +36,9 @@ export async function listSettingsController(
   next: NextFunction,
 ) {
   try {
-    const result = await settingsService.listSettings(getAuthenticatedUser(request));
+    const result = await settingsService.listSettings(
+      getAuthenticatedUser(request),
+    );
 
     response.status(200).json(createSuccessResponse(result, request.requestId));
   } catch (error) {

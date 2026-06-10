@@ -1,108 +1,108 @@
 .row {
-    cursor: pointer;
-    background-color: #fff;
+  cursor: pointer;
+  background-color: #fff;
 }
 
 .row:hover td {
-    background: #f9f9f7;
+  background: #f9f9f7;
 }
 
 .td {
-    padding: 10px 14px;
-    border-bottom: 0.5px solid #eee;
-    vertical-align: middle;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid #eee;
+  vertical-align: middle;
 }
 
 .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .toggleBtn {
-    background: none;
-    border: 0.5px solid #ccc;
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    color: #666;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
+  background: none;
+  border: 0.5px solid #ccc;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .toggleBtn:hover {
-    background: #f1f1f1;
+  background: #f1f1f1;
 }
 
 .chevron {
-    display: inline-block;
-    transition: transform 0.2s;
-    font-size: 10px;
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 10px;
 }
 
 .chevronOpen {
-    transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .editBtn {
-    background: none;
-    border: 0.5px solid #ccc;
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    color: #185FA5;
-    white-space: nowrap;
+  background: none;
+  border: 0.5px solid #ccc;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #185fa5;
+  white-space: nowrap;
 }
 
 .editBtn:hover {
-    background: #E6F1FB;
-    border-color: #378ADD;
+  background: #e6f1fb;
+  border-color: #378add;
 }
 
 .detailCell {
-    background: #f9f9f7;
-    padding: 12px 14px 14px;
+  background: #f9f9f7;
+  padding: 12px 14px 14px;
 }
 
 .detailGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    align-items: start;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: start;
 }
 
 .historyEntry {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    padding: 6px 0;
-    border-bottom: 0.5px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 0;
+  border-bottom: 0.5px solid #eee;
 }
 
 .historyEntry:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .historyEvent {
-    font-size: 12px;
-    font-weight: 500;
-    color: #333;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
 }
 
 .historyMeta {
-    font-size: 11px;
-    color: #999;
+  font-size: 11px;
+  color: #999;
 }
 
 .historyNotes {
-    font-size: 11px;
-    color: #666;
-    font-style: italic;
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
 }

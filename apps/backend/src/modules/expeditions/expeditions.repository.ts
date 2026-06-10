@@ -24,8 +24,12 @@ function calculateExtraDays(input: {
   estimatedDays: number;
 }) {
   const millisecondsPerDay = 1000 * 60 * 60 * 24;
-  const diffMilliseconds = input.arrivingDate.getTime() - input.leavingDate.getTime();
-  const elapsedDays = Math.max(0, Math.ceil(diffMilliseconds / millisecondsPerDay));
+  const diffMilliseconds =
+    input.arrivingDate.getTime() - input.leavingDate.getTime();
+  const elapsedDays = Math.max(
+    0,
+    Math.ceil(diffMilliseconds / millisecondsPerDay),
+  );
 
   return Math.max(0, elapsedDays - input.estimatedDays);
 }
@@ -82,54 +86,55 @@ export type ExpeditionDetailRecord = Prisma.expeditionsGetPayload<{
 
 export class ExpeditionsRepository {
   async listCatalogs(input: ExpeditionCatalogFilters) {
-    const [camps, persons, resources, explorationZones] = await prisma.$transaction([
-      prisma.camps.findMany({
-        where: input.campId
-          ? {
-              id_camp: input.campId,
-              cmp_status: "active",
-            }
-          : {
-              cmp_status: "active",
-            },
-        orderBy: {
-          cmp_name: "asc",
-        },
-      }),
-      prisma.persons.findMany({
-        where: input.campId
-          ? {
-              id_camp: input.campId,
-              prn_is_active: true,
-              prn_admission_status: "accepted",
-            }
-          : {
-              id_person: -1,
-            },
-        orderBy: [{ prn_lastname: "asc" }, { prn_name: "asc" }],
-      }),
-      prisma.resources.findMany({
-        where: {
-          rss_is_active: true,
-        },
-        orderBy: {
-          rss_name: "asc",
-        },
-      }),
-      prisma.exploration_zones.findMany({
-        where: input.campId
-          ? {
-              id_camp: input.campId,
-              exz_is_active: true,
-            }
-          : {
-              id_exploration_zone: -1,
-            },
-        orderBy: {
-          exz_name: "asc",
-        },
-      }),
-    ]);
+    const [camps, persons, resources, explorationZones] =
+      await prisma.$transaction([
+        prisma.camps.findMany({
+          where: input.campId
+            ? {
+                id_camp: input.campId,
+                cmp_status: "active",
+              }
+            : {
+                cmp_status: "active",
+              },
+          orderBy: {
+            cmp_name: "asc",
+          },
+        }),
+        prisma.persons.findMany({
+          where: input.campId
+            ? {
+                id_camp: input.campId,
+                prn_is_active: true,
+                prn_admission_status: "accepted",
+              }
+            : {
+                id_person: -1,
+              },
+          orderBy: [{ prn_lastname: "asc" }, { prn_name: "asc" }],
+        }),
+        prisma.resources.findMany({
+          where: {
+            rss_is_active: true,
+          },
+          orderBy: {
+            rss_name: "asc",
+          },
+        }),
+        prisma.exploration_zones.findMany({
+          where: input.campId
+            ? {
+                id_camp: input.campId,
+                exz_is_active: true,
+              }
+            : {
+                id_exploration_zone: -1,
+              },
+          orderBy: {
+            exz_name: "asc",
+          },
+        }),
+      ]);
 
     return {
       camps,
@@ -310,6 +315,12 @@ export class ExpeditionsRepository {
       };
 
       if (input.nextState === "in_progress") {
+        const rationsUsed = await this.deductExpeditionRations(tx, {
+          expedition,
+          actorUserId: input.actorUserId,
+        });
+        updateData.exe_resources_used = rationsUsed;
+
         await tx.expedition_records.updateMany({
           where: {
             id_expedition: expedition.id_expedition,
@@ -346,7 +357,7 @@ export class ExpeditionsRepository {
 
           const nextNotes =
             memberUpdate?.notes !== undefined
-              ? memberUpdate.notes ?? null
+              ? (memberUpdate.notes ?? null)
               : record.exr_notes;
 
           await tx.expedition_records.update({
@@ -443,11 +454,12 @@ export class ExpeditionsRepository {
             exs_arriving_date:
               updateData.exs_arriving_date instanceof Date
                 ? updateData.exs_arriving_date.toISOString()
-                : updateData.exs_arriving_date ?? null,
+                : (updateData.exs_arriving_date ?? null),
             exe_resources_used:
               input.exe_resources_used ?? Number(expedition.exe_resources_used),
             exe_resources_returned:
-              updateData.exe_resources_returned ?? Number(expedition.exe_resources_returned),
+              updateData.exe_resources_returned ??
+              Number(expedition.exe_resources_returned),
           }),
           evt_description: `Expedition state changed from ${expedition.exe_state} to ${input.nextState}.`,
         },
@@ -566,6 +578,95 @@ export class ExpeditionsRepository {
     );
   }
 
+  private async deductExpeditionRations(
+    tx: Prisma.TransactionClient,
+    input: {
+      expedition: ExpeditionDetailRecord;
+      actorUserId: number;
+    },
+  ) {
+    const rationLines = input.expedition.expedition_records
+      .map((record) => ({
+        personId: record.id_person,
+        quantity: Number(record.exr_rations_assigned),
+      }))
+      .filter((record) => record.quantity > 0);
+    const total = Number(
+      rationLines.reduce((sum, record) => sum + record.quantity, 0).toFixed(2),
+    );
+
+    if (total === 0) {
+      return 0;
+    }
+
+    const foodResource = await this.findFoodResource(tx);
+    if (!foodResource) {
+      throw new AppError(
+        409,
+        "Food resource is not configured for expedition rations.",
+        "EXPEDITION_FOOD_RESOURCE_MISSING",
+      );
+    }
+
+    const storage = await tx.storage.findUnique({
+      where: {
+        id_camp_id_resource: {
+          id_camp: input.expedition.id_camp,
+          id_resource: foodResource.id_resource,
+        },
+      },
+    });
+    const previousQuantity = Number(storage?.stg_quantity ?? 0);
+
+    if (!storage || previousQuantity < total) {
+      throw new AppError(
+        409,
+        "There is not enough food to start the expedition.",
+        "EXPEDITION_INSUFFICIENT_RATIONS",
+      );
+    }
+
+    const nextQuantity = Number((previousQuantity - total).toFixed(2));
+    const now = new Date();
+    await tx.storage.update({
+      where: { id_storage: storage.id_storage },
+      data: {
+        stg_quantity: nextQuantity,
+        stg_last_updated_at: now,
+      },
+    });
+    await tx.storage_records.create({
+      data: {
+        id_storage: storage.id_storage,
+        id_user: input.actorUserId,
+        str_previous_quantity: previousQuantity,
+        str_new_quantity: nextQuantity,
+        str_reason: `Rations for expedition #${input.expedition.id_expedition}.`,
+        str_is_below_minimum: nextQuantity < Number(storage.stg_min_quantity),
+        str_recorded_at: now,
+      },
+    });
+
+    for (const ration of rationLines) {
+      await tx.resources_movements.create({
+        data: {
+          id_resource: foodResource.id_resource,
+          id_camp: input.expedition.id_camp,
+          id_user: input.actorUserId,
+          id_person: ration.personId,
+          rsm_type: "expedition_out",
+          rsm_quantity: -ration.quantity,
+          rsm_reason_for_movement: `Rations for expedition #${input.expedition.id_expedition}.`,
+          rsm_reference_type: "expedition",
+          id_reference: input.expedition.id_expedition,
+          rsm_movement_date: now,
+        },
+      });
+    }
+
+    return total;
+  }
+
   private async adjustStorageForExpeditionReturn(
     tx: Prisma.TransactionClient,
     input: {
@@ -610,7 +711,8 @@ export class ExpeditionsRepository {
           },
         });
 
-    const isBelowMinimum = nextQuantity < Number(targetStorage.stg_min_quantity);
+    const isBelowMinimum =
+      nextQuantity < Number(targetStorage.stg_min_quantity);
     const reason = `Expedition #${input.expeditionId} (${input.expeditionName}) returned resources.`;
 
     await tx.storage_records.create({

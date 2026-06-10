@@ -1,0 +1,47 @@
+.page {
+  display: grid;
+  min-height: 100svh;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  background: #f4f6f4;
+  padding: 24px;
+  color: #536158;
+  text-align: center;
+}
+
+.page > svg {
+  margin-bottom: 12px;
+  color: #9d3c36;
+}
+
+.page span {
+  color: #9d3c36;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.page h1 {
+  max-width: 520px;
+  margin: 0;
+  color: #17211b;
+  font-size: 30px;
+  font-weight: 760;
+}
+
+.page p {
+  max-width: 470px;
+  font-size: 14px;
+}
+
+.page a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  color: #244b36;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}

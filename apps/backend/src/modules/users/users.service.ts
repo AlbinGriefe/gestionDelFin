@@ -107,7 +107,12 @@ function resolveSessionInvalidationPlan(input: {
   passwordChanged: boolean;
   deactivated: boolean;
 }): SessionInvalidationPlan {
-  if (!input.campChanged && !input.roleChanged && !input.passwordChanged && !input.deactivated) {
+  if (
+    !input.campChanged &&
+    !input.roleChanged &&
+    !input.passwordChanged &&
+    !input.deactivated
+  ) {
     return {
       shouldInvalidate: false,
       reason: "forced",
@@ -146,7 +151,10 @@ async function ensureUniqueUsername(username: string, currentUserId?: number) {
   }
 }
 
-async function ensureUniqueEmail(email: string | null | undefined, currentUserId?: number) {
+async function ensureUniqueEmail(
+  email: string | null | undefined,
+  currentUserId?: number,
+) {
   if (!email) {
     return;
   }
@@ -162,7 +170,10 @@ async function ensureUniqueEmail(email: string | null | undefined, currentUserId
   }
 }
 
-async function resolveValidatedPerson(personId: number | null | undefined, currentUserId?: number) {
+async function resolveValidatedPerson(
+  personId: number | null | undefined,
+  currentUserId?: number,
+) {
   if (personId === undefined) {
     return undefined;
   }
@@ -177,10 +188,7 @@ async function resolveValidatedPerson(personId: number | null | undefined, curre
     throw new AppError(404, "Person not found.", "USER_PERSON_NOT_FOUND");
   }
 
-  if (
-    !person.prn_is_active ||
-    person.prn_admission_status !== "accepted"
-  ) {
+  if (!person.prn_is_active || person.prn_admission_status !== "accepted") {
     throw new AppError(
       400,
       "The selected person must be active and accepted.",
@@ -235,7 +243,9 @@ export class UsersService {
       ...(filters.campId ? { id_camp: filters.campId } : {}),
       ...(filters.roleId ? { id_role: filters.roleId } : {}),
       ...(filters.personId ? { id_person: filters.personId } : {}),
-      ...(filters.active !== undefined ? { usr_is_active: filters.active } : {}),
+      ...(filters.active !== undefined
+        ? { usr_is_active: filters.active }
+        : {}),
       ...(search
         ? {
             OR: [
@@ -367,11 +377,17 @@ export class UsersService {
       auditEvents,
     });
 
-    const recentEvents = await usersRepository.listUserEvents(createdUser.id_user);
+    const recentEvents = await usersRepository.listUserEvents(
+      createdUser.id_user,
+    );
     return mapUserDetail(createdUser, recentEvents);
   }
 
-  async updateUser(userId: number, input: UserWriteInput, actor: AuthenticatedUser) {
+  async updateUser(
+    userId: number,
+    input: UserWriteInput,
+    actor: AuthenticatedUser,
+  ) {
     const existingUser = await usersRepository.findUserById(userId);
 
     if (!existingUser) {
@@ -410,7 +426,8 @@ export class UsersService {
       );
     }
 
-    const nextUsername = input.usr_username?.trim() ?? existingUser.usr_username;
+    const nextUsername =
+      input.usr_username?.trim() ?? existingUser.usr_username;
     const nextEmail =
       input.usr_email !== undefined ? input.usr_email : existingUser.usr_email;
 
@@ -419,7 +436,9 @@ export class UsersService {
 
     const nextState = {
       id_person:
-        input.id_person !== undefined ? input.id_person : existingUser.id_person,
+        input.id_person !== undefined
+          ? input.id_person
+          : existingUser.id_person,
       id_role: nextRoleId,
       id_camp: nextCampId,
       usr_username: nextUsername,

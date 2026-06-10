@@ -36,7 +36,8 @@ export class ResilientTextProvider implements TextAiProvider {
         (profession) =>
           profession.name.toLowerCase() === result.professionName.toLowerCase(),
       );
-      if (!valid) throw new Error("Provider recommended an unknown profession.");
+      if (!valid)
+        throw new Error("Provider recommended an unknown profession.");
       return result;
     } catch {
       return this.fallback.recommendProfession(input);

@@ -19,10 +19,9 @@ const evaluationInclude = {
   },
 } satisfies Prisma.admission_evaluationsInclude;
 
-export type AdmissionEvaluationRecord =
-  Prisma.admission_evaluationsGetPayload<{
-    include: typeof evaluationInclude;
-  }>;
+export type AdmissionEvaluationRecord = Prisma.admission_evaluationsGetPayload<{
+  include: typeof evaluationInclude;
+}>;
 
 export class AdmissionEvaluationsRepository {
   async findPerson(personId: number) {

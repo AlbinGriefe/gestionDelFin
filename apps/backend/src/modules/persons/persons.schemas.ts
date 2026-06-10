@@ -49,7 +49,8 @@ const optionalPositiveInteger = z.preprocess(
 );
 
 const nullablePositiveInteger = z.preprocess(
-  (value) => (value === null || value === "" ? null : parseOptionalInteger(value)),
+  (value) =>
+    value === null || value === "" ? null : parseOptionalInteger(value),
   z.number().int().positive().nullable().optional(),
 );
 
@@ -97,7 +98,10 @@ export const createPersonSchema = z.object({
   id_person_health: nullablePositiveInteger,
   prn_name: z.string().trim().min(1).max(100),
   prn_lastname: z.string().trim().min(1).max(100),
-  prn_birth_date: z.preprocess(parseOptionalDate, z.date().nullable().optional()),
+  prn_birth_date: z.preprocess(
+    parseOptionalDate,
+    z.date().nullable().optional(),
+  ),
   prn_document_number: nullableIdentifierString,
   prn_profile_description: nullableProfileDescription,
   prn_is_active: z.boolean().optional().default(true),
@@ -116,7 +120,10 @@ export const updatePersonSchema = z
       emptyStringToUndefined,
       z.string().trim().min(1).max(100).optional(),
     ),
-    prn_birth_date: z.preprocess(parseOptionalDate, z.date().nullable().optional()),
+    prn_birth_date: z.preprocess(
+      parseOptionalDate,
+      z.date().nullable().optional(),
+    ),
     prn_document_number: nullableIdentifierString,
     prn_profile_description: nullableProfileDescription,
     prn_is_active: z.boolean().optional(),

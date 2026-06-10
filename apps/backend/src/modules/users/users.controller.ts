@@ -30,9 +30,9 @@ export async function listUsersController(
   next: NextFunction,
 ) {
   try {
-    const filters = await listUsersQuerySchema.parseAsync(
+    const filters = (await listUsersQuerySchema.parseAsync(
       request.query,
-    ) as UserListFilters;
+    )) as UserListFilters;
     const result = await usersService.listUsers(filters);
 
     response.status(200).json(createSuccessResponse(result, request.requestId));

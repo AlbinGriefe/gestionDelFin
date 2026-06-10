@@ -12,18 +12,20 @@ function createContractApp() {
   app.post("/persons", validateBody(createPersonSchema), (req, res) => {
     res.status(201).json(req.body);
   });
-  app.use((
-    error: unknown,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction,
-  ) => {
-    if (error instanceof ZodError) {
-      res.status(400).json({ code: "VALIDATION_ERROR" });
-      return;
-    }
-    res.status(500).json({ code: "INTERNAL_SERVER_ERROR" });
-  });
+  app.use(
+    (
+      error: unknown,
+      _req: express.Request,
+      res: express.Response,
+      _next: express.NextFunction,
+    ) => {
+      if (error instanceof ZodError) {
+        res.status(400).json({ code: "VALIDATION_ERROR" });
+        return;
+      }
+      res.status(500).json({ code: "INTERNAL_SERVER_ERROR" });
+    },
+  );
   return app;
 }
 

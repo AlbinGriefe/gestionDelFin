@@ -13,6 +13,7 @@ El enunciado establece que si una profesión se queda sin trabajadores activos (
 Devuelve el estado de cobertura de todas las profesiones activas del campamento.
 
 **Respuesta por profesión:**
+
 ```json
 {
   "profession": { "id": 3, "name": "Médico", ... },
@@ -38,6 +39,7 @@ Devuelve el estado de cobertura de todas las profesiones activas del campamento.
 Mueve un grupo de personas temporalmente a una profesión que necesita cobertura.
 
 **Body:**
+
 ```json
 {
   "targetProfessionId": 3,
@@ -47,6 +49,7 @@ Mueve un grupo de personas temporalmente a una profesión que necesita cobertura
 ```
 
 **Respuesta:**
+
 ```json
 {
   "reassigned": [...],
@@ -74,6 +77,7 @@ Mueve un grupo de personas temporalmente a una profesión que necesita cobertura
 Devuelve a las personas a su profesión original después de la emergencia.
 
 **Body:**
+
 ```json
 {
   "personIds": [12, 15, 18],
@@ -82,6 +86,7 @@ Devuelve a las personas a su profesión original después de la emergencia.
 ```
 
 **Cómo funciona el revert:**
+
 1. Busca el registro más reciente en `person_records` con tipo `profession_changed` donde `prr_new_value.is_temporary === true`.
 2. Toma `prr_old_value.id_profession` como la profesión original.
 3. Verifica que `person.id_profession` coincida con `prr_new_value.id_profession` — si no coincide, significa que fue movida manualmente después y va a `skipped`.

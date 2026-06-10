@@ -30,9 +30,9 @@ export async function getExpeditionsCatalogsController(
   next: NextFunction,
 ) {
   try {
-    const filters = await expeditionCatalogsQuerySchema.parseAsync(
+    const filters = (await expeditionCatalogsQuerySchema.parseAsync(
       request.query,
-    ) as ExpeditionCatalogFilters;
+    )) as ExpeditionCatalogFilters;
     const result = await expeditionsService.getCatalogs(
       filters,
       getAuthenticatedUser(request),
@@ -50,9 +50,9 @@ export async function listExpeditionsController(
   next: NextFunction,
 ) {
   try {
-    const filters = await listExpeditionsQuerySchema.parseAsync(
+    const filters = (await listExpeditionsQuerySchema.parseAsync(
       request.query,
-    ) as ExpeditionListFilters;
+    )) as ExpeditionListFilters;
     const result = await expeditionsService.listExpeditions(
       filters,
       getAuthenticatedUser(request),
@@ -70,7 +70,9 @@ export async function getExpeditionByIdController(
   next: NextFunction,
 ) {
   try {
-    const { expeditionId } = await expeditionIdParamSchema.parseAsync(request.params);
+    const { expeditionId } = await expeditionIdParamSchema.parseAsync(
+      request.params,
+    );
     const result = await expeditionsService.getExpeditionById(
       expeditionId,
       getAuthenticatedUser(request),
@@ -101,12 +103,18 @@ export async function createExpeditionController(
 }
 
 export async function updateExpeditionStateController(
-  request: Request<{ expeditionId: string }, unknown, ExpeditionStateUpdateInput>,
+  request: Request<
+    { expeditionId: string },
+    unknown,
+    ExpeditionStateUpdateInput
+  >,
   response: Response,
   next: NextFunction,
 ) {
   try {
-    const { expeditionId } = await expeditionIdParamSchema.parseAsync(request.params);
+    const { expeditionId } = await expeditionIdParamSchema.parseAsync(
+      request.params,
+    );
     const body = await updateExpeditionStateSchema.parseAsync(request.body);
     const result = await expeditionsService.updateExpeditionState(
       expeditionId,

@@ -37,7 +37,9 @@ export async function createAdmissionEvaluationController(
   next: NextFunction,
 ) {
   try {
-    const input = await createAdmissionEvaluationSchema.parseAsync(request.body);
+    const input = await createAdmissionEvaluationSchema.parseAsync(
+      request.body,
+    );
     const result = await admissionEvaluationsService.evaluate(
       input,
       actor(request),
@@ -54,9 +56,12 @@ export async function confirmAdmissionEvaluationController(
   next: NextFunction,
 ) {
   try {
-    const { evaluationId } =
-      await admissionEvaluationIdParamSchema.parseAsync(request.params);
-    const input = await confirmAdmissionEvaluationSchema.parseAsync(request.body);
+    const { evaluationId } = await admissionEvaluationIdParamSchema.parseAsync(
+      request.params,
+    );
+    const input = await confirmAdmissionEvaluationSchema.parseAsync(
+      request.body,
+    );
     const result = await admissionEvaluationsService.confirm(
       evaluationId,
       input,

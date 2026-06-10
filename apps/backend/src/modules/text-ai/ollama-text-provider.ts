@@ -15,7 +15,10 @@ function extractJson(text: string) {
     const start = trimmed.indexOf("{");
     const end = trimmed.lastIndexOf("}");
     if (start >= 0 && end > start) {
-      return JSON.parse(trimmed.slice(start, end + 1)) as Record<string, unknown>;
+      return JSON.parse(trimmed.slice(start, end + 1)) as Record<
+        string,
+        unknown
+      >;
     }
     throw new Error("Ollama did not return valid JSON.");
   }
@@ -52,7 +55,8 @@ export class OllamaTextProvider implements TextAiProvider {
         throw new Error(`Ollama returned ${response.status}.`);
       }
       const payload = (await response.json()) as { response?: string };
-      if (!payload.response) throw new Error("Ollama returned an empty response.");
+      if (!payload.response)
+        throw new Error("Ollama returned an empty response.");
       return {
         parsed: extractJson(payload.response),
         raw: payload,
@@ -99,7 +103,8 @@ export class OllamaTextProvider implements TextAiProvider {
       input.modelName,
     );
     const professionName = String(response.parsed.professionName ?? "").trim();
-    if (!professionName) throw new Error("Ollama did not recommend a profession.");
+    if (!professionName)
+      throw new Error("Ollama did not recommend a profession.");
     const alternatives = Array.isArray(response.parsed.alternatives)
       ? response.parsed.alternatives
           .map((entry) => entry as Record<string, unknown>)

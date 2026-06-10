@@ -10,12 +10,13 @@ function normalize(value: string) {
     .toLowerCase();
 }
 
-function ensureAdmin(actor: AuthenticatedUser) {
-  if (actor.roleName.trim().toLowerCase() !== "administrador sistema") {
+function ensureResourceManager(actor: AuthenticatedUser) {
+  const role = normalize(actor.roleName);
+  if (!(role.includes("gestion") && role.includes("recurso"))) {
     throw new AppError(
       403,
-      "Only system administrators can register care actions.",
-      "CARE_ACTION_ADMIN_REQUIRED",
+      "Only resource managers can register care actions.",
+      "CARE_ACTION_RESOURCE_MANAGER_REQUIRED",
     );
   }
 }
@@ -29,7 +30,7 @@ export class CareActionsService {
     },
     actor: AuthenticatedUser,
   ) {
-    ensureAdmin(actor);
+    ensureResourceManager(actor);
     if (input.doctorPersonId === input.patientPersonId) {
       throw new AppError(
         400,
@@ -61,7 +62,11 @@ export class CareActionsService {
       ]);
 
       if (!doctor || !patient) {
-        throw new AppError(404, "Doctor or patient not found.", "CARE_PERSON_NOT_FOUND");
+        throw new AppError(
+          404,
+          "Doctor or patient not found.",
+          "CARE_PERSON_NOT_FOUND",
+        );
       }
       if (
         doctor.id_camp !== patient.id_camp ||
@@ -76,7 +81,10 @@ export class CareActionsService {
           "CARE_PERSON_INELIGIBLE",
         );
       }
-      if (!doctor.professions || normalize(doctor.professions.pfs_name) !== "medico") {
+      if (
+        !doctor.professions ||
+        normalize(doctor.professions.pfs_name) !== "medico"
+      ) {
         throw new AppError(
           400,
           "Selected doctor does not have the Medico profession.",
@@ -93,7 +101,11 @@ export class CareActionsService {
 
       const food = resources.find((resource) => {
         const name = normalize(resource.rss_name);
-        return name.includes("comida") || name.includes("food") || name.includes("aliment");
+        return (
+          name.includes("comida") ||
+          name.includes("food") ||
+          name.includes("aliment")
+        );
       });
       if (!food) {
         throw new AppError(
@@ -129,7 +141,7 @@ export class CareActionsService {
       );
       const wasSick = Boolean(
         patient.person_health &&
-          normalize(patient.person_health.phs_name).includes("enfer"),
+        normalize(patient.person_health.phs_name).includes("enfer"),
       );
       const previousFood = Number(storage.stg_quantity);
       const nextFood = Number((previousFood - foodCost).toFixed(2));

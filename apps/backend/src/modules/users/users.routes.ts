@@ -1,9 +1,6 @@
 import { Router } from "express";
 
-import {
-  authenticate,
-  requireRoles,
-} from "../../api/v1/middlewares/auth.js";
+import { authenticate, requireRoles } from "../../api/v1/middlewares/auth.js";
 import { validateBody } from "../../api/v1/middlewares/validate-body.js";
 import {
   createUserController,
@@ -21,6 +18,10 @@ usersRouter.get("/catalogs", getUsersCatalogsController);
 usersRouter.get("/", listUsersController);
 usersRouter.get("/:userId", getUserByIdController);
 usersRouter.post("/", validateBody(createUserSchema), createUserController);
-usersRouter.patch("/:userId", validateBody(updateUserSchema), updateUserController);
+usersRouter.patch(
+  "/:userId",
+  validateBody(updateUserSchema),
+  updateUserController,
+);
 
 export { usersRouter };

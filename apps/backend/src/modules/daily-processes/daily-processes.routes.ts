@@ -4,11 +4,13 @@ import {
   getDailyProcessStatusController,
   getDailyAssignmentsController,
   runDailyProcessController,
+  runScheduledDailyProcessesController,
   updateDailyAssignmentsController,
 } from "./daily-processes.controller.js";
 
 export const dailyProcessesRouter = Router();
 
+dailyProcessesRouter.post("/cron/run", runScheduledDailyProcessesController);
 dailyProcessesRouter.use(authenticate);
 
 // POST /api/v1/daily-processes/run

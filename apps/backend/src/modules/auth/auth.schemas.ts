@@ -4,3 +4,7 @@ export const loginSchema = z.object({
   identity: z.string().trim().min(1, "Username or email is required."),
   password: z.string().min(1, "Password is required."),
 });
+
+export const switchCampSchema = z.object({
+  campId: z.number().int().positive(),
+});

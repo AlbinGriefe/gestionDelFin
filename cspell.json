@@ -1,6 +1,15 @@
 {
   "version": "0.2",
+  "import": ["@cspell/dict-es-es/cspell-ext.json"],
   "language": "en,es",
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": "./config/cspell-project-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["project-words"],
   "useGitignore": true,
   "ignorePaths": [
     "node_modules",
@@ -22,6 +31,17 @@
     "Hono",
     "Valibot",
     "Playwright",
-    "cspell"
+    "cspell",
+    "Ollama",
+    "Qwen",
+    "Prisma",
+    "Vitest",
+    "Railway",
+    "Vercel",
+    "healthcheck",
+    "idempotencia",
+    "gestion",
+    "campamento",
+    "campamentos"
   ]
 }

@@ -26,9 +26,9 @@ export async function listSessionsController(
   next: NextFunction,
 ) {
   try {
-    const filters = await listSessionsQuerySchema.parseAsync(
+    const filters = (await listSessionsQuerySchema.parseAsync(
       request.query,
-    ) as SessionListFilters;
+    )) as SessionListFilters;
     const result = await sessionsService.listSessions(
       filters,
       getAuthenticatedUser(request),

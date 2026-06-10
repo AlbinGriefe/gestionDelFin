@@ -1,142 +1,142 @@
 .table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
 }
 
 .thead th {
-    text-align: left;
-    padding: 10px 14px;
-    font-weight: 500;
-    font-size: 12px;
-    color: #666;
-    border-bottom: 0.5px solid #ddd;
-    background: #f9f9f7;
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 500;
+  font-size: 12px;
+  color: #666;
+  border-bottom: 0.5px solid #ddd;
+  background: #f9f9f7;
 }
 
 .empty {
-    padding: 1rem;
-    color: #888;
-    font-size: 13px;
+  padding: 1rem;
+  color: #888;
+  font-size: 13px;
 }
 
 .filterBar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    border-bottom: 0.5px solid #eee;
-    background: #fff;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid #eee;
+  background: #fff;
+  flex-wrap: wrap;
 }
 
 .statusFilters {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .statusBtn {
-    padding: 4px 10px;
-    border: 0.5px solid #ccc;
-    border-radius: 20px;
-    font-size: 12px;
-    background: #fff;
-    color: #666;
-    cursor: pointer;
+  padding: 4px 10px;
+  border: 0.5px solid #ccc;
+  border-radius: 20px;
+  font-size: 12px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
 }
 
 .statusBtn:hover {
-    background: #f1f1f1;
+  background: #f1f1f1;
 }
 
 .statusBtnActive {
-    background: #185FA5;
-    border-color: #185FA5;
-    color: #fff;
-    font-weight: 500;
+  background: #185fa5;
+  border-color: #185fa5;
+  color: #fff;
+  font-weight: 500;
 }
 
 .statusBtnActive:hover {
-    background: #0C447C;
+  background: #0c447c;
 }
 
 .reasonSelect {
-    padding: 6px 10px;
-    border: 0.5px solid #ccc;
-    border-radius: 8px;
-    font-size: 13px;
-    color: #111;
-    background: #fff;
-    cursor: pointer;
+  padding: 6px 10px;
+  border: 0.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #111;
+  background: #fff;
+  cursor: pointer;
 }
 
 .reasonSelect:focus {
-    outline: none;
-    border-color: #378ADD;
+  outline: none;
+  border-color: #378add;
 }
 
 .pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    border-top: 0.5px solid #eee;
-    background: #f9f9f7;
-    flex-wrap: wrap;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 0.5px solid #eee;
+  background: #f9f9f7;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .paginationInfo {
-    font-size: 12px;
-    color: #888;
+  font-size: 12px;
+  color: #888;
 }
 
 .paginationControls {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .pageBtn {
-    min-width: 30px;
-    height: 30px;
-    padding: 0 6px;
-    border: 0.5px solid #ccc;
-    border-radius: 6px;
-    background: #fff;
-    font-size: 13px;
-    color: #444;
-    cursor: pointer;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  border: 0.5px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  color: #444;
+  cursor: pointer;
 }
 
 .pageBtn:hover:not(:disabled) {
-    background: #E6F1FB;
-    border-color: #378ADD;
-    color: #0C447C;
+  background: #e6f1fb;
+  border-color: #378add;
+  color: #0c447c;
 }
 
 .pageBtn:disabled {
-    color: #ccc;
-    border-color: #eee;
-    cursor: not-allowed;
+  color: #ccc;
+  border-color: #eee;
+  cursor: not-allowed;
 }
 
 .pageBtnActive {
-    background: #185FA5;
-    border-color: #185FA5;
-    color: white;
-    font-weight: 500;
+  background: #185fa5;
+  border-color: #185fa5;
+  color: white;
+  font-weight: 500;
 }
 
 .pageBtnActive:hover:not(:disabled) {
-    background: #185FA5;
-    border-color: #185FA5;
-    color: white;
+  background: #185fa5;
+  border-color: #185fa5;
+  color: white;
 }
 
 .ellipsis {
-    font-size: 13px;
-    color: #aaa;
-    padding: 0 4px;
+  font-size: 13px;
+  color: #aaa;
+  padding: 0 4px;
 }

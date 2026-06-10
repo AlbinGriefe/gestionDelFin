@@ -7,6 +7,7 @@ import {
   updateDailyAssignmentsSchema,
 } from "./daily-processes.schemas.js";
 import { dailyProcessesService } from "./daily-processes.service.js";
+import { env } from "../../lib/env.js";
 
 function getAuthenticatedUser(request: Request) {
   if (!request.auth) {
@@ -39,13 +40,40 @@ export async function getDailyProcessStatusController(
   next: NextFunction,
 ) {
   try {
-    const { campId } = await dailyProcessStatusParamsSchema.parseAsync(request.params);
+    const { campId } = await dailyProcessStatusParamsSchema.parseAsync(
+      request.params,
+    );
     const actor = getAuthenticatedUser(request);
-    const result = await dailyProcessesService.getDailyProcessStatus(campId, actor);
+    const result = await dailyProcessesService.getDailyProcessStatus(
+      campId,
+      actor,
+    );
 
-    response
-      .status(200)
-      .json(createSuccessResponse(result, request.requestId));
+    response.status(200).json(createSuccessResponse(result, request.requestId));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function runScheduledDailyProcessesController(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    if (request.header("x-cron-secret") !== env.CRON_SECRET) {
+      response.status(401).json({
+        success: false,
+        error: {
+          code: "INVALID_CRON_SECRET",
+          message: "Invalid cron secret.",
+        },
+      });
+      return;
+    }
+
+    const result = await dailyProcessesService.runScheduledDailyProcesses();
+    response.status(200).json(createSuccessResponse(result, request.requestId));
   } catch (error) {
     next(error);
   }

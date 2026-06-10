@@ -2,15 +2,15 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../modules/auth/context/useAuth";
 
 interface Props {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export default function PublicRoute({ children }: Props) {
-    const { user } = useAuth();
+  const { user } = useAuth();
 
-    if (user) {
-        return <Navigate to="/home" replace />;
-    }
+  if (user) {
+    return <Navigate to="/home" replace />;
+  }
 
-    return <>{children}</>;
+  return <>{children}</>;
 }

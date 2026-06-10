@@ -13,6 +13,10 @@ export interface PublicUserProfile {
   campId: number;
   campName: string;
   personId: number | null;
+  availableCamps: Array<{
+    id: number;
+    name: string;
+  }>;
 }
 
 export interface AuthenticatedUser extends PublicUserProfile {
@@ -29,6 +33,8 @@ export interface LoginResult {
   serverTime: string;
   user: PublicUserProfile;
 }
+
+export type SwitchCampResult = LoginResult;
 
 export interface SessionConfig {
   serverTime: string;

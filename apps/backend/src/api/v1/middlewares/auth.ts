@@ -13,7 +13,11 @@ function extractBearerToken(request: Request) {
   return authorizationHeader.slice("Bearer ".length).trim();
 }
 
-export async function authenticate(request: Request, _response: Response, next: NextFunction) {
+export async function authenticate(
+  request: Request,
+  _response: Response,
+  next: NextFunction,
+) {
   try {
     const token = extractBearerToken(request);
     request.auth = await authService.resolveAuthenticatedUser(token);
@@ -42,7 +46,13 @@ export function requireRoles(...allowedRoles: string[]) {
     );
 
     if (!isAllowed) {
-      next(new AppError(403, "You do not have access to this resource.", "FORBIDDEN"));
+      next(
+        new AppError(
+          403,
+          "You do not have access to this resource.",
+          "FORBIDDEN",
+        ),
+      );
       return;
     }
 

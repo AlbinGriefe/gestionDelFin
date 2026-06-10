@@ -1,0 +1,295 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(18, 27, 21, 0.48);
+}
+
+.panel {
+  width: min(560px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: #f4f6f4;
+  box-shadow: -12px 0 28px rgba(18, 27, 21, 0.18);
+}
+
+.panel > header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  min-height: 78px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #dbe2dc;
+  background: #ffffff;
+  padding: 0 20px;
+}
+
+.panel > header > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.panel > header span {
+  color: #7d8880;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.panel > header h2 {
+  margin: 2px 0 0;
+  color: #1f3026;
+  font-size: 17px;
+}
+
+.panel > header p {
+  margin-top: 2px;
+  color: #88928b;
+  font-size: 9px;
+}
+
+.panel > header button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #dce2dd;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #56635a;
+  cursor: pointer;
+}
+
+.body {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.profile,
+.step,
+.complete {
+  border: 1px solid #dbe2dc;
+  border-radius: 7px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.profile > p {
+  color: #536158;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.stats > div {
+  border-radius: 5px;
+  background: #f1f4f1;
+  padding: 8px;
+}
+
+.stats span,
+.stats strong {
+  display: block;
+}
+
+.stats span {
+  color: #7c877f;
+  font-size: 8px;
+}
+
+.stats strong {
+  margin-top: 3px;
+  color: #28382e;
+  font-size: 12px;
+}
+
+.stepTitle,
+.complete {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.stepTitle {
+  margin-bottom: 14px;
+  color: #365842;
+}
+
+.stepTitle h3 {
+  margin: 0;
+  color: #24342a;
+  font-size: 13px;
+}
+
+.stepTitle p {
+  margin-top: 3px;
+  color: #828d85;
+  font-size: 9px;
+}
+
+.primary,
+.actions button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 6px;
+  background: #244b36;
+  padding: 0 13px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primary:disabled,
+.actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.result {
+  border-radius: 6px;
+  background: #f3f6f3;
+  padding: 12px;
+}
+
+.resultHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.decision {
+  border-radius: 4px;
+  background: #e3eee6;
+  padding: 5px 8px;
+  color: #2e5e41;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.resultHeader strong {
+  color: #3f4f45;
+  font-size: 9px;
+}
+
+.resultHeader small {
+  margin-left: auto;
+  color: #8b948e;
+  font-size: 8px;
+}
+
+.result ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: #5e6c63;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 13px;
+}
+
+.actions button:not(:first-child) {
+  border: 1px solid #ccd6ce;
+  background: #ffffff;
+  color: #3b4e41;
+}
+
+.actions .danger {
+  border-color: #e4c4c0;
+  color: #9d3c36;
+}
+
+.confirmProfession {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  margin-top: 13px;
+}
+
+.confirmProfession label {
+  display: grid;
+  flex: 1;
+  gap: 5px;
+  color: #6e7a72;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.confirmProfession select {
+  height: 36px;
+  border: 1px solid #d4dcd6;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 0 9px;
+  color: #29392f;
+  font: inherit;
+  font-size: 10px;
+}
+
+.warning {
+  margin-top: 10px;
+  color: #996515;
+  font-size: 9px;
+}
+
+.complete {
+  background: #e9f1eb;
+  color: #2f6243;
+}
+
+.complete strong,
+.complete span {
+  display: block;
+}
+
+.complete strong {
+  font-size: 11px;
+}
+
+.complete span {
+  margin-top: 3px;
+  color: #64806d;
+  font-size: 9px;
+}
+
+.loading {
+  display: flex;
+  min-height: 260px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #718078;
+  font-size: 11px;
+}
+
+@media (max-width: 520px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .confirmProfession {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

@@ -25,9 +25,9 @@ export async function listCampsController(
   next: NextFunction,
 ) {
   try {
-    const filters = await listCampsQuerySchema.parseAsync(
+    const filters = (await listCampsQuerySchema.parseAsync(
       request.query,
-    ) as CampListFilters;
+    )) as CampListFilters;
     const result = await campsService.listCamps(
       filters,
       getAuthenticatedUser(request),
@@ -102,7 +102,9 @@ export async function updateCampOperationalRulesController(
 ) {
   try {
     const { campId } = await campIdParamSchema.parseAsync(request.params);
-    const body = await updateCampOperationalRulesSchema.parseAsync(request.body);
+    const body = await updateCampOperationalRulesSchema.parseAsync(
+      request.body,
+    );
     const result = await campsService.updateOperationalRules(
       campId,
       body,

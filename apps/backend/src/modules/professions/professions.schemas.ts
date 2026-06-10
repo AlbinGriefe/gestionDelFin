@@ -54,16 +54,13 @@ const optionalPositiveInteger = z.preprocess(
   z.number().int().positive().optional(),
 );
 
-const nullablePositiveInteger = z.preprocess(
-  (value) => {
-    if (value === null || value === "" || value === "null") {
-      return null;
-    }
+const nullablePositiveInteger = z.preprocess((value) => {
+  if (value === null || value === "" || value === "null") {
+    return null;
+  }
 
-    return parseOptionalInteger(value);
-  },
-  z.number().int().positive().nullable().optional(),
-);
+  return parseOptionalInteger(value);
+}, z.number().int().positive().nullable().optional());
 
 export const professionIdParamSchema = z.object({
   professionId: z.coerce.number().int().positive(),
@@ -111,12 +108,18 @@ export const coverageQuerySchema = z.object({
 export const temporaryReassignmentSchema = z.object({
   targetProfessionId: z.number().int().positive(),
   personIds: z.array(z.number().int().positive()).min(1).max(50),
-  notes: z.preprocess(emptyStringToUndefined, z.string().trim().max(255).optional()),
+  notes: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().max(255).optional(),
+  ),
 });
 
 export const revertReassignmentSchema = z.object({
   personIds: z.array(z.number().int().positive()).min(1).max(50),
-  notes: z.preprocess(emptyStringToUndefined, z.string().trim().max(255).optional()),
+  notes: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().max(255).optional(),
+  ),
 });
 
 export const updateProfessionSchema = z

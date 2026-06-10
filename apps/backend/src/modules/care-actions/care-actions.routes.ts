@@ -1,8 +1,5 @@
 import { Router } from "express";
-import {
-  authenticate,
-  requireRoles,
-} from "../../api/v1/middlewares/auth.js";
+import { authenticate, requireRoles } from "../../api/v1/middlewares/auth.js";
 import { validateBody } from "../../api/v1/middlewares/validate-body.js";
 import { healPersonController } from "./care-actions.controller.js";
 import { healPersonSchema } from "./care-actions.schemas.js";

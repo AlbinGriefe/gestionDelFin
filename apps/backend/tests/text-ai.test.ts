@@ -70,9 +70,8 @@ describe("text AI providers", () => {
 
   it("uses rules when the primary provider fails", async () => {
     process.env.JWT_SECRET = "test-secret-at-least-16-characters";
-    const { ResilientTextProvider } = await import(
-      "../src/modules/text-ai/resilient-text-provider.js"
-    );
+    const { ResilientTextProvider } =
+      await import("../src/modules/text-ai/resilient-text-provider.js");
     const failingProvider: TextAiProvider = {
       evaluateAdmission: async (_input: AdmissionAiInput) => {
         throw new Error("offline");

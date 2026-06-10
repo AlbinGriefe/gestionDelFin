@@ -1,6 +1,5 @@
 import prisma, { Prisma } from "../../lib/prisma.js";
 import type { system_settings_sts_value_type } from "../../generated/prisma/client.js";
-import type { SettingWriteInput } from "./settings.types.js";
 
 function toPrismaJsonValue(value: unknown) {
   if (value === undefined || value === null) {

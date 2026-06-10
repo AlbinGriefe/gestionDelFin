@@ -128,16 +128,13 @@ export const updateInventoryThresholdsSchema = z
       parseOptionalDecimal,
       z.number().min(0).optional(),
     ),
-    stg_max_quantity: z.preprocess(
-      (value) => {
-        if (value === null || value === "" || value === "null") {
-          return null;
-        }
+    stg_max_quantity: z.preprocess((value) => {
+      if (value === null || value === "" || value === "null") {
+        return null;
+      }
 
-        return parseOptionalDecimal(value);
-      },
-      z.number().min(0).nullable().optional(),
-    ),
+      return parseOptionalDecimal(value);
+    }, z.number().min(0).nullable().optional()),
   })
   .superRefine((value, context) => {
     const hasAnyDefinedValue = Object.values(value).some(

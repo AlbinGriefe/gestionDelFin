@@ -7,6 +7,15 @@ function isAdmin(actor: AuthenticatedUser) {
   return actor.roleName.trim().toLowerCase() === "administrador sistema";
 }
 
+function canManageZones(actor: AuthenticatedUser) {
+  const role = actor.roleName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  return role.includes("viaje") || role.includes("comunic");
+}
+
 function mapZone(record: {
   id_exploration_zone: number;
   id_camp: number;
@@ -23,8 +32,7 @@ function mapZone(record: {
     campId: record.id_camp,
     name: record.exz_name,
     description: record.exz_description,
-    latitude:
-      record.exz_latitude === null ? null : Number(record.exz_latitude),
+    latitude: record.exz_latitude === null ? null : Number(record.exz_latitude),
     longitude:
       record.exz_longitude === null ? null : Number(record.exz_longitude),
     risk: record.exz_risk,
@@ -74,13 +82,18 @@ export class ExplorationZonesService {
     },
     actor: AuthenticatedUser,
   ) {
-    if (!isAdmin(actor)) {
-      throw new AppError(403, "Administrator role required.", "ZONE_ADMIN_REQUIRED");
+    if (!canManageZones(actor)) {
+      throw new AppError(
+        403,
+        "Travel manager role required.",
+        "ZONE_MANAGER_REQUIRED",
+      );
     }
     const camp = await prisma.camps.findUnique({
       where: { id_camp: input.campId },
     });
-    if (!camp) throw new AppError(404, "Camp not found.", "ZONE_CAMP_NOT_FOUND");
+    if (!camp)
+      throw new AppError(404, "Camp not found.", "ZONE_CAMP_NOT_FOUND");
     const zone = await prisma.exploration_zones.create({
       data: {
         id_camp: input.campId,
@@ -107,8 +120,12 @@ export class ExplorationZonesService {
     },
     actor: AuthenticatedUser,
   ) {
-    if (!isAdmin(actor)) {
-      throw new AppError(403, "Administrator role required.", "ZONE_ADMIN_REQUIRED");
+    if (!canManageZones(actor)) {
+      throw new AppError(
+        403,
+        "Travel manager role required.",
+        "ZONE_MANAGER_REQUIRED",
+      );
     }
     const existing = await prisma.exploration_zones.findUnique({
       where: { id_exploration_zone: zoneId },
@@ -123,7 +140,9 @@ export class ExplorationZonesService {
         ...(input.description !== undefined
           ? { exz_description: input.description }
           : {}),
-        ...(input.latitude !== undefined ? { exz_latitude: input.latitude } : {}),
+        ...(input.latitude !== undefined
+          ? { exz_latitude: input.latitude }
+          : {}),
         ...(input.longitude !== undefined
           ? { exz_longitude: input.longitude }
           : {}),
