@@ -224,3 +224,8 @@ fotografias
 iran
 validacion
 vacias
+aplicacion
+codigo
+composicion
+generacion
+programatica

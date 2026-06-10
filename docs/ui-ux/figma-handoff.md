@@ -3,8 +3,15 @@
 ## Estado
 
 El frontend navegable ya implementa los flujos y sirve como fuente de verdad
-visual. La creacion del archivo editable de Figma queda bloqueada hasta aceptar
-la instalacion y autenticacion del conector Figma en Codex.
+visual. El archivo de Figma fue creado y la pantalla `Play` fue capturada desde
+la aplicacion local.
+
+- Archivo: `https://www.figma.com/design/STawByOaiGsp1VGCBhnEd8`
+- Captura `Play`: `https://www.figma.com/design/STawByOaiGsp1VGCBhnEd8?node-id=1-2`
+
+La generacion de fundamentos, componentes reutilizables y flujos adicionales
+queda pausada porque el equipo alcanzo el limite de llamadas MCP del plan
+Starter de Figma. No es un bloqueo del codigo ni de autenticacion.
 
 ## Referencia visual
 
@@ -39,5 +46,5 @@ la instalacion y autenticacion del conector Figma en Codex.
 | Advertencia     | `#895a12`     |
 | Radio           | `6px` a `7px` |
 
-Al habilitar el conector, el archivo debe generarse desde las pantallas reales
-y no desde una reinterpretacion separada.
+Al restablecerse la cuota MCP, las pantallas restantes deben generarse desde la
+aplicacion real y no desde una reinterpretacion separada.
