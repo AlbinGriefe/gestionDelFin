@@ -14,12 +14,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "seed": "tsx prisma/seed.ts",
-    "prisma:validate": "npx.cmd prisma validate --config prisma/prisma.config.ts",
-    "prisma:pull": "npx.cmd prisma db pull --config prisma/prisma.config.ts",
-    "prisma:format": "npx.cmd prisma format --config prisma/prisma.config.ts",
-    "prisma:generate": "npx.cmd prisma generate --config prisma/prisma.config.ts",
-    "prisma:migrate:deploy": "npx.cmd prisma migrate deploy --config prisma/prisma.config.ts",
-    "prisma:migrate:reset": "npx.cmd prisma migrate reset --force --config prisma/prisma.config.ts",
+    "prisma:validate": "prisma validate --config prisma/prisma.config.ts",
+    "prisma:pull": "prisma db pull --config prisma/prisma.config.ts",
+    "prisma:format": "prisma format --config prisma/prisma.config.ts",
+    "prisma:generate": "prisma generate --config prisma/prisma.config.ts",
+    "prisma:migrate:deploy": "prisma migrate deploy --config prisma/prisma.config.ts",
+    "prisma:migrate:reset": "prisma migrate reset --force --config prisma/prisma.config.ts",
     "prisma:sync": "npm run prisma:pull && npm run prisma:format && npm run prisma:generate"
   },
   "keywords": [
