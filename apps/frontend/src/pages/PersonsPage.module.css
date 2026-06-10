@@ -1,0 +1,17 @@
+.cardStyle {
+    background: #fff;
+    border-radius: 12px;
+    border: 0.5px solid #ddd;
+    overflow: hidden;
+}
+
+.sectionHeaderStyle {
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 0.5px solid #eee;
+    background: #f9f9f7;
+}

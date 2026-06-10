@@ -1,0 +1,63 @@
+.row {
+    cursor: pointer;
+    background-color: #fff;
+}
+
+.row:hover td {
+    background: #f9f9f7;
+}
+
+.td {
+    padding: 10px 14px;
+    border-bottom: 0.5px solid #eee;
+    vertical-align: middle;
+}
+
+.toggleBtn {
+    background: none;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chevron {
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+.detailCell {
+    background: #f9f9f7;
+    padding: 12px 14px 14px;
+}
+
+.detailGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    align-items: stretch;
+}
+
+.editBtn {
+    background: none;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #185FA5;
+}
+
+.editBtn:hover {
+    background: #E6F1FB;
+    border-color: #378ADD;
+}

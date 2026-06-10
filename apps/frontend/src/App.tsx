@@ -1,6 +1,7 @@
 import AppRoutes from "./routes/AppRoutes";
 import { Toaster } from "sonner";
 import { useAuth } from "./modules/auth/context/useAuth";
+import { IdleManager } from "./modules/auth/components/IdleManager";
 
 function App() {
 
@@ -16,6 +17,7 @@ function App() {
 
   return (
     <>
+      <IdleManager />
       <AppRoutes />
       <Toaster
         position="top-right"

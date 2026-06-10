@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";

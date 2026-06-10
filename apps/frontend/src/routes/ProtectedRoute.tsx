@@ -13,7 +13,12 @@ export default function ProtectedRoute({ children, allowedRoles }: Props) {
         return <Navigate to="/login" replace />;
     }
 
-    if (allowedRoles && !allowedRoles.includes(user.roleName)) {
+    const normalizedRole = user.roleName.trim().toLowerCase();
+    const isAllowed = allowedRoles?.some(
+        role => role.trim().toLowerCase() === normalizedRole,
+    );
+
+    if (allowedRoles && !isAllowed) {
         return <Navigate to="/unauthorized" replace />;
     }
 

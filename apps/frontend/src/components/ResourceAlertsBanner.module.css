@@ -1,0 +1,157 @@
+.banner {
+    background: #fffbf0;
+    border: 0.5px solid #f0c060;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.bannerHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    cursor: pointer;
+    background: #fff8e1;
+    border-bottom: 0.5px solid #f0c060;
+    user-select: none;
+}
+
+.bannerHeader:hover {
+    background: #fef3c7;
+}
+
+.bannerTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #7A4500;
+}
+
+.warningIcon {
+    font-size: 15px;
+    color: #c07020;
+}
+
+.criticalTag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    background: #FDECEA;
+    color: #A32D2D;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.bannerActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.refreshBtn {
+    background: none;
+    border: 0.5px solid #c07020;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: #7A4500;
+    cursor: pointer;
+}
+
+.refreshBtn:hover {
+    background: #fef3c7;
+}
+
+.chevron {
+    font-size: 10px;
+    color: #c07020;
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.chevronCollapsed {
+    transform: rotate(-90deg);
+}
+
+.alertList {
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.groupLabel {
+    font-size: 10px;
+    font-weight: 500;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 6px 0 4px;
+}
+
+.groupLabel:first-child {
+    margin-top: 0;
+}
+
+.alertItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #fff;
+    border: 0.5px solid #f0e0c0;
+    gap: 12px;
+}
+
+.alertInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.alertName {
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.alertCamp {
+    font-size: 11px;
+    color: #999;
+}
+
+.alertQty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.progressBar {
+    width: 70px;
+    height: 5px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.alertNumbers {
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
