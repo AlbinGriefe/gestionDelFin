@@ -17,7 +17,9 @@ apps/backend/src/generated/prisma/
 .env.*
 !.env.example
 !.env.*.example
-!.ReporteEsdadoActualProyecto.md
+
+# Local project progress report
+/ReporteEstadoActualProyecto.md
 
 # Logs
 logs/
