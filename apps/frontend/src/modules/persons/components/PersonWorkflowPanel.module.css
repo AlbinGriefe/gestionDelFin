@@ -220,6 +220,25 @@
   color: #9d3c36;
 }
 
+.observationFollowUp {
+  display: grid;
+  gap: 10px;
+  margin-top: 13px;
+  border-top: 1px solid #d8e0da;
+  padding-top: 12px;
+}
+
+.observationFollowUp p {
+  margin: 0;
+  color: #6e5a29;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.observationFollowUp .primary {
+  width: fit-content;
+}
+
 .confirmProfession {
   display: flex;
   align-items: flex-end;

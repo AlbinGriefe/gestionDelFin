@@ -75,10 +75,12 @@ export default function PersonWorkflowPanel({ personId, onClose }: Props) {
     void reload();
   }, [reload]);
 
-  const runAdmission = async () => {
+  const runAdmission = async (forceRefresh = false) => {
     setBusy(true);
     try {
-      const result = await personWorkflowApi.evaluateAdmission(personId);
+      const result = await personWorkflowApi.evaluateAdmission(personId, {
+        forceRefresh,
+      });
       setAdmission(result.evaluation);
       toast.success(
         result.reusedExisting
@@ -256,6 +258,23 @@ export default function PersonWorkflowPanel({ personId, onClose }: Props) {
                           </button>
                         </div>
                       )}
+                      {admission.isFinal &&
+                        person.admissionStatus === "observe" && (
+                          <div className={styles.observationFollowUp}>
+                            <p>
+                              La persona sigue en observacion y todavia no forma
+                              parte activa del campamento. Debe ser evaluada y
+                              admitida antes de asignarle un oficio.
+                            </p>
+                            <button
+                              className={styles.primary}
+                              disabled={busy}
+                              onClick={() => void runAdmission(true)}
+                            >
+                              <RefreshCw size={15} /> Realizar nueva evaluacion
+                            </button>
+                          </div>
+                        )}
                     </div>
                   )}
                 </section>

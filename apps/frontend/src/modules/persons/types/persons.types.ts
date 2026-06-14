@@ -36,7 +36,7 @@ export type PersonWriteInput = {
   id_person_health?: number | null;
   prn_name?: string;
   prn_lastname?: string;
-  prn_birth_date?: Date | null;
+  prn_birth_date?: string | null;
   prn_document_number?: string | null;
   prn_profile_description?: string | null;
   prn_is_active?: boolean;

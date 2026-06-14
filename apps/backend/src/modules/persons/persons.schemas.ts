@@ -37,7 +37,25 @@ function parseOptionalDate(value: unknown) {
   if (value === null || value === "") return null;
   if (value instanceof Date) return value;
   if (typeof value === "string") {
-    const parsed = new Date(`${value.trim()}T00:00:00.000Z`);
+    const normalized = value.trim();
+    const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+
+    if (dateOnlyMatch) {
+      const [, yearValue, monthValue, dayValue] = dateOnlyMatch;
+      const year = Number(yearValue);
+      const month = Number(monthValue);
+      const day = Number(dayValue);
+      const parsed = new Date(Date.UTC(year, month - 1, day));
+
+      const isExactDate =
+        parsed.getUTCFullYear() === year &&
+        parsed.getUTCMonth() === month - 1 &&
+        parsed.getUTCDate() === day;
+
+      return isExactDate ? parsed : value;
+    }
+
+    const parsed = new Date(normalized);
     return Number.isNaN(parsed.getTime()) ? value : parsed;
   }
   return value;

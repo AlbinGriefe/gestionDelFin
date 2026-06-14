@@ -22,13 +22,19 @@ export type ProfessionRecommendation = {
   isFinal: boolean;
 };
 
-async function evaluateAdmission(personId: number) {
+async function evaluateAdmission(
+  personId: number,
+  options: { forceRefresh?: boolean } = {},
+) {
   return httpClient<{
     evaluation: AdmissionEvaluation;
     reusedExisting: boolean;
   }>("/admission-evaluations", {
     method: "POST",
-    body: JSON.stringify({ personId }),
+    body: JSON.stringify({
+      personId,
+      forceRefresh: options.forceRefresh ?? false,
+    }),
   });
 }
 

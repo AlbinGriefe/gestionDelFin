@@ -51,7 +51,7 @@ export default function PersonForm({
       prn_name: name.trim(),
       prn_lastname: lastname.trim(),
       prn_document_number: document.trim() || null,
-      prn_birth_date: birthDate ? new Date(`${birthDate}T00:00:00`) : null,
+      prn_birth_date: birthDate || null,
       prn_profile_description: profileDescription.trim() || null,
       id_person_health: healthId ? Number(healthId) : null,
       id_camp: campId ? Number(campId) : undefined,
