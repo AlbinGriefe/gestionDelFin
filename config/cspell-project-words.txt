@@ -229,3 +229,6 @@ codigo
 composicion
 generacion
 programatica
+automatico
+maximo
+nums
