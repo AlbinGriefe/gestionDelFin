@@ -43,10 +43,10 @@ Resultado base de `npm audit --workspaces --omit=dev`:
 
 Estas dependencias se resuelven en el backend que corre Express y deben priorizarse primero:
 
-| Paquete | Severidad | Via actual | Riesgo |
-| --- | --- | --- | --- |
-| `path-to-regexp@8.3.0` | High | `express -> router -> path-to-regexp` | Afecta parsing de rutas en runtime |
-| `qs@6.15.0` | Moderate | `express -> body-parser/qs` | Afecta parsing de query/body en runtime |
+| Paquete                | Severidad | Via actual                            | Riesgo                                  |
+| ---------------------- | --------- | ------------------------------------- | --------------------------------------- |
+| `path-to-regexp@8.3.0` | High      | `express -> router -> path-to-regexp` | Afecta parsing de rutas en runtime      |
+| `qs@6.15.0`            | Moderate  | `express -> body-parser/qs`           | Afecta parsing de query/body en runtime |
 
 Decision:
 
@@ -57,12 +57,12 @@ Decision:
 
 Estas dependencias vienen de la cadena de Prisma CLI y herramientas de desarrollo:
 
-| Paquete | Severidad | Via actual | Tipo |
-| --- | --- | --- | --- |
-| `@hono/node-server@1.19.9` | High | `prisma -> @prisma/dev -> @hono/node-server` | Tooling |
-| `hono@4.11.4` | High | `prisma -> @prisma/dev -> hono` | Tooling |
-| `effect@3.18.4` | High | `prisma -> @prisma/config -> effect` | Tooling |
-| `lodash@4.17.21` | High | `prisma -> @prisma/dev -> @mrleebo/prisma-ast -> chevrotain -> lodash` | Tooling |
+| Paquete                    | Severidad | Via actual                                                             | Tipo    |
+| -------------------------- | --------- | ---------------------------------------------------------------------- | ------- |
+| `@hono/node-server@1.19.9` | High      | `prisma -> @prisma/dev -> @hono/node-server`                           | Tooling |
+| `hono@4.11.4`              | High      | `prisma -> @prisma/dev -> hono`                                        | Tooling |
+| `effect@3.18.4`            | High      | `prisma -> @prisma/config -> effect`                                   | Tooling |
+| `lodash@4.17.21`           | High      | `prisma -> @prisma/dev -> @mrleebo/prisma-ast -> chevrotain -> lodash` | Tooling |
 
 Decision:
 

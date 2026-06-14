@@ -19,8 +19,10 @@
     "audit:prod": "npm audit --workspaces --omit=dev",
     "audit:all": "npm audit --workspaces",
     "frontend:dev": "npm run dev -w @gestiondelfin/frontend",
+    "frontend:lint": "npm run lint -w @gestiondelfin/frontend",
     "frontend:build": "npm run build -w @gestiondelfin/frontend",
     "backend:dev": "npm run dev -w @gestiondelfin/backend",
+    "backend:lint": "npm run lint -w @gestiondelfin/backend",
     "backend:build": "npm run build -w @gestiondelfin/backend",
     "backend:start": "npm run start -w @gestiondelfin/backend",
     "backend:typecheck": "npm run typecheck -w @gestiondelfin/backend",
@@ -28,8 +30,15 @@
     "backend:prisma:validate": "npm run prisma:validate -w @gestiondelfin/backend",
     "backend:prisma:sync": "npm run prisma:sync -w @gestiondelfin/backend",
     "backend:prisma:generate": "npm run prisma:generate -w @gestiondelfin/backend",
+    "backend:prisma:migrate:deploy": "npm run prisma:migrate:deploy -w @gestiondelfin/backend",
+    "backend:prisma:migrate:reset": "npm run prisma:migrate:reset -w @gestiondelfin/backend",
     "backend:seed": "npm run seed -w @gestiondelfin/backend",
-    "verify:build": "npm run backend:build && npm run frontend:build"
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "spellcheck": "cspell .",
+    "test:e2e": "playwright test",
+    "verify:build": "npm run backend:build && npm run frontend:build",
+    "verify": "npm run backend:prisma:validate && npm run backend:typecheck && npm run backend:lint && npm run frontend:lint && npm run backend:test && npm run verify:build && npm run format:check && npm run spellcheck"
   },
   "keywords": [
     "monorepo",
@@ -40,5 +49,17 @@
   ],
   "author": "Equipo gestionDelFin",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@cspell/dict-es-es": "^3.0.8",
+    "@playwright/test": "^1.60.0",
+    "cspell": "^10.0.1",
+    "prettier": "^3.8.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
 }

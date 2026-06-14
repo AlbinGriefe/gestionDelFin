@@ -1,0 +1,195 @@
+.panel,
+.loading {
+  border: 1px solid #dbe2dc;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.panel {
+  padding: 18px;
+}
+
+.loading {
+  display: flex;
+  min-height: 120px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #738078;
+  font-size: 11px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header span {
+  color: #7c877f;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin: 3px 0 0;
+  color: #223229;
+  font-size: 16px;
+}
+
+.header p {
+  margin-top: 4px;
+  color: #7b877f;
+  font-size: 9px;
+}
+
+.header button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #d9e0da;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #526057;
+  cursor: pointer;
+}
+
+.coverageGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.coverageGrid article {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e5e9e6;
+  border-radius: 6px;
+  padding: 9px;
+}
+
+.coverageGrid article > strong {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e5efe8;
+  color: #2f6243;
+  font-size: 10px;
+}
+
+.coverageGrid article > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.coverageGrid span,
+.coverageGrid small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coverageGrid span {
+  color: #2c3b31;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.coverageGrid small {
+  margin-top: 2px;
+  color: #89928c;
+  font-size: 8px;
+}
+
+.gap {
+  border-color: #ebcbc7 !important;
+  background: #fdf7f6;
+}
+
+.gap > strong {
+  background: #f5e2e0 !important;
+  color: #9d3c36 !important;
+}
+
+.gap > svg {
+  color: #ad554e;
+}
+
+.assignment {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto auto;
+  gap: 8px;
+  align-items: end;
+  margin-top: 16px;
+  border-top: 1px solid #edf0ed;
+  padding-top: 15px;
+}
+
+.assignment label {
+  display: grid;
+  gap: 5px;
+  color: #6c786f;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.assignment select {
+  width: 100%;
+  height: 36px;
+  border: 1px solid #d5ddd7;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 0 9px;
+  color: #2b3a30;
+  font-size: 10px;
+}
+
+.assignment button {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 6px;
+  background: #244b36;
+  padding: 0 11px;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.assignment button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.assignment .secondary {
+  border: 1px solid #d6ddd8;
+  background: #ffffff;
+  color: #4e5e53;
+}
+
+@media (max-width: 960px) {
+  .coverageGrid,
+  .assignment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .coverageGrid,
+  .assignment {
+    grid-template-columns: 1fr;
+  }
+}

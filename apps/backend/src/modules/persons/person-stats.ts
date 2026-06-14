@@ -39,7 +39,9 @@ export function advanceStats(stats: PersonStatsSummary): PersonStatsSummary {
   };
 }
 
-export function healthPercentage(stats: Pick<PersonStatsSummary, "health" | "maxHealth">) {
+export function healthPercentage(
+  stats: Pick<PersonStatsSummary, "health" | "maxHealth">,
+) {
   if (stats.maxHealth <= 0) return 0;
   return (stats.health / stats.maxHealth) * 100;
 }

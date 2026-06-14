@@ -37,9 +37,9 @@ export async function listPersonsController(
   next: NextFunction,
 ) {
   try {
-    const filters = await listPersonsQuerySchema.parseAsync(
+    const filters = (await listPersonsQuerySchema.parseAsync(
       request.query,
-    ) as PersonListFilters;
+    )) as PersonListFilters;
     const result = await personsService.listPersons(
       filters,
       getAuthenticatedUser(request),

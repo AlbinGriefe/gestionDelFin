@@ -10,6 +10,8 @@ coverage/
 # Generated files
 .prisma/
 generated/
+!apps/frontend/src/assets/generated/
+!apps/frontend/src/assets/generated/camp-entry.png
 apps/backend/src/generated/prisma/
 
 # Environment files

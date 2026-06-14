@@ -124,10 +124,14 @@ function validateSettingConstraint(input: {
     );
   }
 
-  if (!Number.isInteger(input.value) || Number(input.value) <= 0) {
+  if (
+    !Number.isInteger(input.value) ||
+    Number(input.value) < 1 ||
+    Number(input.value) > 1440
+  ) {
     throw new AppError(
       400,
-      "session_timeout_minutes must be a positive integer.",
+      "session_timeout_minutes must be an integer between 1 and 1440.",
       "SETTINGS_INVALID_TIMEOUT_VALUE",
     );
   }
@@ -242,11 +246,11 @@ export class SettingsService {
       description:
         input.description !== undefined
           ? input.description
-          : existingSetting?.sts_description ?? null,
+          : (existingSetting?.sts_description ?? null),
       isPublic:
         input.isPublic !== undefined
           ? input.isPublic
-          : existingSetting?.sts_is_public ?? false,
+          : (existingSetting?.sts_is_public ?? false),
       actorUserId: actor.id,
     });
 

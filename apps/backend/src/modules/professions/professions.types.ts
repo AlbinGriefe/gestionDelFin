@@ -48,7 +48,6 @@ export interface ProfessionSummary {
   isActive: boolean;
 }
 
-
 export interface ProfessionCoverageEntry {
   profession: ProfessionSummary;
   totalPersons: number;

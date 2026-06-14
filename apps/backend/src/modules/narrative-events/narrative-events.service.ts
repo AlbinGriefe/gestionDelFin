@@ -19,9 +19,7 @@ function mapEvent(record: Awaited<ReturnType<typeof findEvent>>) {
     status: record.nre_status,
     sourceType: record.nre_source_type,
     referenceId: record.nre_reference_id,
-    probability: record.nre_probability
-      ? Number(record.nre_probability)
-      : null,
+    probability: record.nre_probability ? Number(record.nre_probability) : null,
     roll: record.nre_roll ? Number(record.nre_roll) : null,
     participants: record.nre_participants,
     effects: record.nre_effects,

@@ -127,7 +127,9 @@ function mapInventoryDetail(
 
 export class InventoryService {
   async getCatalogs(actor: AuthenticatedUser): Promise<InventoryCatalogs> {
-    const accessibleCampId = isSystemAdministrator(actor) ? undefined : actor.campId;
+    const accessibleCampId = isSystemAdministrator(actor)
+      ? undefined
+      : actor.campId;
     const result = await inventoryRepository.listCatalogs({
       campId: accessibleCampId,
     });
@@ -161,7 +163,9 @@ export class InventoryService {
       ensureCampScope(actor, filters.campId);
     }
 
-    const resolvedCampId = filters.campId ?? (isSystemAdministrator(actor) ? undefined : actor.campId);
+    const resolvedCampId =
+      filters.campId ??
+      (isSystemAdministrator(actor) ? undefined : actor.campId);
     const search = filters.search?.trim();
 
     const where = {
@@ -212,7 +216,10 @@ export class InventoryService {
           page: filters.page,
           pageSize: filters.pageSize,
           totalItems: filteredItems.length,
-          totalPages: Math.max(1, Math.ceil(filteredItems.length / filters.pageSize)),
+          totalPages: Math.max(
+            1,
+            Math.ceil(filteredItems.length / filters.pageSize),
+          ),
         },
         appliedFilters: {
           ...filters,
@@ -293,7 +300,9 @@ export class InventoryService {
       );
     }
 
-    const resource = await inventoryRepository.findResourceById(input.id_resource);
+    const resource = await inventoryRepository.findResourceById(
+      input.id_resource,
+    );
 
     if (!resource) {
       throw new AppError(
@@ -315,7 +324,9 @@ export class InventoryService {
       resolvedCampId,
       input.id_resource,
     );
-    const previousQuantity = existingStorage ? Number(existingStorage.stg_quantity) : 0;
+    const previousQuantity = existingStorage
+      ? Number(existingStorage.stg_quantity)
+      : 0;
     const nextQuantity =
       input.mode === "set" ? input.quantity : previousQuantity + input.quantity;
 

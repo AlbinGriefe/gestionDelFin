@@ -1,121 +1,121 @@
 .tabs {
-    display: flex;
-    border-bottom: 0.5px solid #eee;
-    background: #fff;
+  display: flex;
+  border-bottom: 0.5px solid #eee;
+  background: #fff;
 }
 
 .tab {
-    padding: 10px 16px;
-    font-size: 13px;
-    cursor: pointer;
-    color: #888;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -0.5px;
-    background: none;
-    border-top: none;
-    border-left: none;
-    border-right: none;
+  padding: 10px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #888;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -0.5px;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
 }
 
 .tab:hover {
-    color: #444;
+  color: #444;
 }
 
 .tabActive {
-    color: #185FA5;
-    border-bottom-color: #185FA5;
-    font-weight: 500;
+  color: #185fa5;
+  border-bottom-color: #185fa5;
+  font-weight: 500;
 }
 
 .body {
-    padding: 16px;
-    background: #fff;
+  padding: 16px;
+  background: #fff;
 }
 
 .metaRow {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-    padding-bottom: 14px;
-    border-bottom: 0.5px solid #eee;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 0.5px solid #eee;
 }
 
 .metaItem {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .metaLabel {
-    font-size: 11px;
-    color: #aaa;
+  font-size: 11px;
+  color: #aaa;
 }
 
 .metaValue {
-    font-size: 13px;
-    color: #111;
-    font-weight: 500;
+  font-size: 13px;
+  color: #111;
+  font-weight: 500;
 }
 
 .infoGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: stretch;
 }
 
 .badgeActive {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    background: #EAF3DE;
-    color: #3B6D11;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #eaf3de;
+  color: #3b6d11;
 }
 
 .badgeInactive {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    background: #F1EFE8;
-    color: #5F5E5A;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #f1efe8;
+  color: #5f5e5a;
 }
 
 .table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
 }
 
 .table th {
-    text-align: left;
-    padding: 8px 14px;
-    font-weight: 500;
-    font-size: 11px;
-    color: #888;
-    border-bottom: 0.5px solid #eee;
-    background: #f9f9f7;
+  text-align: left;
+  padding: 8px 14px;
+  font-weight: 500;
+  font-size: 11px;
+  color: #888;
+  border-bottom: 0.5px solid #eee;
+  background: #f9f9f7;
 }
 
 .table td {
-    padding: 8px 14px;
-    border-bottom: 0.5px solid #eee;
-    color: #111;
-    background: #fff;
+  padding: 8px 14px;
+  border-bottom: 0.5px solid #eee;
+  color: #111;
+  background: #fff;
 }
 
 .table tr:last-child td {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .empty {
-    padding: 24px;
-    text-align: center;
-    color: #aaa;
-    font-size: 13px;
-    background: #fff;
+  padding: 24px;
+  text-align: center;
+  color: #aaa;
+  font-size: 13px;
+  background: #fff;
 }

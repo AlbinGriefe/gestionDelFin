@@ -100,6 +100,7 @@ model camps {
   transfers_transfers_id_origin_campTocamps  transfers[]             @relation("transfers_id_origin_campTocamps")
   user_sessions                              user_sessions[]
   users                                      users[]
+  user_camp_memberships                      user_camp_memberships[]
   camp_operational_rules                     camp_operational_rules?
   care_actions                               care_actions[]
   daily_assignments                          daily_assignments[]
@@ -223,6 +224,7 @@ model persons {
   id_profile_template          Int?
   prn_name                     String                         @db.VarChar(100)
   prn_lastname                 String                         @db.VarChar(100)
+  prn_identifier               String                         @unique(map: "uk_persons_identifier") @db.VarChar(40)
   prn_birth_date               DateTime?                      @db.Date
   prn_document_number          String?                        @db.VarChar(100)
   prn_profile_description      String                         @db.Text
@@ -617,6 +619,19 @@ model user_sessions {
   @@index([id_user], map: "idx_user_sessions_user")
 }
 
+model user_camp_memberships {
+  id_user_camp_membership Int      @id @default(autoincrement())
+  id_user                 Int
+  id_camp                 Int
+  ucm_is_active           Boolean  @default(true)
+  ucm_created_at          DateTime @default(now()) @db.DateTime(0)
+  users                   users    @relation(fields: [id_user], references: [id_user], onDelete: Cascade, map: "fk_user_camp_memberships_user")
+  camps                   camps    @relation(fields: [id_camp], references: [id_camp], onDelete: Cascade, map: "fk_user_camp_memberships_camp")
+
+  @@unique([id_user, id_camp], map: "uk_user_camp_membership")
+  @@index([id_camp], map: "idx_user_camp_memberships_camp")
+}
+
 model users {
   id_user                                                Int                          @id @default(autoincrement())
   id_person                                              Int?
@@ -642,6 +657,7 @@ model users {
   transfers_transfers_id_approved_origin_by_userTousers  transfers[]                  @relation("transfers_id_approved_origin_by_userTousers")
   transfers_transfers_id_requested_by_userTousers        transfers[]                  @relation("transfers_id_requested_by_userTousers")
   user_sessions                                          user_sessions[]
+  user_camp_memberships                                  user_camp_memberships[]
   camps                                                  camps                        @relation(fields: [id_camp], references: [id_camp], map: "fk_users_camp")
   persons                                                persons?                     @relation(fields: [id_person], references: [id_person], map: "fk_users_person")
   roles                                                  roles                        @relation(fields: [id_role], references: [id_role], map: "fk_users_role")

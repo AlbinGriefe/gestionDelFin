@@ -227,7 +227,8 @@ export class InventoryRepository {
             },
           });
 
-      const isBelowMinimum = input.newQuantity < Number(storage.stg_min_quantity);
+      const isBelowMinimum =
+        input.newQuantity < Number(storage.stg_min_quantity);
 
       await tx.storage_records.create({
         data: {

@@ -651,7 +651,8 @@ export class TransfersRepository {
           },
         });
 
-    const isBelowMinimum = nextQuantity < Number(targetStorage.stg_min_quantity);
+    const isBelowMinimum =
+      nextQuantity < Number(targetStorage.stg_min_quantity);
 
     await tx.storage_records.create({
       data: {

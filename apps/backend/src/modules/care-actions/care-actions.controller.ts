@@ -9,7 +9,8 @@ export async function healPersonController(
   next: NextFunction,
 ) {
   try {
-    if (!request.auth) throw new Error("Authenticated user context is missing.");
+    if (!request.auth)
+      throw new Error("Authenticated user context is missing.");
     const input = await healPersonSchema.parseAsync(request.body);
     const result = await careActionsService.heal(input, request.auth);
     response.status(201).json(createSuccessResponse(result, request.requestId));

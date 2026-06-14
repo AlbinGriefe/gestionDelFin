@@ -10,18 +10,6 @@ function emptyStringToUndefined(value: unknown) {
   return value;
 }
 
-function emptyStringToNull(value: unknown) {
-  if (value === null) {
-    return null;
-  }
-
-  if (typeof value === "string" && value.trim() === "") {
-    return null;
-  }
-
-  return value;
-}
-
 function parseOptionalInteger(value: unknown) {
   if (value === undefined || value === null || value === "") {
     return undefined;

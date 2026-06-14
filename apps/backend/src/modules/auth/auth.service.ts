@@ -12,18 +12,41 @@ import type {
   LoginResult,
   PublicUserProfile,
   SessionConfig,
+  SwitchCampResult,
 } from "./auth.types.js";
 import { authRepository, type AuthUserRecord } from "./auth.repository.js";
 
-function buildPublicUserProfile(user: AuthUserRecord): PublicUserProfile {
+function buildPublicUserProfile(
+  user: AuthUserRecord,
+  activeCampId: number,
+): PublicUserProfile {
+  const availableCamps = user.user_camp_memberships.map((membership) => ({
+    id: membership.camps.id_camp,
+    name: membership.camps.cmp_name,
+  }));
+  const activeCamp =
+    availableCamps.find((camp) => camp.id === activeCampId) ??
+    (user.id_camp === activeCampId
+      ? { id: user.camps.id_camp, name: user.camps.cmp_name }
+      : null);
+
+  if (!activeCamp) {
+    throw new AppError(
+      403,
+      "The user does not belong to the active camp.",
+      "CAMP_MEMBERSHIP_REQUIRED",
+    );
+  }
+
   return {
     id: user.id_user,
     username: user.usr_username,
     email: user.usr_email,
     roleName: user.roles.rls_name,
-    campId: user.id_camp,
-    campName: user.camps.cmp_name,
+    campId: activeCamp.id,
+    campName: activeCamp.name,
     personId: user.id_person,
+    availableCamps,
   };
 }
 
@@ -132,7 +155,7 @@ export class AuthService {
       expiresInHours: env.JWT_EXPIRES_IN_HOURS,
       sessionTimeoutMinutes,
       serverTime: now.toISOString(),
-      user: buildPublicUserProfile(user),
+      user: buildPublicUserProfile(user, user.id_camp),
     };
   }
 
@@ -180,7 +203,7 @@ export class AuthService {
     await authRepository.touchSession(session.id_user_session, nextExpiry);
 
     return {
-      ...buildPublicUserProfile(user),
+      ...buildPublicUserProfile(user, session.id_camp),
       sessionId: payload.sid,
       sessionExpiresAt: nextExpiry.toISOString(),
       sessionTimeoutMinutes,
@@ -193,6 +216,67 @@ export class AuthService {
     return {
       serverTime: getServerNow().toISOString(),
       message: "Session closed successfully.",
+    };
+  }
+
+  async switchCamp(
+    actor: AuthenticatedUser,
+    campId: number,
+    ipAddress: string,
+  ): Promise<SwitchCampResult> {
+    if (campId === actor.campId) {
+      throw new AppError(
+        409,
+        "The requested camp is already active.",
+        "CAMP_ALREADY_ACTIVE",
+      );
+    }
+
+    const user = await authRepository.findUserById(actor.id);
+    const membership = user?.user_camp_memberships.find(
+      (item) => item.id_camp === campId && item.ucm_is_active,
+    );
+    const camp =
+      membership?.camps ?? (await authRepository.findCampById(campId));
+
+    if (!user || !membership || !camp || camp.cmp_status !== "active") {
+      throw new AppError(
+        403,
+        "The selected camp is unavailable for this user.",
+        "CAMP_SWITCH_FORBIDDEN",
+      );
+    }
+
+    const sessionTimeoutMinutes =
+      await authRepository.getSessionTimeoutMinutes();
+    const sessionId = randomUUID();
+    const now = getServerNow();
+    const expiresAt = addMinutes(now, sessionTimeoutMinutes);
+
+    await authRepository.expireSessionByToken(actor.sessionId, "camp_change");
+    await authRepository.createSession({
+      userId: user.id_user,
+      campId,
+      sessionToken: sessionId,
+      ipAddress,
+      expiresAt,
+    });
+
+    const accessToken = signAccessToken({
+      userId: user.id_user,
+      username: user.usr_username,
+      roleName: user.roles.rls_name,
+      campId,
+      sessionId,
+    });
+
+    return {
+      accessToken,
+      tokenType: "Bearer",
+      expiresInHours: env.JWT_EXPIRES_IN_HOURS,
+      sessionTimeoutMinutes,
+      serverTime: now.toISOString(),
+      user: buildPublicUserProfile(user, campId),
     };
   }
 }

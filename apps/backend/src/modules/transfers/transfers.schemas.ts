@@ -163,7 +163,10 @@ export const createTransferSchema = z
     ensureUniqueIds(value.persons, "id_person", context, "persons");
     ensureUniqueIds(value.resources, "id_resource", context, "resources");
 
-    if (value.id_origin_camp && value.id_origin_camp === value.id_destiny_camp) {
+    if (
+      value.id_origin_camp &&
+      value.id_origin_camp === value.id_destiny_camp
+    ) {
       context.addIssue({
         code: "custom",
         message: "Origin and destiny camps must be different.",

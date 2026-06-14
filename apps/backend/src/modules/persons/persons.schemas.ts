@@ -37,7 +37,25 @@ function parseOptionalDate(value: unknown) {
   if (value === null || value === "") return null;
   if (value instanceof Date) return value;
   if (typeof value === "string") {
-    const parsed = new Date(`${value.trim()}T00:00:00.000Z`);
+    const normalized = value.trim();
+    const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+
+    if (dateOnlyMatch) {
+      const [, yearValue, monthValue, dayValue] = dateOnlyMatch;
+      const year = Number(yearValue);
+      const month = Number(monthValue);
+      const day = Number(dayValue);
+      const parsed = new Date(Date.UTC(year, month - 1, day));
+
+      const isExactDate =
+        parsed.getUTCFullYear() === year &&
+        parsed.getUTCMonth() === month - 1 &&
+        parsed.getUTCDate() === day;
+
+      return isExactDate ? parsed : value;
+    }
+
+    const parsed = new Date(normalized);
     return Number.isNaN(parsed.getTime()) ? value : parsed;
   }
   return value;
@@ -49,7 +67,8 @@ const optionalPositiveInteger = z.preprocess(
 );
 
 const nullablePositiveInteger = z.preprocess(
-  (value) => (value === null || value === "" ? null : parseOptionalInteger(value)),
+  (value) =>
+    value === null || value === "" ? null : parseOptionalInteger(value),
   z.number().int().positive().nullable().optional(),
 );
 
@@ -97,7 +116,10 @@ export const createPersonSchema = z.object({
   id_person_health: nullablePositiveInteger,
   prn_name: z.string().trim().min(1).max(100),
   prn_lastname: z.string().trim().min(1).max(100),
-  prn_birth_date: z.preprocess(parseOptionalDate, z.date().nullable().optional()),
+  prn_birth_date: z.preprocess(
+    parseOptionalDate,
+    z.date().nullable().optional(),
+  ),
   prn_document_number: nullableIdentifierString,
   prn_profile_description: nullableProfileDescription,
   prn_is_active: z.boolean().optional().default(true),
@@ -116,7 +138,10 @@ export const updatePersonSchema = z
       emptyStringToUndefined,
       z.string().trim().min(1).max(100).optional(),
     ),
-    prn_birth_date: z.preprocess(parseOptionalDate, z.date().nullable().optional()),
+    prn_birth_date: z.preprocess(
+      parseOptionalDate,
+      z.date().nullable().optional(),
+    ),
     prn_document_number: nullableIdentifierString,
     prn_profile_description: nullableProfileDescription,
     prn_is_active: z.boolean().optional(),

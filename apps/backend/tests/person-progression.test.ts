@@ -19,8 +19,11 @@ describe("person progression", () => {
     };
     const tx = {
       person_progressions: {
-        findFirst: async ({ where }: { where: { ppg_reference_key: string } }) =>
-          progressionKeys.has(where.ppg_reference_key) ? { id: 1 } : null,
+        findFirst: async ({
+          where,
+        }: {
+          where: { ppg_reference_key: string };
+        }) => (progressionKeys.has(where.ppg_reference_key) ? { id: 1 } : null),
         create: async ({ data }: { data: { ppg_reference_key: string } }) => {
           progressionKeys.add(data.ppg_reference_key);
           return data;

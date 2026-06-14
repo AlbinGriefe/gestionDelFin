@@ -1,33 +1,27 @@
+import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
+
 import LoginForm from "../modules/auth/components/LoginForm";
+import styles from "./LoginPage.module.css";
 
 export default function LoginPage() {
-    return (
-        <div style={{
-            display: "flex",
-            alignItems: "center",
-            flexDirection: "column",
-            justifyContent: "center",
-            height: "100svh",
-            gap: 0,
-        }}>
-            <h1 style={{}}>Gestión del Fin</h1>
-            <div style={{
-                background: "#f9f9f7",
-                border: "0.5px solid var(--border)",
-                borderRadius: 16,
-                padding: "32px 36px",
-                width: "100%",
-                maxWidth: 380,
-                boxSizing: "border-box",
-            }}>
-                <h1 style={{ fontSize: 24, fontWeight: 500, marginBottom: 4, marginTop: 0, textAlign: "left" }}>
-                    Inicio de sesión
-                </h1>
-                <p style={{ fontSize: 13, color: "var(--text)", marginBottom: 24, textAlign: "left" }}>
-                    Para continuar, debes iniciar sesión
-                </p>
-                <LoginForm />
-            </div>
+  return (
+    <main className={styles.page}>
+      <Link className={styles.back} to="/play">
+        <ArrowLeft size={17} /> Volver
+      </Link>
+      <section className={styles.login}>
+        <div className={styles.brand}>GF</div>
+        <span>Gestion del Fin</span>
+        <h1>Acceso al centro operativo</h1>
+        <p>Utiliza la cuenta asignada a tu rol y campamento.</p>
+        <div className={styles.formSurface}>
+          <LoginForm />
         </div>
-    );
+        <small>
+          <ShieldCheck size={14} /> Sesion protegida con cierre por inactividad
+        </small>
+      </section>
+    </main>
+  );
 }

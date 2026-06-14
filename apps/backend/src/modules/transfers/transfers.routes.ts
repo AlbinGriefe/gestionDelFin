@@ -9,7 +9,10 @@ import {
   listTransfersController,
   updateTransferStateController,
 } from "./transfers.controller.js";
-import { createTransferSchema, updateTransferStateSchema } from "./transfers.schemas.js";
+import {
+  createTransferSchema,
+  updateTransferStateSchema,
+} from "./transfers.schemas.js";
 
 const transfersRouter = Router();
 
@@ -17,7 +20,11 @@ transfersRouter.use(authenticate);
 transfersRouter.get("/catalogs", getTransferCatalogsController);
 transfersRouter.get("/", listTransfersController);
 transfersRouter.get("/:transferId", getTransferByIdController);
-transfersRouter.post("/", validateBody(createTransferSchema), createTransferController);
+transfersRouter.post(
+  "/",
+  validateBody(createTransferSchema),
+  createTransferController,
+);
 transfersRouter.patch(
   "/:transferId/state",
   validateBody(updateTransferStateSchema),

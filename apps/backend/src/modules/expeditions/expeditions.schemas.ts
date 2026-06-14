@@ -139,16 +139,13 @@ export const listExpeditionsQuerySchema = z.object({
 
 const expeditionMemberSchema = z.object({
   id_person: z.coerce.number().int().positive(),
-  id_resource: z.preprocess(
-    (value) => {
-      if (value === null || value === "" || value === "null") {
-        return null;
-      }
+  id_resource: z.preprocess((value) => {
+    if (value === null || value === "" || value === "null") {
+      return null;
+    }
 
-      return parseOptionalInteger(value);
-    },
-    z.number().int().positive().nullable().optional(),
-  ),
+    return parseOptionalInteger(value);
+  }, z.number().int().positive().nullable().optional()),
   roleInExpedition: z.preprocess(
     emptyStringToNull,
     z.string().trim().max(100).nullable().optional(),
@@ -169,15 +166,12 @@ export const createExpeditionSchema = z
       parseOptionalInteger,
       z.number().int().positive().optional(),
     ),
-    id_exploration_zone: z.preprocess(
-      (value) => {
-        if (value === null || value === "" || value === "null") {
-          return null;
-        }
-        return parseOptionalInteger(value);
-      },
-      z.number().int().positive().nullable().optional(),
-    ),
+    id_exploration_zone: z.preprocess((value) => {
+      if (value === null || value === "" || value === "null") {
+        return null;
+      }
+      return parseOptionalInteger(value);
+    }, z.number().int().positive().nullable().optional()),
     exs_name: z.string().trim().min(3).max(100),
     exs_leaving_date: z.preprocess(parseOptionalDate, z.date()),
     exs_estimated_days: z.preprocess(
@@ -217,7 +211,10 @@ export const updateExpeditionStateSchema = z
       parseOptionalDecimal,
       z.number().min(0).optional(),
     ),
-    exs_arriving_date: z.preprocess(parseOptionalDate, z.date().nullable().optional()),
+    exs_arriving_date: z.preprocess(
+      parseOptionalDate,
+      z.date().nullable().optional(),
+    ),
     members: z.array(expeditionReturnMemberSchema).optional().default([]),
     notes: z.preprocess(
       emptyStringToNull,

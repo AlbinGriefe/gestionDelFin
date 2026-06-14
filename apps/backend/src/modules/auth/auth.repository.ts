@@ -5,13 +5,26 @@ export const authUserInclude = {
   camps: true,
   persons: true,
   roles: true,
+  user_camp_memberships: {
+    where: {
+      ucm_is_active: true,
+    },
+    include: {
+      camps: true,
+    },
+  },
 } satisfies Prisma.usersInclude;
 
 export type AuthUserRecord = Prisma.usersGetPayload<{
   include: typeof authUserInclude;
 }>;
 
-type SignOutReason = "manual" | "timeout" | "forced" | "camp_change" | "security";
+type SignOutReason =
+  | "manual"
+  | "timeout"
+  | "forced"
+  | "camp_change"
+  | "security";
 
 export class AuthRepository {
   async findUserByIdentity(identity: string) {
@@ -82,7 +95,10 @@ export class AuthRepository {
     });
   }
 
-  async expireSessionByToken(sessionToken: string) {
+  async expireSessionByToken(
+    sessionToken: string,
+    reason: SignOutReason = "manual",
+  ) {
     return prisma.user_sessions.updateMany({
       where: {
         uss_token: sessionToken,
@@ -92,7 +108,7 @@ export class AuthRepository {
         uss_is_expired: true,
         uss_last_update: new Date(),
         uss_expired_session: new Date(),
-        uss_sign_out_reason: "manual",
+        uss_sign_out_reason: reason,
       },
     });
   }
@@ -106,6 +122,12 @@ export class AuthRepository {
         uss_expired_session: new Date(),
         uss_sign_out_reason: reason,
       },
+    });
+  }
+
+  async findCampById(campId: number) {
+    return prisma.camps.findUnique({
+      where: { id_camp: campId },
     });
   }
 

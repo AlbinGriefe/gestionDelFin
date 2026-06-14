@@ -24,7 +24,11 @@ professionsRouter.use(authenticate);
 professionsRouter.get("/coverage", getProfessionCoverageController);
 professionsRouter.get("/", listProfessionsController);
 professionsRouter.get("/:professionId", getProfessionByIdController);
-professionsRouter.post("/", validateBody(createProfessionSchema), createProfessionController);
+professionsRouter.post(
+  "/",
+  validateBody(createProfessionSchema),
+  createProfessionController,
+);
 professionsRouter.post(
   "/temporary-reassignment",
   validateBody(temporaryReassignmentSchema),

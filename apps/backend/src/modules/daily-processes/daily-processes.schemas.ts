@@ -29,11 +29,7 @@ export const updateDailyAssignmentsSchema = z.object({
     .array(
       z.object({
         personId: z.number().int().positive(),
-        task: z.enum([
-          "food_production",
-          "water_production",
-          "camp_support",
-        ]),
+        task: z.enum(["food_production", "water_production", "camp_support"]),
       }),
     )
     .max(500),

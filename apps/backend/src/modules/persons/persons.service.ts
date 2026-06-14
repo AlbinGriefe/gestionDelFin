@@ -1,4 +1,5 @@
 import type { Prisma } from "../../generated/prisma/client.js";
+import { randomUUID } from "node:crypto";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import { generateInitialStats } from "./person-stats.js";
@@ -58,6 +59,7 @@ function serializePersonState(input: {
   id_profile_template: number | null;
   prn_name: string;
   prn_lastname: string;
+  prn_identifier: string;
   prn_birth_date: Date | null;
   prn_document_number: string | null;
   prn_profile_description: string;
@@ -74,6 +76,7 @@ function serializePersonState(input: {
 function mapPersonSummary(record: PersonSummaryRecord): PersonSummary {
   return {
     id: record.id_person,
+    identifier: record.prn_identifier,
     fullName: buildFullName(record.prn_name, record.prn_lastname),
     camp: {
       id: record.camps.id_camp,
@@ -181,14 +184,12 @@ export class PersonsService {
   async listPersons(filters: PersonListFilters, actor: AuthenticatedUser) {
     const resolvedCampId =
       actor.roleName.trim().toLowerCase() === "administrador sistema"
-        ? filters.campId ?? actor.campId
+        ? (filters.campId ?? actor.campId)
         : actor.campId;
     const search = filters.search?.trim();
     const admissionStatus =
       filters.admissionStatus ??
-      (filters.accepted === true
-        ? "accepted"
-        : undefined);
+      (filters.accepted === true ? "accepted" : undefined);
 
     const where: Prisma.personsWhereInput = {
       id_camp: resolvedCampId,
@@ -199,7 +200,9 @@ export class PersonsService {
         : filters.accepted === false
           ? { prn_admission_status: { not: "accepted" } }
           : {}),
-      ...(filters.active !== undefined ? { prn_is_active: filters.active } : {}),
+      ...(filters.active !== undefined
+        ? { prn_is_active: filters.active }
+        : {}),
       ...(search
         ? {
             OR: [
@@ -238,7 +241,11 @@ export class PersonsService {
       actor.roleName.trim().toLowerCase() !== "administrador sistema" &&
       person.id_camp !== actor.campId
     ) {
-      throw new AppError(403, "Person is outside your camp.", "PERSONS_FORBIDDEN");
+      throw new AppError(
+        403,
+        "Person is outside your camp.",
+        "PERSONS_FORBIDDEN",
+      );
     }
     return mapPersonDetail(person);
   }
@@ -271,7 +278,8 @@ export class PersonsService {
     ensureSystemAdministrator(actor);
     const campId = input.id_camp ?? actor.campId;
     const camp = await personsRepository.findCampById(campId);
-    if (!camp) throw new AppError(404, "Camp not found.", "PERSON_CAMP_NOT_FOUND");
+    if (!camp)
+      throw new AppError(404, "Camp not found.", "PERSON_CAMP_NOT_FOUND");
     if (camp.cmp_status !== "active") {
       throw new AppError(
         400,
@@ -304,6 +312,7 @@ export class PersonsService {
       id_profile_template: profile.templateId,
       prn_name: input.prn_name?.trim() ?? "",
       prn_lastname: input.prn_lastname?.trim() ?? "",
+      prn_identifier: `CMP${campId}-${randomUUID().slice(0, 8).toUpperCase()}`,
       prn_birth_date: input.prn_birth_date ?? null,
       prn_document_number: input.prn_document_number ?? null,
       prn_profile_description: profile.description,
@@ -394,6 +403,7 @@ export class PersonsService {
       id_profile_template: profile.templateId,
       prn_name: input.prn_name?.trim() ?? existing.prn_name,
       prn_lastname: input.prn_lastname?.trim() ?? existing.prn_lastname,
+      prn_identifier: existing.prn_identifier,
       prn_birth_date:
         input.prn_birth_date !== undefined
           ? input.prn_birth_date
@@ -416,8 +426,10 @@ export class PersonsService {
     const data: Prisma.personsUncheckedUpdateInput = {};
     for (const [key, value] of Object.entries(nextState)) {
       const before = existing[key as keyof typeof existing];
-      const normalizedBefore = before instanceof Date ? before.toISOString() : before;
-      const normalizedAfter = value instanceof Date ? value.toISOString() : value;
+      const normalizedBefore =
+        before instanceof Date ? before.toISOString() : before;
+      const normalizedAfter =
+        value instanceof Date ? value.toISOString() : value;
       if (normalizedBefore !== normalizedAfter) {
         (data as Record<string, unknown>)[key] = value;
       }

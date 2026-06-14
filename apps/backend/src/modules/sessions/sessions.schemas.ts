@@ -57,12 +57,20 @@ export const listSessionsQuerySchema = z.object({
     parseOptionalInteger,
     z.number().int().min(1).max(100).default(20),
   ),
-  userId: z.preprocess(parseOptionalInteger, z.number().int().positive().optional()),
-  campId: z.preprocess(parseOptionalInteger, z.number().int().positive().optional()),
+  userId: z.preprocess(
+    parseOptionalInteger,
+    z.number().int().positive().optional(),
+  ),
+  campId: z.preprocess(
+    parseOptionalInteger,
+    z.number().int().positive().optional(),
+  ),
   active: z.preprocess(parseOptionalBoolean, z.boolean().optional()),
   reason: z.preprocess(
     emptyStringToUndefined,
-    z.enum(["manual", "timeout", "forced", "camp_change", "security"]).optional(),
+    z
+      .enum(["manual", "timeout", "forced", "camp_change", "security"])
+      .optional(),
   ),
   search: z.preprocess(
     emptyStringToUndefined,

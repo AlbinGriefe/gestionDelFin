@@ -1,0 +1,126 @@
+.page {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  color: #ffffff;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(13, 22, 16, 0.92) 0%,
+    rgba(13, 22, 16, 0.72) 42%,
+    rgba(13, 22, 16, 0.08) 78%
+  );
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(620px, calc(100% - 40px));
+  align-self: center;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: clamp(20px, 7vw, 104px);
+  text-align: left;
+}
+
+.brand {
+  margin-bottom: 64px;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  margin-bottom: 12px;
+  color: #b8d0bf;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.content h1 {
+  max-width: 590px;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 760;
+  line-height: 1.02;
+}
+
+.description {
+  max-width: 510px;
+  margin-top: 22px;
+  color: #d8e1da;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.primaryAction {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  border-radius: 6px;
+  background: #d7eadc;
+  padding: 0 18px;
+  color: #173624;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.primaryAction:hover {
+  background: #ffffff;
+}
+
+.signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 72px;
+  color: #d4ddd6;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.signals span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+@media (max-width: 620px) {
+  .page {
+    background-position: 62% center;
+  }
+
+  .overlay {
+    background: rgba(12, 21, 15, 0.75);
+  }
+
+  .content {
+    width: calc(100% - 32px);
+    margin: 0 16px;
+  }
+
+  .brand {
+    margin-bottom: 52px;
+  }
+
+  .content h1 {
+    font-size: 42px;
+  }
+
+  .signals {
+    margin-top: 48px;
+  }
+}

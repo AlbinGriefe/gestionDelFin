@@ -40,7 +40,6 @@ function isSystemAdministrator(user: AuthenticatedUser) {
 }
 
 function canTriggerDailyProcess(user: AuthenticatedUser) {
-  if (isSystemAdministrator(user)) return true;
   const role = normalizeRole(user.roleName);
   return role.includes("gestion") && role.includes("recurso");
 }
@@ -49,7 +48,7 @@ function ensureCanTrigger(user: AuthenticatedUser) {
   if (!canTriggerDailyProcess(user)) {
     throw new AppError(
       403,
-      "Only resource managers or system administrators can manage daily processes.",
+      "Only resource managers can manage daily processes.",
       "DAILY_PROCESS_FORBIDDEN_ROLE",
     );
   }
@@ -136,7 +135,10 @@ async function applyDiseaseEvents(
 
   for (const person of input.people) {
     const stats = person.person_stats;
-    if (!stats || person.person_health?.phs_name.toLowerCase().includes("enfer")) {
+    if (
+      !stats ||
+      person.person_health?.phs_name.toLowerCase().includes("enfer")
+    ) {
       continue;
     }
     const percentage = healthPercentage({
@@ -194,6 +196,87 @@ async function applyDiseaseEvents(
 }
 
 export class DailyProcessesService {
+  async runScheduledDailyProcesses() {
+    const camps = await prisma.camps.findMany({
+      where: { cmp_status: "active" },
+      include: {
+        users: {
+          where: {
+            usr_is_active: true,
+            roles: {
+              is: {
+                rls_name: { contains: "gestion recursos" },
+              },
+            },
+          },
+          include: {
+            roles: true,
+          },
+          take: 1,
+        },
+      },
+      orderBy: { id_camp: "asc" },
+    });
+
+    const results: Array<{
+      campId: number;
+      campName: string;
+      status: "processed" | "skipped" | "failed";
+      message?: string;
+      result?: DailyProcessRunResult;
+    }> = [];
+
+    for (const camp of camps) {
+      const manager = camp.users[0];
+      if (!manager) {
+        results.push({
+          campId: camp.id_camp,
+          campName: camp.cmp_name,
+          status: "skipped",
+          message: "No active resource manager is assigned to the camp.",
+        });
+        continue;
+      }
+
+      try {
+        const result = await this.runDailyProcess(
+          { campId: camp.id_camp },
+          {
+            id: manager.id_user,
+            username: manager.usr_username,
+            email: manager.usr_email,
+            roleName: manager.roles.rls_name,
+            campId: camp.id_camp,
+            campName: camp.cmp_name,
+            personId: manager.id_person,
+            availableCamps: [{ id: camp.id_camp, name: camp.cmp_name }],
+            sessionId: "scheduled-process",
+            sessionExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+            sessionTimeoutMinutes: 1,
+          },
+        );
+        results.push({
+          campId: camp.id_camp,
+          campName: camp.cmp_name,
+          status: "processed",
+          result,
+        });
+      } catch (error) {
+        results.push({
+          campId: camp.id_camp,
+          campName: camp.cmp_name,
+          status: "failed",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+
+    return {
+      runAt: getServerNow().toISOString(),
+      camps: results,
+    };
+  }
+
   async getAssignments(campId: number, date: Date, actor: AuthenticatedUser) {
     ensureCanTrigger(actor);
     ensureCampScope(actor, campId);
@@ -258,7 +341,11 @@ export class DailyProcessesService {
     ensureCampScope(actor, campId);
     const camp = await findCampById(campId);
     if (!camp) {
-      throw new AppError(404, "Camp not found.", "DAILY_PROCESS_CAMP_NOT_FOUND");
+      throw new AppError(
+        404,
+        "Camp not found.",
+        "DAILY_PROCESS_CAMP_NOT_FOUND",
+      );
     }
     if (camp.cmp_status !== "active") {
       throw new AppError(
@@ -270,7 +357,8 @@ export class DailyProcessesService {
 
     const existingEvent = await findTodayDailyProcessEvent(campId);
     if (existingEvent && !input.force) {
-      const cached = existingEvent.evt_new_value as DailyProcessRunResult | null;
+      const cached =
+        existingEvent.evt_new_value as DailyProcessRunResult | null;
       if (cached) return { ...cached, alreadyRunToday: true };
       throw new AppError(
         409,
@@ -278,10 +366,10 @@ export class DailyProcessesService {
         "DAILY_PROCESS_ALREADY_RAN_TODAY",
       );
     }
-    if (input.force && !isSystemAdministrator(actor)) {
+    if (input.force && !canTriggerDailyProcess(actor)) {
       throw new AppError(
         403,
-        "Only system administrators can force a re-run.",
+        "Only resource managers can force a re-run.",
         "DAILY_PROCESS_FORCE_FORBIDDEN",
       );
     }
@@ -325,7 +413,8 @@ export class DailyProcessesService {
       });
     }
 
-    const productionRows: DailyProcessRunResult["production"]["production"] = [];
+    const productionRows: DailyProcessRunResult["production"]["production"] =
+      [];
     const rationRows: DailyProcessRunResult["rations"]["rations"] = [];
 
     await prisma.$transaction(async (tx) => {
@@ -470,7 +559,11 @@ export class DailyProcessesService {
     ensureCampScope(actor, campId);
     const camp = await findCampById(campId);
     if (!camp) {
-      throw new AppError(404, "Camp not found.", "DAILY_PROCESS_CAMP_NOT_FOUND");
+      throw new AppError(
+        404,
+        "Camp not found.",
+        "DAILY_PROCESS_CAMP_NOT_FOUND",
+      );
     }
     const existingEvent = await findTodayDailyProcessEvent(campId);
     return {
@@ -516,7 +609,8 @@ function buildRunSummary(input: {
         waterProduced: Number(totalWater.toFixed(2)),
         personsProcessed: input.productionRows.filter((row) => !row.skipped)
           .length,
-        personsSkipped: input.productionRows.filter((row) => row.skipped).length,
+        personsSkipped: input.productionRows.filter((row) => row.skipped)
+          .length,
       },
     },
     rations: {

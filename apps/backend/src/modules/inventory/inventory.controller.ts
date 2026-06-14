@@ -44,9 +44,9 @@ export async function listInventoryController(
   next: NextFunction,
 ) {
   try {
-    const filters = await listInventoryQuerySchema.parseAsync(
+    const filters = (await listInventoryQuerySchema.parseAsync(
       request.query,
-    ) as InventoryListFilters;
+    )) as InventoryListFilters;
     const result = await inventoryService.listInventory(
       filters,
       getAuthenticatedUser(request),

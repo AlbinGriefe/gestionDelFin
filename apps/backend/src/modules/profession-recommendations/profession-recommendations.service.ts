@@ -75,10 +75,7 @@ export class ProfessionRecommendationsService {
         "PROFESSION_RECOMMENDATION_PERSON_NOT_FOUND",
       );
     }
-    if (
-      !person.prn_is_active ||
-      person.prn_admission_status !== "accepted"
-    ) {
+    if (!person.prn_is_active || person.prn_admission_status !== "accepted") {
       throw new AppError(
         409,
         "Only active, accepted people can receive a profession recommendation.",
@@ -93,8 +90,9 @@ export class ProfessionRecommendationsService {
       );
     }
 
-    const pending =
-      await professionRecommendationsRepository.findLatestPending(input.personId);
+    const pending = await professionRecommendationsRepository.findLatestPending(
+      input.personId,
+    );
     if (pending && !input.forceRefresh) {
       return { recommendation: mapRecord(pending), reusedExisting: true };
     }

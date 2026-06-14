@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: apocalypse_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      NODE_ENV: test
+      PORT: 3001
+      API_PREFIX: /api/v1
+      CORS_ORIGIN: http://localhost:5173
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/apocalypse_ci
+      AI_PROVIDER: rules
+      VITE_API_URL: http://localhost:3001/api/v1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Generate ephemeral CI secrets
+        shell: bash
+        run: |
+          JWT_SECRET="$(openssl rand -hex 32)"
+          CRON_SECRET="$(openssl rand -hex 32)"
+          ADMIN_PASSWORD="Ci$(openssl rand -hex 16)A1"
+          GESTION_ALPHA_PASSWORD="Ci$(openssl rand -hex 16)A1"
+          VIAJES_ALPHA_PASSWORD="Ci$(openssl rand -hex 16)A1"
+          TRABAJADOR_ALPHA_PASSWORD="Ci$(openssl rand -hex 16)A1"
+          GESTION_BETA_PASSWORD="Ci$(openssl rand -hex 16)A1"
+          VIAJES_BETA_PASSWORD="Ci$(openssl rand -hex 16)A1"
+          for secret in \
+            "$JWT_SECRET" \
+            "$CRON_SECRET" \
+            "$ADMIN_PASSWORD" \
+            "$GESTION_ALPHA_PASSWORD" \
+            "$VIAJES_ALPHA_PASSWORD" \
+            "$TRABAJADOR_ALPHA_PASSWORD" \
+            "$GESTION_BETA_PASSWORD" \
+            "$VIAJES_BETA_PASSWORD"; do
+            echo "::add-mask::$secret"
+          done
+          echo "JWT_SECRET=$JWT_SECRET" >> "$GITHUB_ENV"
+          echo "CRON_SECRET=$CRON_SECRET" >> "$GITHUB_ENV"
+          echo "SEED_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "SEED_GESTION_ALPHA_PASSWORD=$GESTION_ALPHA_PASSWORD" >> "$GITHUB_ENV"
+          echo "SEED_VIAJES_ALPHA_PASSWORD=$VIAJES_ALPHA_PASSWORD" >> "$GITHUB_ENV"
+          echo "SEED_TRABAJADOR_ALPHA_PASSWORD=$TRABAJADOR_ALPHA_PASSWORD" >> "$GITHUB_ENV"
+          echo "SEED_GESTION_BETA_PASSWORD=$GESTION_BETA_PASSWORD" >> "$GITHUB_ENV"
+          echo "SEED_VIAJES_BETA_PASSWORD=$VIAJES_BETA_PASSWORD" >> "$GITHUB_ENV"
+          echo "E2E_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "E2E_GESTION_ALPHA_PASSWORD=$GESTION_ALPHA_PASSWORD" >> "$GITHUB_ENV"
+          echo "E2E_VIAJES_ALPHA_PASSWORD=$VIAJES_ALPHA_PASSWORD" >> "$GITHUB_ENV"
+          echo "E2E_TRABAJADOR_ALPHA_PASSWORD=$TRABAJADOR_ALPHA_PASSWORD" >> "$GITHUB_ENV"
+
+      - run: npm ci
+      - run: npm run backend:prisma:generate
+      - run: npm run backend:prisma:migrate:deploy
+      - run: npm run backend:seed
+      - run: npm run backend:prisma:validate
+      - run: npm run backend:typecheck
+      - run: npm run backend:lint
+      - run: npm run frontend:lint
+      - run: npm run backend:test
+        env:
+          RUN_DB_INTEGRATION: "true"
+      - run: npm run verify:build
+      - run: npm run format:check
+      - run: npm run spellcheck
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

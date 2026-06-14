@@ -1,6 +1,10 @@
 type LogLevel = "info" | "warn" | "error";
 
-function writeLog(level: LogLevel, message: string, meta?: Record<string, unknown>) {
+function writeLog(
+  level: LogLevel,
+  message: string,
+  meta?: Record<string, unknown>,
+) {
   const payload = {
     level,
     message,

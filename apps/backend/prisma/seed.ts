@@ -23,7 +23,8 @@ interface SeedProfession {
 const professions: SeedProfession[] = [
   {
     name: "Medico",
-    description: "Atiende heridas y enfermedades dentro y fuera del campamento.",
+    description:
+      "Atiende heridas y enfermedades dentro y fuera del campamento.",
     canExpedition: true,
     canTransfer: true,
     productionPenalty: 6,
@@ -79,15 +80,32 @@ function requireEnv(key: string) {
   return value;
 }
 
+function requireEnvAny(...keys: string[]) {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (value) return value;
+  }
+  throw new Error(`Required environment variable: ${keys.join(" or ")}`);
+}
+
 async function upsertPerson(input: {
   campId: number;
-  professionId: number;
+  professionId: number | null;
   healthId: number;
   profileTemplateId: number | null;
   profileDescription: string;
   name: string;
   lastname: string;
+  identifier: string;
   documentNumber: string;
+  admissionStatus?:
+    | "pending"
+    | "under_review"
+    | "observe"
+    | "accepted"
+    | "rejected";
+  active?: boolean;
+  admissionNotes?: string | null;
   stats: {
     health: number;
     strength: number;
@@ -97,7 +115,7 @@ async function upsertPerson(input: {
   };
 }) {
   const existing = await prisma.persons.findFirst({
-    where: { prn_document_number: input.documentNumber },
+    where: { prn_identifier: input.identifier },
   });
   const data = {
     id_camp: input.campId,
@@ -106,11 +124,13 @@ async function upsertPerson(input: {
     id_profile_template: input.profileTemplateId,
     prn_name: input.name,
     prn_lastname: input.lastname,
+    prn_identifier: input.identifier,
     prn_document_number: input.documentNumber,
     prn_profile_description: input.profileDescription,
-    prn_admission_status: "accepted" as const,
-    prn_is_active: true,
-    prn_admission_notes: "Seeded as an accepted camp member.",
+    prn_admission_status: input.admissionStatus ?? "accepted",
+    prn_is_active: input.active ?? true,
+    prn_admission_notes:
+      input.admissionNotes ?? "Seeded as an accepted camp member.",
   };
   const person = existing
     ? await prisma.persons.update({
@@ -131,7 +151,15 @@ async function upsertPerson(input: {
       pst_luck: input.stats.luck,
       pst_level: 1,
     },
-    update: {},
+    update: {
+      pst_health: input.stats.health,
+      pst_max_health: Math.max(1, input.stats.health),
+      pst_strength: input.stats.strength,
+      pst_satiety: input.stats.satiety,
+      pst_hydration: input.stats.hydration,
+      pst_luck: input.stats.luck,
+      pst_level: 1,
+    },
   });
 
   return person;
@@ -142,9 +170,20 @@ async function main() {
 
   const passwords = {
     admin: requireEnv("SEED_ADMIN_PASSWORD"),
-    gestion: requireEnv("SEED_GESTION_PASSWORD"),
-    viajes: requireEnv("SEED_VIAJES_PASSWORD"),
-    trabajador: requireEnv("SEED_TRABAJADOR_PASSWORD"),
+    gestion_alpha: requireEnvAny(
+      "SEED_GESTION_ALPHA_PASSWORD",
+      "SEED_GESTION_PASSWORD",
+    ),
+    viajes_alpha: requireEnvAny(
+      "SEED_VIAJES_ALPHA_PASSWORD",
+      "SEED_VIAJES_PASSWORD",
+    ),
+    trabajador_alpha: requireEnvAny(
+      "SEED_TRABAJADOR_ALPHA_PASSWORD",
+      "SEED_TRABAJADOR_PASSWORD",
+    ),
+    gestion_beta: requireEnv("SEED_GESTION_BETA_PASSWORD"),
+    viajes_beta: requireEnv("SEED_VIAJES_BETA_PASSWORD"),
   };
 
   const campA = await prisma.camps.upsert({
@@ -157,7 +196,13 @@ async function main() {
       cmp_max_capacity: 100,
       cmp_status: "active",
     },
-    update: {},
+    update: {
+      cmp_location: "Sector Norte - Zona Industrial",
+      cmp_latitude: 9.9281,
+      cmp_longitude: -84.0907,
+      cmp_max_capacity: 100,
+      cmp_status: "active",
+    },
   });
   const campB = await prisma.camps.upsert({
     where: { cmp_name: "Refugio Beta" },
@@ -169,7 +214,13 @@ async function main() {
       cmp_max_capacity: 60,
       cmp_status: "active",
     },
-    update: {},
+    update: {
+      cmp_location: "Sector Sur - Zona Residencial",
+      cmp_latitude: 9.8921,
+      cmp_longitude: -84.105,
+      cmp_max_capacity: 60,
+      cmp_status: "active",
+    },
   });
 
   const roleDefinitions = [
@@ -308,10 +359,7 @@ async function main() {
             pft_is_active: true,
           },
         });
-    templateByDescription.set(
-      saved.pft_description,
-      saved.id_profile_template,
-    );
+    templateByDescription.set(saved.pft_description, saved.id_profile_template);
   }
 
   for (const camp of [campA, campB]) {
@@ -330,7 +378,18 @@ async function main() {
         cor_valuable_probability: 20,
         cor_disease_threshold: 25,
       },
-      update: {},
+      update: {
+        cor_admission_rules: {
+          minimumHealth: 1,
+          requireProfileDescription: true,
+          requireAvailableCapacity: true,
+        },
+        cor_expedition_success: 70,
+        cor_transfer_success: 75,
+        cor_disease_probability: 25,
+        cor_valuable_probability: 20,
+        cor_disease_threshold: 25,
+      },
     });
   }
 
@@ -338,53 +397,93 @@ async function main() {
     {
       username: "admin",
       email: "admin@base-alpha.com",
+      camp: campA,
+      passwordKey: "admin",
       roleName: "administrador sistema",
       professionName: "Diplomatico",
       name: "Carlos",
       lastname: "Ramirez",
+      identifier: "ALPHA-ADM-001",
       documentNumber: "ADM-001",
       templateIndex: 5,
       stats: { health: 8, strength: 6, satiety: 8, hydration: 8, luck: 7 },
     },
     {
-      username: "gestion",
-      email: "gestion@base-alpha.com",
+      username: "gestion_alpha",
+      email: "gestion.alpha@base-alpha.com",
+      camp: campA,
+      passwordKey: "gestion_alpha",
       roleName: "gestion recursos",
       professionName: "Cientifico",
       name: "Ana",
       lastname: "Torres",
+      identifier: "ALPHA-GRS-001",
       documentNumber: "GRS-001",
       templateIndex: 8,
       stats: { health: 7, strength: 5, satiety: 8, hydration: 9, luck: 6 },
     },
     {
-      username: "viajes",
-      email: "viajes@base-alpha.com",
+      username: "viajes_alpha",
+      email: "viajes.alpha@base-alpha.com",
+      camp: campA,
+      passwordKey: "viajes_alpha",
       roleName: "encargado de viajes y comunicacion",
       professionName: "Explorador",
       name: "Miguel",
       lastname: "Vargas",
+      identifier: "ALPHA-VJE-001",
       documentNumber: "VJE-001",
       templateIndex: 2,
       stats: { health: 9, strength: 8, satiety: 7, hydration: 7, luck: 9 },
     },
     {
-      username: "trabajador",
-      email: "trabajador@base-alpha.com",
+      username: "trabajador_alpha",
+      email: "trabajador.alpha@base-alpha.com",
+      camp: campA,
+      passwordKey: "trabajador_alpha",
       roleName: "trabajador",
       professionName: "Medico",
       name: "Sofia",
       lastname: "Castro",
+      identifier: "ALPHA-TRB-001",
       documentNumber: "TRB-001",
       templateIndex: 7,
       stats: { health: 7, strength: 4, satiety: 8, hydration: 8, luck: 5 },
+    },
+    {
+      username: "gestion_beta",
+      email: "gestion.beta@refugio-beta.com",
+      camp: campB,
+      passwordKey: "gestion_beta",
+      roleName: "gestion recursos",
+      professionName: "Agricultor",
+      name: "Lucia",
+      lastname: "Mendez",
+      identifier: "BETA-GRS-001",
+      documentNumber: "B-GRS-001",
+      templateIndex: 3,
+      stats: { health: 8, strength: 6, satiety: 8, hydration: 7, luck: 6 },
+    },
+    {
+      username: "viajes_beta",
+      email: "viajes.beta@refugio-beta.com",
+      camp: campB,
+      passwordKey: "viajes_beta",
+      roleName: "encargado de viajes y comunicacion",
+      professionName: "Cazador",
+      name: "Diego",
+      lastname: "Salas",
+      identifier: "BETA-VJE-001",
+      documentNumber: "B-VJE-001",
+      templateIndex: 6,
+      stats: { health: 9, strength: 8, satiety: 7, hydration: 7, luck: 8 },
     },
   ] as const;
 
   for (const definition of seededPeople) {
     const template = DEFAULT_PROFILE_TEMPLATES[definition.templateIndex];
     const person = await upsertPerson({
-      campId: campA.id_camp,
+      campId: definition.camp.id_camp,
       professionId: professionByName.get(definition.professionName)!,
       healthId: healthByName.get("Sano")!,
       profileTemplateId:
@@ -392,14 +491,15 @@ async function main() {
       profileDescription: template.description,
       name: definition.name,
       lastname: definition.lastname,
+      identifier: definition.identifier,
       documentNumber: definition.documentNumber,
       stats: definition.stats,
     });
-    const password = await bcrypt.hash(passwords[definition.username], 10);
-    await prisma.users.upsert({
+    const password = await bcrypt.hash(passwords[definition.passwordKey], 10);
+    const user = await prisma.users.upsert({
       where: { usr_username: definition.username },
       create: {
-        id_camp: campA.id_camp,
+        id_camp: definition.camp.id_camp,
         id_role: roleByName.get(definition.roleName)!,
         id_person: person.id_person,
         usr_username: definition.username,
@@ -408,13 +508,110 @@ async function main() {
         usr_is_active: true,
       },
       update: {
-        id_camp: campA.id_camp,
+        id_camp: definition.camp.id_camp,
         id_role: roleByName.get(definition.roleName)!,
         id_person: person.id_person,
         usr_email: definition.email,
         usr_password: password,
         usr_is_active: true,
       },
+    });
+
+    const membershipCamps =
+      definition.username === "admin" ? [campA, campB] : [definition.camp];
+    for (const camp of membershipCamps) {
+      await prisma.user_camp_memberships.upsert({
+        where: {
+          id_user_id_camp: {
+            id_user: user.id_user,
+            id_camp: camp.id_camp,
+          },
+        },
+        create: {
+          id_user: user.id_user,
+          id_camp: camp.id_camp,
+          ucm_is_active: true,
+        },
+        update: {
+          ucm_is_active: true,
+        },
+      });
+    }
+  }
+
+  const scenarioPeople = [
+    {
+      identifier: "ALPHA-PENDING-001",
+      documentNumber: "PEN-001",
+      campId: campA.id_camp,
+      name: "Daniel",
+      lastname: "Rojas",
+      templateIndex: 1,
+      professionName: null,
+      healthName: "Sano",
+      admissionStatus: "pending" as const,
+      stats: { health: 7, strength: 9, satiety: 6, hydration: 7, luck: 5 },
+      notes: "Pendiente de evaluacion textual.",
+    },
+    {
+      identifier: "ALPHA-OBSERVE-001",
+      documentNumber: "OBS-001",
+      campId: campA.id_camp,
+      name: "Elena",
+      lastname: "Quintero",
+      templateIndex: 4,
+      professionName: null,
+      healthName: "Herido leve",
+      admissionStatus: "observe" as const,
+      stats: { health: 3, strength: 4, satiety: 5, hydration: 5, luck: 6 },
+      notes: "Observacion por salud reducida.",
+    },
+    {
+      identifier: "BETA-REJECTED-001",
+      documentNumber: "REJ-001",
+      campId: campB.id_camp,
+      name: "Marco",
+      lastname: "Leon",
+      templateIndex: 0,
+      professionName: null,
+      healthName: "Herido grave",
+      admissionStatus: "rejected" as const,
+      stats: { health: 1, strength: 3, satiety: 2, hydration: 2, luck: 1 },
+      notes: "Rechazado por capacidad operativa y salud.",
+    },
+    {
+      identifier: "ALPHA-SICK-001",
+      documentNumber: "ENF-001",
+      campId: campA.id_camp,
+      name: "Nora",
+      lastname: "Jimenez",
+      templateIndex: 3,
+      professionName: "Agricultor",
+      healthName: "Enfermo",
+      admissionStatus: "accepted" as const,
+      stats: { health: 2, strength: 4, satiety: 5, hydration: 4, luck: 3 },
+      notes: "Paciente disponible para probar curacion.",
+    },
+  ];
+
+  for (const definition of scenarioPeople) {
+    const template = DEFAULT_PROFILE_TEMPLATES[definition.templateIndex]!;
+    await upsertPerson({
+      campId: definition.campId,
+      professionId: definition.professionName
+        ? professionByName.get(definition.professionName)!
+        : null,
+      healthId: healthByName.get(definition.healthName)!,
+      profileTemplateId:
+        templateByDescription.get(template.description) ?? null,
+      profileDescription: template.description,
+      name: definition.name,
+      lastname: definition.lastname,
+      identifier: definition.identifier,
+      documentNumber: definition.documentNumber,
+      admissionStatus: definition.admissionStatus,
+      admissionNotes: definition.notes,
+      stats: definition.stats,
     });
   }
 
@@ -464,21 +661,31 @@ async function main() {
         rss_is_active: true,
       },
     });
-    await prisma.storage.upsert({
-      where: {
-        id_camp_id_resource: {
-          id_camp: campA.id_camp,
-          id_resource: saved.id_resource,
+    for (const [camp, multiplier] of [
+      [campA, 1],
+      [campB, 0.65],
+    ] as const) {
+      const quantity = Number((resource[4] * multiplier).toFixed(2));
+      const minimum = Number((resource[5] * multiplier).toFixed(2));
+      await prisma.storage.upsert({
+        where: {
+          id_camp_id_resource: {
+            id_camp: camp.id_camp,
+            id_resource: saved.id_resource,
+          },
         },
-      },
-      create: {
-        id_camp: campA.id_camp,
-        id_resource: saved.id_resource,
-        stg_quantity: resource[4],
-        stg_min_quantity: resource[5],
-      },
-      update: {},
-    });
+        create: {
+          id_camp: camp.id_camp,
+          id_resource: saved.id_resource,
+          stg_quantity: quantity,
+          stg_min_quantity: minimum,
+        },
+        update: {
+          stg_quantity: quantity,
+          stg_min_quantity: minimum,
+        },
+      });
+    }
   }
 
   await prisma.system_settings.upsert({
@@ -490,7 +697,12 @@ async function main() {
       sts_description: "Session inactivity timeout in minutes.",
       sts_is_public: true,
     },
-    update: {},
+    update: {
+      sts_value: process.env.SESSION_TIMEOUT_MINUTES ?? "20",
+      sts_value_type: "integer",
+      sts_description: "Session inactivity timeout in minutes.",
+      sts_is_public: true,
+    },
   });
   await prisma.system_settings.upsert({
     where: { sts_key: "daily_ration_per_person" },
@@ -498,14 +710,116 @@ async function main() {
       sts_key: "daily_ration_per_person",
       sts_value: "1",
       sts_value_type: "decimal",
-      sts_description: "Daily amount consumed per person and rationable resource.",
+      sts_description:
+        "Daily amount consumed per person and rationable resource.",
       sts_is_public: false,
     },
-    update: {},
+    update: {
+      sts_value: "1",
+      sts_value_type: "decimal",
+      sts_description:
+        "Daily amount consumed per person and rationable resource.",
+      sts_is_public: false,
+    },
   });
 
+  const zoneDefinitions = [
+    {
+      camp: campA,
+      name: "Distrito industrial",
+      description: "Almacenes abandonados con riesgo medio.",
+      latitude: 9.934,
+      longitude: -84.083,
+      risk: "medium" as const,
+    },
+    {
+      camp: campA,
+      name: "Hospital central",
+      description: "Posibles suministros medicos y alta presencia hostil.",
+      latitude: 9.925,
+      longitude: -84.101,
+      risk: "high" as const,
+    },
+    {
+      camp: campB,
+      name: "Mercado del sur",
+      description: "Zona comercial parcialmente explorada.",
+      latitude: 9.887,
+      longitude: -84.11,
+      risk: "medium" as const,
+    },
+    {
+      camp: campB,
+      name: "Reserva forestal",
+      description: "Area de caza con rutas poco estables.",
+      latitude: 9.875,
+      longitude: -84.095,
+      risk: "high" as const,
+    },
+  ];
+
+  for (const zone of zoneDefinitions) {
+    await prisma.exploration_zones.upsert({
+      where: {
+        id_camp_exz_name: {
+          id_camp: zone.camp.id_camp,
+          exz_name: zone.name,
+        },
+      },
+      create: {
+        id_camp: zone.camp.id_camp,
+        exz_name: zone.name,
+        exz_description: zone.description,
+        exz_latitude: zone.latitude,
+        exz_longitude: zone.longitude,
+        exz_risk: zone.risk,
+        exz_is_active: true,
+      },
+      update: {
+        exz_description: zone.description,
+        exz_latitude: zone.latitude,
+        exz_longitude: zone.longitude,
+        exz_risk: zone.risk,
+        exz_is_active: true,
+      },
+    });
+  }
+
+  const existingSeedEvent = await prisma.narrative_events.findFirst({
+    where: {
+      id_camp: campA.id_camp,
+      nre_source_type: "seed",
+      nre_reference_id: 1,
+    },
+  });
+  const seedEventData = {
+    id_camp: campA.id_camp,
+    nre_type: "scarcity" as const,
+    nre_status: "resolved" as const,
+    nre_source_type: "seed",
+    nre_reference_id: 1,
+    nre_probability: null,
+    nre_roll: null,
+    nre_participants: [],
+    nre_effects: { resource: "Agua potable", shortfall: 12 },
+    nre_description:
+      "Simulacion resuelta de escasez para validar la pantalla de eventos.",
+  };
+  if (existingSeedEvent) {
+    await prisma.narrative_events.update({
+      where: {
+        id_narrative_event: existingSeedEvent.id_narrative_event,
+      },
+      data: seedEventData,
+    });
+  } else {
+    await prisma.narrative_events.create({ data: seedEventData });
+  }
+
   console.log("Seed completed.");
-  console.log("Users: admin, gestion, viajes, trabajador.");
+  console.log(
+    "Users: admin, gestion_alpha, viajes_alpha, trabajador_alpha, gestion_beta, viajes_beta.",
+  );
 }
 
 main()

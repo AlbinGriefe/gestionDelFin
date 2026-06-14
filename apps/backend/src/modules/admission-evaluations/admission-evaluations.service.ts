@@ -17,7 +17,9 @@ function ensureAdmin(actor: AuthenticatedUser) {
   }
 }
 
-function mapStats(stats: NonNullable<AdmissionEvaluationRecord["persons"]["person_stats"]>) {
+function mapStats(
+  stats: NonNullable<AdmissionEvaluationRecord["persons"]["person_stats"]>,
+) {
   return {
     health: stats.pst_health,
     maxHealth: stats.pst_max_health,
@@ -65,9 +67,15 @@ export class AdmissionEvaluationsService {
     actor: AuthenticatedUser,
   ) {
     ensureAdmin(actor);
-    const person = await admissionEvaluationsRepository.findPerson(input.personId);
+    const person = await admissionEvaluationsRepository.findPerson(
+      input.personId,
+    );
     if (!person) {
-      throw new AppError(404, "Person not found.", "ADMISSION_PERSON_NOT_FOUND");
+      throw new AppError(
+        404,
+        "Person not found.",
+        "ADMISSION_PERSON_NOT_FOUND",
+      );
     }
     if (!person.prn_is_active) {
       throw new AppError(
@@ -98,15 +106,12 @@ export class AdmissionEvaluationsService {
       return { evaluation: mapEvaluation(pending), reusedExisting: true };
     }
 
-    const rules =
-      (person.camps.camp_operational_rules?.cor_admission_rules as Record<
-        string,
-        unknown
-      > | null) ?? {
-        minimumHealth: 1,
-        requireProfileDescription: true,
-        requireAvailableCapacity: true,
-      };
+    const rules = (person.camps.camp_operational_rules
+      ?.cor_admission_rules as Record<string, unknown> | null) ?? {
+      minimumHealth: 1,
+      requireProfileDescription: true,
+      requireAvailableCapacity: true,
+    };
     const stats = mapStats(person.person_stats);
     const providerInput = {
       personId: person.id_person,
@@ -162,7 +167,10 @@ export class AdmissionEvaluationsService {
       }
       return mapEvaluation(confirmed);
     } catch (error) {
-      if (error instanceof Error && error.message === "CAMP_CAPACITY_EXCEEDED") {
+      if (
+        error instanceof Error &&
+        error.message === "CAMP_CAPACITY_EXCEEDED"
+      ) {
         throw new AppError(
           409,
           "Camp capacity would be exceeded.",

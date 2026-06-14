@@ -128,17 +128,23 @@ export async function findFoodAndWaterResourceIds() {
   });
 
   const normalize = (s: string) =>
-    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+    s
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
 
-  const foodResource = resources.find((r: (typeof resources)[number]) =>
-    normalize(r.rss_name).includes("comida") ||
-    normalize(r.rss_name).includes("food") ||
-    normalize(r.rss_name).includes("aliment"),
+  const foodResource = resources.find(
+    (r: (typeof resources)[number]) =>
+      normalize(r.rss_name).includes("comida") ||
+      normalize(r.rss_name).includes("food") ||
+      normalize(r.rss_name).includes("aliment"),
   );
 
- const waterResource = resources.find((r: (typeof resources)[number]) =>
-    normalize(r.rss_name).includes("agua") ||
-    normalize(r.rss_name).includes("water"),
+  const waterResource = resources.find(
+    (r: (typeof resources)[number]) =>
+      normalize(r.rss_name).includes("agua") ||
+      normalize(r.rss_name).includes("water"),
   );
 
   return {
@@ -158,7 +164,9 @@ export async function findRationPerPersonSetting(): Promise<number> {
   return Number.isNaN(parsed) ? 1 : parsed;
 }
 
-export async function findPersonsOutOfCamp(campId: number): Promise<Set<number>> {
+export async function findPersonsOutOfCamp(
+  campId: number,
+): Promise<Set<number>> {
   const [expeditionPersons, transferPersons] = await prisma.$transaction([
     prisma.expedition_records.findMany({
       where: {
@@ -188,8 +196,12 @@ export async function findPersonsOutOfCamp(campId: number): Promise<Set<number>>
   return ids;
 }
 
-export type WorkablePerson = Awaited<ReturnType<typeof findWorkablePersons>>[number];
-export type RationableStorageRecord = Awaited<ReturnType<typeof findRationableStorage>>[number];
+export type WorkablePerson = Awaited<
+  ReturnType<typeof findWorkablePersons>
+>[number];
+export type RationableStorageRecord = Awaited<
+  ReturnType<typeof findRationableStorage>
+>[number];
 
 // ─── Write operations ─────────────────────────────────────────────────────────
 
@@ -306,9 +318,7 @@ export async function applyDailyRations(
 
     const stockBefore = Number(storageRecord.stg_quantity);
     const totalConsumed = Math.min(stockBefore, requestedConsumption);
-    const shortfall = Number(
-      (requestedConsumption - totalConsumed).toFixed(2),
-    );
+    const shortfall = Number((requestedConsumption - totalConsumed).toFixed(2));
     const stockAfter = Number((stockBefore - totalConsumed).toFixed(2));
     const minQuantity = Number(storageRecord.stg_min_quantity);
     const isBelowMinimum = stockAfter < minQuantity;

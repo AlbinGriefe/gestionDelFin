@@ -70,3 +70,24 @@ export async function logoutController(
     next(error);
   }
 }
+
+export async function switchCampController(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    if (!request.auth) {
+      throw new Error("Authenticated user context is missing.");
+    }
+
+    const result = await authService.switchCamp(
+      request.auth,
+      Number(request.body.campId),
+      resolveIpAddress(request),
+    );
+    response.status(200).json(createSuccessResponse(result, request.requestId));
+  } catch (error) {
+    next(error);
+  }
+}

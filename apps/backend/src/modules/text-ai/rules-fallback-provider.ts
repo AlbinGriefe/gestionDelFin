@@ -94,7 +94,10 @@ export class RulesFallbackProvider implements TextAiProvider {
         ? input.rules.minimumHealth
         : 1;
 
-    if (input.camp.maxCapacity > 0 && input.camp.activePersons >= input.camp.maxCapacity) {
+    if (
+      input.camp.maxCapacity > 0 &&
+      input.camp.activePersons >= input.camp.maxCapacity
+    ) {
       decision = "reject";
       confidence = 0.98;
       reasons.push("El campamento no tiene capacidad disponible.");
@@ -108,8 +111,12 @@ export class RulesFallbackProvider implements TextAiProvider {
       reasons.push("La descripcion no contiene informacion suficiente.");
     } else {
       reasons.push("Existe capacidad disponible en el campamento.");
-      reasons.push("El perfil contiene informacion suficiente para revision humana.");
-      reasons.push("Las estadisticas iniciales no incumplen las reglas configuradas.");
+      reasons.push(
+        "El perfil contiene informacion suficiente para revision humana.",
+      );
+      reasons.push(
+        "Las estadisticas iniciales no incumplen las reglas configuradas.",
+      );
     }
 
     return {

@@ -34,12 +34,12 @@ function isSystemAdministrator(user: AuthenticatedUser) {
 }
 
 function canManageTransfers(user: AuthenticatedUser) {
-  if (isSystemAdministrator(user)) {
-    return true;
-  }
-
   const normalizedRole = normalizeRoleName(user.roleName);
-  return normalizedRole.includes("viaje") || normalizedRole.includes("comunic");
+  return (
+    normalizedRole.includes("viaje") ||
+    normalizedRole.includes("comunic") ||
+    (normalizedRole.includes("gestion") && normalizedRole.includes("recurso"))
+  );
 }
 
 function ensureTransferManager(user: AuthenticatedUser) {
@@ -104,12 +104,11 @@ function buildTransferOutcome(
     baseProbability: calculation.baseProbability,
     luckBonusPoints: calculation.luckBonusPoints,
     professionBonusPoints: calculation.professionBonusPoints,
-    failureEventType:
-      successful
-        ? undefined
-        : rollPercentage() <= 50
-          ? "zombie_attack"
-          : "traveler_loss",
+    failureEventType: successful
+      ? undefined
+      : rollPercentage() <= 50
+        ? "zombie_attack"
+        : "traveler_loss",
   };
 }
 
@@ -120,7 +119,8 @@ function mapTransferSummary(record: TransferSummaryRecord): TransferSummary {
     state: record.tfs_state,
     comments: record.tfs_comments,
     requestedDate: record.tfs_requested_date.toISOString(),
-    acceptedRequestDate: record.tfs_accepted_request_date?.toISOString() ?? null,
+    acceptedRequestDate:
+      record.tfs_accepted_request_date?.toISOString() ?? null,
     shipmentDate: record.tfs_shipment_date?.toISOString() ?? null,
     arrivalDate: record.tfs_arrival_date?.toISOString() ?? null,
     returnDate: record.tfs_return_date?.toISOString() ?? null,
@@ -145,7 +145,9 @@ function mapTransferSummary(record: TransferSummaryRecord): TransferSummary {
 
 function mapTransferDetail(
   record: TransferDetailRecord,
-  recentEvents: Awaited<ReturnType<typeof transfersRepository.listTransferEvents>>,
+  recentEvents: Awaited<
+    ReturnType<typeof transfersRepository.listTransferEvents>
+  >,
 ): TransferDetail {
   const summary = mapTransferSummary(record);
 
@@ -162,14 +164,16 @@ function mapTransferDetail(
       ? {
           id: record.users_transfers_id_approved_origin_by_userTousers.id_user,
           username:
-            record.users_transfers_id_approved_origin_by_userTousers.usr_username,
+            record.users_transfers_id_approved_origin_by_userTousers
+              .usr_username,
         }
       : null,
     approvedDestinyBy: record.users_transfers_id_approved_destiny_by_userTousers
       ? {
           id: record.users_transfers_id_approved_destiny_by_userTousers.id_user,
           username:
-            record.users_transfers_id_approved_destiny_by_userTousers.usr_username,
+            record.users_transfers_id_approved_destiny_by_userTousers
+              .usr_username,
         }
       : null,
     persons: record.application_admission_person.map((personLine) => ({
@@ -207,7 +211,10 @@ function mapTransferDetail(
   };
 }
 
-function ensureTransferVisibility(actor: AuthenticatedUser, transfer: TransferDetailRecord) {
+function ensureTransferVisibility(
+  actor: AuthenticatedUser,
+  transfer: TransferDetailRecord,
+) {
   if (isSystemAdministrator(actor)) {
     return;
   }
@@ -243,7 +250,10 @@ function ensureTransitionAuthority(
   ];
   const originDrivenStates = ["scheduled", "in_transit", "cancelled"];
 
-  if (destinyDrivenStates.includes(nextState) && actor.campId !== transfer.id_destiny_camp) {
+  if (
+    destinyDrivenStates.includes(nextState) &&
+    actor.campId !== transfer.id_destiny_camp
+  ) {
     throw new AppError(
       403,
       "This state transition must be performed from the destiny camp.",
@@ -251,7 +261,10 @@ function ensureTransitionAuthority(
     );
   }
 
-  if (originDrivenStates.includes(nextState) && actor.campId !== transfer.id_origin_camp) {
+  if (
+    originDrivenStates.includes(nextState) &&
+    actor.campId !== transfer.id_origin_camp
+  ) {
     throw new AppError(
       403,
       "This state transition must be performed from the origin camp.",
@@ -264,7 +277,10 @@ function ensureValidTransition(
   currentState: TransferDetailRecord["tfs_state"],
   nextState: TransferStateUpdateInput["nextState"],
 ) {
-  const allowedTransitions: Record<string, TransferStateUpdateInput["nextState"][]> = {
+  const allowedTransitions: Record<
+    string,
+    TransferStateUpdateInput["nextState"][]
+  > = {
     pending: ["accepted", "declined", "cancelled"],
     accepted: ["scheduled", "cancelled"],
     scheduled: ["in_transit", "cancelled"],
@@ -289,8 +305,13 @@ function ensureValidTransition(
 }
 
 export class TransfersService {
-  async getCatalogs(filters: TransferCatalogFilters, actor: AuthenticatedUser): Promise<TransferCatalogs> {
-    const originCampId = filters.originCampId ?? (isSystemAdministrator(actor) ? undefined : actor.campId);
+  async getCatalogs(
+    filters: TransferCatalogFilters,
+    actor: AuthenticatedUser,
+  ): Promise<TransferCatalogs> {
+    const originCampId =
+      filters.originCampId ??
+      (isSystemAdministrator(actor) ? undefined : actor.campId);
 
     if (originCampId) {
       ensureCampScope(actor, originCampId);
@@ -329,7 +350,9 @@ export class TransfersService {
       ensureCampScope(actor, filters.campId);
     }
 
-    const resolvedCampId = filters.campId ?? (isSystemAdministrator(actor) ? undefined : actor.campId);
+    const resolvedCampId =
+      filters.campId ??
+      (isSystemAdministrator(actor) ? undefined : actor.campId);
     const search = filters.search?.trim();
     const where = {
       ...(filters.state ? { tfs_state: filters.state } : {}),
@@ -399,7 +422,8 @@ export class TransfersService {
 
     ensureTransferVisibility(actor, transfer);
 
-    const recentEvents = await transfersRepository.listTransferEvents(transferId);
+    const recentEvents =
+      await transfersRepository.listTransferEvents(transferId);
     return mapTransferDetail(transfer, recentEvents);
   }
 
@@ -437,7 +461,9 @@ export class TransfersService {
     });
 
     const personIds = (input.persons ?? []).map((person) => person.id_person);
-    const resourceIds = (input.resources ?? []).map((resource) => resource.id_resource);
+    const resourceIds = (input.resources ?? []).map(
+      (resource) => resource.id_resource,
+    );
 
     if (personIds.length > 0) {
       const destinationCamp = camps.find(
@@ -492,7 +518,8 @@ export class TransfersService {
     }
 
     if (resourceIds.length > 0) {
-      const resources = await transfersRepository.findResourcesByIds(resourceIds);
+      const resources =
+        await transfersRepository.findResourcesByIds(resourceIds);
 
       if (resources.length !== resourceIds.length) {
         throw new AppError(
@@ -576,7 +603,8 @@ export class TransfersService {
       actorUserId: actor.id,
     });
 
-    const recentEvents = await transfersRepository.listTransferEvents(transferId);
+    const recentEvents =
+      await transfersRepository.listTransferEvents(transferId);
     return mapTransferDetail(updatedTransfer, recentEvents);
   }
 }

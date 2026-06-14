@@ -19,7 +19,9 @@ export async function listExplorationZonesController(
   next: NextFunction,
 ) {
   try {
-    const input = await listExplorationZonesQuerySchema.parseAsync(request.query);
+    const input = await listExplorationZonesQuerySchema.parseAsync(
+      request.query,
+    );
     response
       .status(200)
       .json(

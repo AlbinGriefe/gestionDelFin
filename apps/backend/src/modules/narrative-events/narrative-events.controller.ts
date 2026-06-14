@@ -17,7 +17,9 @@ export async function listNarrativeEventsController(
   next: NextFunction,
 ) {
   try {
-    const input = await listNarrativeEventsQuerySchema.parseAsync(request.query);
+    const input = await listNarrativeEventsQuerySchema.parseAsync(
+      request.query,
+    );
     const result = await narrativeEventsService.list(input, actor(request));
     response.status(200).json(createSuccessResponse(result, request.requestId));
   } catch (error) {
@@ -34,7 +36,10 @@ export async function getNarrativeEventController(
     const { eventId } = await narrativeEventIdParamSchema.parseAsync(
       request.params,
     );
-    const result = await narrativeEventsService.getById(eventId, actor(request));
+    const result = await narrativeEventsService.getById(
+      eventId,
+      actor(request),
+    );
     response.status(200).json(createSuccessResponse(result, request.requestId));
   } catch (error) {
     next(error);

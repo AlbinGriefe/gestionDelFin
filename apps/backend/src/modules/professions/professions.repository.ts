@@ -9,7 +9,6 @@ function toPrismaJsonValue(value: unknown) {
   return value as Prisma.InputJsonValue;
 }
 
-
 export async function findAllActiveProfessionsForCamp(campId: number) {
   return prisma.professions.findMany({
     where: {
@@ -30,7 +29,10 @@ export async function countWorkablePersonsInProfession(
       id_camp: campId,
       prn_admission_status: "accepted",
       prn_is_active: true,
-      OR: [{ id_person_health: null }, { person_health: { phs_can_work: true } }],
+      OR: [
+        { id_person_health: null },
+        { person_health: { phs_can_work: true } },
+      ],
     },
   });
 }
@@ -50,7 +52,9 @@ export async function findCampWithPersonsForCoverage(campId: number) {
   });
 }
 
-export async function findPersonsOutOfCampForCoverage(campId: number): Promise<Set<number>> {
+export async function findPersonsOutOfCampForCoverage(
+  campId: number,
+): Promise<Set<number>> {
   const [expeditionPersons, transferPersons] = await prisma.$transaction([
     prisma.expedition_records.findMany({
       where: {
@@ -80,7 +84,9 @@ export async function findPersonsOutOfCampForCoverage(campId: number): Promise<S
   return ids;
 }
 
-export async function findTemporarilyAssignedPersonIds(campId: number): Promise<Set<number>> {
+export async function findTemporarilyAssignedPersonIds(
+  campId: number,
+): Promise<Set<number>> {
   const records = await prisma.person_records.findMany({
     where: {
       persons: {
@@ -113,8 +119,10 @@ export async function findTemporarilyAssignedPersonIds(campId: number): Promise<
   return temporaryIds;
 }
 
-
-export async function findPersonsForReassignment(personIds: number[], campId: number) {
+export async function findPersonsForReassignment(
+  personIds: number[],
+  campId: number,
+) {
   return prisma.persons.findMany({
     where: {
       id_person: { in: personIds },
@@ -171,7 +179,9 @@ export async function applyBulkProfessionChange(input: {
           id_user: input.actorUserId,
           prr_event_type: "profession_changed",
           prr_notes: change.notes,
-          prr_old_value: toPrismaJsonValue({ id_profession: change.oldProfessionId }),
+          prr_old_value: toPrismaJsonValue({
+            id_profession: change.oldProfessionId,
+          }),
           prr_new_value: toPrismaJsonValue({
             id_profession: change.newProfessionId,
             is_temporary: change.isTemporary,
@@ -186,12 +196,18 @@ export async function applyBulkProfessionChange(input: {
           evt_entity: "persons",
           evt_entity_id: change.personId,
           evt_action: "profession_changed",
-          evt_old_value: toPrismaJsonValue({ id_profession: change.oldProfessionId }),
+          evt_old_value: toPrismaJsonValue({
+            id_profession: change.oldProfessionId,
+          }),
           evt_new_value: toPrismaJsonValue({
             id_profession: change.newProfessionId,
             is_temporary: change.isTemporary,
           }),
-          evt_description: change.notes ?? (change.isTemporary ? "Temporary profession reassignment" : "Profession reverted"),
+          evt_description:
+            change.notes ??
+            (change.isTemporary
+              ? "Temporary profession reassignment"
+              : "Profession reverted"),
         },
       });
     }
@@ -251,7 +267,8 @@ export class ProfessionsRepository {
       await tx.events.create({
         data: {
           id_user: input.actorUserId,
-          id_camp: typeof input.data.id_camp === "number" ? input.data.id_camp : null,
+          id_camp:
+            typeof input.data.id_camp === "number" ? input.data.id_camp : null,
           evt_entity: "professions",
           evt_entity_id: profession.id_profession,
           evt_action: "created",
@@ -259,8 +276,12 @@ export class ProfessionsRepository {
             pfs_name: profession.pfs_name,
             pfs_description: profession.pfs_description,
             pfs_collects_resources: profession.pfs_collects_resources,
-            pfs_food_generated_per_day: Number(profession.pfs_food_generated_per_day),
-            pfs_water_generated_per_day: Number(profession.pfs_water_generated_per_day),
+            pfs_food_generated_per_day: Number(
+              profession.pfs_food_generated_per_day,
+            ),
+            pfs_water_generated_per_day: Number(
+              profession.pfs_water_generated_per_day,
+            ),
             id_camp: profession.id_camp,
             pfs_is_active: profession.pfs_is_active,
           }),

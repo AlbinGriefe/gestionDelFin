@@ -66,23 +66,23 @@ const optionalPositiveInteger = z.preprocess(
   z.number().int().positive().optional(),
 );
 
-const nullablePositiveInteger = z.preprocess(
-  (value) => {
-    if (value === null || value === "" || value === "null") {
-      return null;
-    }
+const nullablePositiveInteger = z.preprocess((value) => {
+  if (value === null || value === "" || value === "null") {
+    return null;
+  }
 
-    return parseOptionalInteger(value);
-  },
-  z.number().int().positive().nullable().optional(),
-);
+  return parseOptionalInteger(value);
+}, z.number().int().positive().nullable().optional());
 
 const usernameSchema = z
   .string()
   .trim()
   .min(3)
   .max(70)
-  .regex(/^[a-zA-Z0-9._-]+$/, "Username can only contain letters, numbers, dots, underscores and hyphens.");
+  .regex(
+    /^[a-zA-Z0-9._-]+$/,
+    "Username can only contain letters, numbers, dots, underscores and hyphens.",
+  );
 
 const emailSchema = z.preprocess(
   emptyStringToNull,
@@ -132,7 +132,10 @@ export const updateUserSchema = z
     id_person: nullablePositiveInteger,
     id_role: optionalPositiveInteger,
     id_camp: optionalPositiveInteger,
-    usr_username: z.preprocess(emptyStringToUndefined, usernameSchema.optional()),
+    usr_username: z.preprocess(
+      emptyStringToUndefined,
+      usernameSchema.optional(),
+    ),
     usr_email: emailSchema,
     usr_password: z.preprocess(
       emptyStringToUndefined,

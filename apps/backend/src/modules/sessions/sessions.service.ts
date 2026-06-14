@@ -14,7 +14,10 @@ function isSystemAdministrator(user: AuthenticatedUser) {
   return user.roleName.trim().toLocaleLowerCase() === "administrador sistema";
 }
 
-function mapSession(record: SessionRecord, currentSessionToken: string): SessionSummary {
+function mapSession(
+  record: SessionRecord,
+  currentSessionToken: string,
+): SessionSummary {
   return {
     id: record.id_user_session,
     user: {
@@ -37,7 +40,10 @@ function mapSession(record: SessionRecord, currentSessionToken: string): Session
   };
 }
 
-function ensureSessionVisibility(actor: AuthenticatedUser, session: SessionRecord) {
+function ensureSessionVisibility(
+  actor: AuthenticatedUser,
+  session: SessionRecord,
+) {
   if (isSystemAdministrator(actor)) {
     return;
   }
@@ -89,7 +95,9 @@ export class SessionsService {
     });
 
     return {
-      items: result.items.map((session) => mapSession(session, actor.sessionId)),
+      items: result.items.map((session) =>
+        mapSession(session, actor.sessionId),
+      ),
       pagination: {
         page: filters.page,
         pageSize: filters.pageSize,
@@ -106,7 +114,9 @@ export class SessionsService {
   }
 
   async getCurrentSession(actor: AuthenticatedUser) {
-    const session = await sessionsRepository.findSessionByToken(actor.sessionId);
+    const session = await sessionsRepository.findSessionByToken(
+      actor.sessionId,
+    );
 
     if (!session) {
       throw new AppError(404, "Session not found.", "SESSION_NOT_FOUND");
@@ -144,10 +154,14 @@ export class SessionsService {
     }
 
     const reason = isSystemAdministrator(actor)
-      ? input.reason ?? "forced"
+      ? (input.reason ?? "forced")
       : "manual";
 
-    if (!isSystemAdministrator(actor) && input.reason && input.reason !== "manual") {
+    if (
+      !isSystemAdministrator(actor) &&
+      input.reason &&
+      input.reason !== "manual"
+    ) {
       throw new AppError(
         403,
         "You can only manually revoke your own sessions.",
