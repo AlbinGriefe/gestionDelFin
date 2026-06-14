@@ -8,6 +8,7 @@ export interface AuthContextType {
   login: (identity: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   switchCamp: (campId: number) => Promise<void>;
+  refreshSessionConfig: () => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
   sessionConfig: SessionConfig | null;

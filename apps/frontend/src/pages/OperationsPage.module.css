@@ -368,6 +368,61 @@
   align-self: end;
 }
 
+.sessionTimeoutForm {
+  display: grid;
+  gap: 14px;
+}
+
+.sessionTimeoutForm > label {
+  display: grid;
+  gap: 6px;
+  color: #657168;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.sessionTimeoutForm > p {
+  margin: 0;
+  color: #6d7971;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.inputWithSuffix {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px;
+  overflow: hidden;
+  border: 1px solid #d7ded8;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.inputWithSuffix input {
+  height: 38px;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0 10px;
+  color: #25352b;
+  font: inherit;
+  font-size: 12px;
+}
+
+.inputWithSuffix span {
+  display: grid;
+  place-items: center;
+  border-left: 1px solid #e1e6e2;
+  background: #f5f7f5;
+  color: #69756d;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.primaryButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 @media (max-width: 820px) {
   .zoneGrid,
   .twoColumns {

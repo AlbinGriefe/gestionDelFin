@@ -14,6 +14,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     null,
   );
 
+  const refreshSessionConfig = useCallback(async () => {
+    const config = await authApi.getSessionConfig();
+    setSessionConfig(config);
+  }, []);
+
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -27,8 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const me = await authApi.me();
         setUser(me);
 
-        const config = await authApi.getSessionConfig();
-        setSessionConfig(config);
+        await refreshSessionConfig();
       } catch (error) {
         if (error instanceof Error && error.message === "Unauthorized") {
           tokenStorage.remove();
@@ -45,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     initAuth();
-  }, []);
+  }, [refreshSessionConfig]);
 
   const login = async (identity: string, password: string) => {
     const res = await authApi.login({ identity, password });
@@ -55,8 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const me = await authApi.me();
     setUser(me);
 
-    const config = await authApi.getSessionConfig();
-    setSessionConfig(config);
+    await refreshSessionConfig();
   };
 
   const logout = useCallback(async () => {
@@ -88,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         switchCamp,
+        refreshSessionConfig,
         isAuthenticated: !!user,
         loading,
         sessionConfig,

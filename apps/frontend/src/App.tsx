@@ -16,8 +16,9 @@ function App() {
 
   return (
     <>
-      <IdleManager />
-      <AppRoutes />
+      <IdleManager>
+        <AppRoutes />
+      </IdleManager>
       <Toaster position="top-right" duration={3000} />
     </>
   );

@@ -202,6 +202,51 @@
   color: #526057;
 }
 
+.idleCountdown {
+  display: flex;
+  min-width: 104px;
+  height: 40px;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 8px;
+  border-left: 1px solid #dfe5e0;
+  padding-left: 14px;
+  color: #526057;
+}
+
+.idleCountdown div {
+  min-width: 58px;
+}
+
+.idleCountdown span,
+.idleCountdown strong {
+  display: block;
+  line-height: 1.15;
+}
+
+.idleCountdown span {
+  color: #7a847d;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.idleCountdown strong {
+  margin-top: 3px;
+  color: #26362c;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.idleCountdownWarning,
+.idleCountdownWarning strong {
+  color: #9d3c36;
+}
+
+.idleCountdownWarning span {
+  color: #a55a54;
+}
+
 .campSelector select {
   min-width: 0;
   flex: 1;
@@ -285,6 +330,25 @@
     min-width: 0;
     width: 42px;
     padding: 0 11px;
+  }
+
+  .idleCountdown {
+    min-width: 78px;
+    gap: 6px;
+    padding-left: 10px;
+  }
+
+  .idleCountdown div {
+    min-width: 46px;
+  }
+
+  .idleCountdown span {
+    display: none;
+  }
+
+  .idleCountdown strong {
+    margin-top: 0;
+    font-size: 12px;
   }
 
   .campSelector select,

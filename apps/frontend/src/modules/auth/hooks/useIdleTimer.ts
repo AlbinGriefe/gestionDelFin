@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
   "mousemove",
@@ -34,8 +34,13 @@ export function useIdleTimer({
 }: UseIdleTimerOptions) {
   const idleTimerRef = useRef<number | null>(null);
   const warningTimerRef = useRef<number | null>(null);
+  const countdownTimerRef = useRef<number | null>(null);
+  const deadlineRef = useRef(0);
   const lastResetRef = useRef(0);
   const lastKeepAliveRef = useRef(0);
+  const [remainingSeconds, setRemainingSeconds] = useState(() =>
+    enabled ? Math.ceil(timeoutMs / 1000) : null,
+  );
 
   useEffect(() => {
     if (!enabled || timeoutMs <= 0) {
@@ -51,10 +56,26 @@ export function useIdleTimer({
         window.clearTimeout(warningTimerRef.current);
         warningTimerRef.current = null;
       }
+      if (countdownTimerRef.current !== null) {
+        window.clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+    };
+
+    const updateCountdown = () => {
+      const nextValue = Math.max(
+        0,
+        Math.ceil((deadlineRef.current - Date.now()) / 1000),
+      );
+      setRemainingSeconds((currentValue) =>
+        currentValue === nextValue ? currentValue : nextValue,
+      );
     };
 
     const scheduleTimers = () => {
       clearTimers();
+      deadlineRef.current = Date.now() + timeoutMs;
+      updateCountdown();
 
       if (onWarning && warningMs && warningMs < timeoutMs) {
         warningTimerRef.current = window.setTimeout(
@@ -63,7 +84,11 @@ export function useIdleTimer({
         );
       }
 
-      idleTimerRef.current = window.setTimeout(onIdle, timeoutMs);
+      idleTimerRef.current = window.setTimeout(() => {
+        setRemainingSeconds(0);
+        onIdle();
+      }, timeoutMs);
+      countdownTimerRef.current = window.setInterval(updateCountdown, 1000);
     };
 
     const handleActivity = () => {
@@ -106,4 +131,8 @@ export function useIdleTimer({
     onWarning,
     onActivity,
   ]);
+
+  return {
+    remainingSeconds: enabled ? remainingSeconds : null,
+  };
 }

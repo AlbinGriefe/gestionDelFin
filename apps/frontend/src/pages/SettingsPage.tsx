@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Bot, CheckCircle2, Save, ShieldAlert } from "lucide-react";
+import { Bot, CheckCircle2, Clock3, Save, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "../modules/auth/context/useAuth";
+import { settingsApi } from "../modules/settings/api/settings.api";
 import { httpClient } from "../shared/api/httpClient";
 import styles from "./OperationsPage.module.css";
 
@@ -18,8 +19,12 @@ type CampDetail = {
 };
 
 export default function SettingsPage() {
-  const { user, sessionConfig } = useAuth();
+  const { user, sessionConfig, refreshSessionConfig } = useAuth();
   const [rules, setRules] = useState<CampDetail["operationalRules"]>(null);
+  const [timeoutMinutes, setTimeoutMinutes] = useState(
+    sessionConfig?.sessionTimeoutMinutes ?? 20,
+  );
+  const [savingTimeout, setSavingTimeout] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -27,6 +32,40 @@ export default function SettingsPage() {
       setRules(camp.operationalRules),
     );
   }, [user]);
+
+  useEffect(() => {
+    if (sessionConfig) {
+      setTimeoutMinutes(sessionConfig.sessionTimeoutMinutes);
+    }
+  }, [sessionConfig]);
+
+  const submitSessionTimeout = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (
+      !Number.isInteger(timeoutMinutes) ||
+      timeoutMinutes < 1 ||
+      timeoutMinutes > 1440
+    ) {
+      toast.error("El tiempo debe ser un numero entero entre 1 y 1440.");
+      return;
+    }
+
+    setSavingTimeout(true);
+    try {
+      await settingsApi.updateSetting("session_timeout_minutes", {
+        value: timeoutMinutes,
+        valueType: "integer",
+        description:
+          "Tiempo maximo de inactividad antes de cerrar una sesion autenticada.",
+        isPublic: true,
+      });
+      await refreshSessionConfig();
+      toast.success("Tiempo de inactividad actualizado");
+    } finally {
+      setSavingTimeout(false);
+    }
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -82,10 +121,6 @@ export default function SettingsPage() {
           </div>
           <div className={styles.definitionList}>
             <div>
-              <span>Tiempo de inactividad</span>
-              <strong>{sessionConfig?.sessionTimeoutMinutes ?? 20} min</strong>
-            </div>
-            <div>
               <span>Campamento</span>
               <strong>{user?.campName}</strong>
             </div>
@@ -95,6 +130,51 @@ export default function SettingsPage() {
             </div>
           </div>
         </article>
+
+        <form
+          className={styles.panel}
+          onSubmit={(event) => void submitSessionTimeout(event)}
+        >
+          <div className={styles.sectionHeading}>
+            <Clock3 size={20} />
+            <div>
+              <h3>Seguridad de sesion</h3>
+              <p>Cierre automatico por inactividad</p>
+            </div>
+          </div>
+          <div className={styles.sessionTimeoutForm}>
+            <label>
+              Tiempo de inactividad
+              <div className={styles.inputWithSuffix}>
+                <input
+                  type="number"
+                  min="1"
+                  max="1440"
+                  step="1"
+                  value={timeoutMinutes}
+                  onChange={(event) =>
+                    setTimeoutMinutes(Number(event.target.value))
+                  }
+                  required
+                />
+                <span>min</span>
+              </div>
+            </label>
+            <p>
+              El contador visible se reinicia con la actividad del usuario. El
+              nuevo valor se aplica inmediatamente a esta sesion y a los
+              siguientes accesos.
+            </p>
+            <button
+              className={styles.primaryButton}
+              type="submit"
+              disabled={savingTimeout}
+            >
+              <Save size={16} />
+              {savingTimeout ? "Guardando..." : "Guardar tiempo"}
+            </button>
+          </div>
+        </form>
 
         <form className={styles.panel} onSubmit={(event) => void submit(event)}>
           <div className={styles.sectionHeading}>

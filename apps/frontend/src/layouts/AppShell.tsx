@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarClock,
   ChevronDown,
+  Clock3,
   Compass,
   LayoutDashboard,
   LogOut,
@@ -22,6 +23,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 import { useAuth } from "../modules/auth/context/useAuth";
+import { useIdleSession } from "../modules/auth/context/useIdleSession";
 import styles from "./AppShell.module.css";
 
 function normalizeRole(roleName: string) {
@@ -123,8 +125,18 @@ const pageTitles: Record<string, string> = {
   "/settings": "Configuracion",
 };
 
+function formatRemainingTime(remainingSeconds: number | null) {
+  if (remainingSeconds === null) return "--:--";
+
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 export default function AppShell() {
   const { user, logout, switchCamp } = useAuth();
+  const { remainingSeconds, isWarning } = useIdleSession();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [changingCamp, setChangingCamp] = useState(false);
@@ -231,6 +243,19 @@ export default function AppShell() {
           <div className={styles.pageIdentity}>
             <span>Panel operativo</span>
             <h1>{pageTitles[location.pathname] ?? "Gestion del Fin"}</h1>
+          </div>
+          <div
+            className={`${styles.idleCountdown} ${
+              isWarning ? styles.idleCountdownWarning : ""
+            }`}
+            aria-label={`Tiempo restante antes del cierre por inactividad: ${formatRemainingTime(remainingSeconds)}`}
+            title="Tiempo restante antes del cierre por inactividad"
+          >
+            <Clock3 size={17} />
+            <div>
+              <span>Inactividad</span>
+              <strong>{formatRemainingTime(remainingSeconds)}</strong>
+            </div>
           </div>
           <label className={styles.campSelector}>
             <Building2 size={17} />
