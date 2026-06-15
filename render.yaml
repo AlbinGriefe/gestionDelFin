@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: npm ci && npm run backend:prisma:generate && npm run backend:build
+    buildCommand: npm ci --include=dev && npm run backend:prisma:generate && npm run backend:build
     startCommand: npm run backend:prisma:migrate:deploy && npm run backend:start
     healthCheckPath: /api/v1/health
     autoDeploy: true

@@ -9,7 +9,7 @@ const server = app.listen(env.PORT, () => {
   });
 });
 
-server.on("error", (error) => {
+server.on("error", (error: Error) => {
   logger.error("Server failed to start.", { error });
   process.exit(1);
 });
@@ -17,7 +17,7 @@ server.on("error", (error) => {
 async function shutdown(signal: string) {
   logger.info("Shutdown signal received.", { signal });
 
-  server.close((error) => {
+  server.close((error?: Error) => {
     if (error) {
       logger.error("Graceful shutdown failed.", { error, signal });
       process.exit(1);
