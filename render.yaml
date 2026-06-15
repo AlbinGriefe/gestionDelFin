@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: gestiondelfin-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm ci && npm run backend:prisma:generate && npm run backend:build
+    startCommand: npm run backend:prisma:migrate:deploy && npm run backend:start
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PREFIX
+        value: /api/v1
+      - key: AI_PROVIDER
+        value: rules
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
