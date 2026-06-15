@@ -15,6 +15,8 @@ services:
         value: /api/v1
       - key: AI_PROVIDER
         value: rules
+      - key: DATABASE_SSL
+        value: "true"
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET

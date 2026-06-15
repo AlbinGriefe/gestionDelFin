@@ -12,9 +12,24 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not defined.");
 }
 
-const adapter = new PrismaMariaDb(connectionString);
+function createAdapter() {
+  if (process.env.DATABASE_SSL === "true") {
+    const url = new URL(connectionString!);
+    return new PrismaMariaDb({
+      host: url.hostname,
+      port: url.port ? Number(url.port) : 3306,
+      user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      database: url.pathname.replace(/^\/+/, ""),
+      ssl: { rejectUnauthorized: false },
+    });
+  }
 
-// Reuse a single client during development reloads.
+  return new PrismaMariaDb(connectionString!);
+}
+
+const adapter = createAdapter();
+
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") {
