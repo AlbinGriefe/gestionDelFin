@@ -1,15 +1,15 @@
 .row {
   cursor: pointer;
-  background-color: #f9f9f7;
+  background-color: rgba(16, 18, 13, 0.4);
 }
 
 .row:hover td {
-  background: #ededeb;
+  background: var(--border);
 }
 
 .td {
   padding: 10px 14px;
-  border-bottom: 0.5px solid #eee;
+  border-bottom: 0.5px solid var(--border);
   vertical-align: middle;
 }
 
@@ -19,8 +19,8 @@
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
-  background: #eaf3de;
-  color: #3b6d11;
+  background: var(--accent-bg);
+  color: var(--moss-bright);
 }
 
 .badgeInactive {
@@ -29,18 +29,18 @@
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
-  background: #f1efe8;
-  color: #5f5e5a;
+  background: rgba(16, 18, 13, 0.4);
+  color: var(--ash);
 }
 
 .toggleBtn {
   background: none;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #666;
+  color: var(--ash);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -56,7 +56,7 @@
 }
 
 .detailCell {
-  background: #f9f9f7;
+  background: rgba(16, 18, 13, 0.4);
   padding: 12px 14px 14px;
 }
 
@@ -68,27 +68,27 @@
 }
 
 .empty {
-  color: #aaa;
+  color: var(--ash);
   font-size: 12px;
 }
 
 .editBtn {
   background: none;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #185fa5;
+  color: var(--moss);
 }
 
 .editBtn:hover:not(:disabled) {
-  background: #e6f1fb;
-  border-color: #378add;
+  background: var(--accent-bg);
+  border-color: var(--moss-bright);
 }
 
 .editBtn:disabled {
-  color: #aaa;
-  border-color: #eee;
+  color: var(--ash);
+  border-color: var(--border);
   cursor: not-allowed;
 }

@@ -1,15 +1,15 @@
 .row {
   cursor: pointer;
-  background-color: #fff;
+  background-color: var(--bg-panel);
 }
 
 .row:hover td {
-  background: #f9f9f7;
+  background: rgba(16, 18, 13, 0.4);
 }
 
 .td {
   padding: 10px 14px;
-  border-bottom: 0.5px solid #eee;
+  border-bottom: 0.5px solid var(--border);
   vertical-align: middle;
 }
 
@@ -24,12 +24,12 @@
 
 .toggleBtn {
   background: none;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #666;
+  color: var(--ash);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -37,7 +37,7 @@
 }
 
 .toggleBtn:hover {
-  background: #f1f1f1;
+  background: rgba(16, 18, 13, 0.4);
 }
 
 .chevron {
@@ -52,22 +52,22 @@
 
 .editBtn {
   background: none;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #185fa5;
+  color: var(--moss);
   white-space: nowrap;
 }
 
 .editBtn:hover {
-  background: #e6f1fb;
-  border-color: #378add;
+  background: var(--accent-bg);
+  border-color: var(--moss-bright);
 }
 
 .detailCell {
-  background: #f9f9f7;
+  background: rgba(16, 18, 13, 0.4);
   padding: 12px 14px 14px;
 }
 
@@ -83,7 +83,7 @@
   flex-direction: column;
   gap: 1px;
   padding: 6px 0;
-  border-bottom: 0.5px solid #eee;
+  border-bottom: 0.5px solid var(--border);
 }
 
 .historyEntry:last-child {
@@ -93,16 +93,16 @@
 .historyEvent {
   font-size: 12px;
   font-weight: 500;
-  color: #333;
+  color: var(--bone);
 }
 
 .historyMeta {
   font-size: 11px;
-  color: #999;
+  color: var(--ash);
 }
 
 .historyNotes {
   font-size: 11px;
-  color: #666;
+  color: var(--ash);
   font-style: italic;
 }

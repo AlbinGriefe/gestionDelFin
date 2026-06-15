@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import prisma from "../../../lib/prisma.js";
+import { achievementsRouter } from "../../../modules/achievements/achievements.routes.js";
 import { admissionEvaluationsRouter } from "../../../modules/admission-evaluations/admission-evaluations.routes.js";
 import { authRouter } from "../../../modules/auth/auth.routes.js";
 import { campsRouter } from "../../../modules/camps/camps.routes.js";
@@ -47,6 +48,7 @@ apiV1Router.get("/health", async (request, response, next) => {
 });
 
 apiV1Router.use("/auth", authRouter);
+apiV1Router.use("/achievements", achievementsRouter);
 apiV1Router.use("/admission-evaluations", admissionEvaluationsRouter);
 apiV1Router.use("/camps", campsRouter);
 apiV1Router.use("/care-actions", careActionsRouter);

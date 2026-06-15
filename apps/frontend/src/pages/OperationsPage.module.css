@@ -11,7 +11,7 @@
 }
 
 .pageIntro span {
-  color: #7a857d;
+  color: var(--ash);
   font-size: 10px;
   font-weight: 750;
   text-transform: uppercase;
@@ -19,23 +19,23 @@
 
 .pageIntro h2 {
   margin: 3px 0 0;
-  color: #17211b;
+  color: var(--bone);
   font-size: 23px;
   font-weight: 760;
 }
 
 .pageIntro p {
   margin-top: 6px;
-  color: #6d7971;
+  color: var(--ash);
   font-size: 12px;
 }
 
 .panel,
 .inlineForm,
 .zoneCard {
-  border: 1px solid #dbe2dc;
+  border: 1px solid var(--border);
   border-radius: 7px;
-  background: #ffffff;
+  background: var(--bg-panel);
 }
 
 .panel {
@@ -50,9 +50,9 @@
   gap: 7px;
   border: 0;
   border-radius: 6px;
-  background: #244b36;
+  background: var(--moss);
   padding: 0 14px;
-  color: #ffffff;
+  color: var(--bg-panel);
   font-size: 11px;
   font-weight: 750;
   cursor: pointer;
@@ -61,7 +61,7 @@
 .fieldCompact {
   display: grid;
   gap: 5px;
-  color: #6c786f;
+  color: var(--ash);
   font-size: 10px;
   font-weight: 700;
 }
@@ -72,11 +72,11 @@
 .formGrid input {
   height: 38px;
   box-sizing: border-box;
-  border: 1px solid #d7ded8;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--bg-panel);
   padding: 0 10px;
-  color: #25352b;
+  color: var(--bone);
   font: inherit;
   font-size: 12px;
 }
@@ -88,7 +88,7 @@
 .timeline article {
   display: flex;
   gap: 12px;
-  border-bottom: 1px solid #edf0ed;
+  border-bottom: 1px solid var(--border);
   padding: 13px 0;
 }
 
@@ -111,16 +111,16 @@
 }
 
 .green {
-  background: #e5efe8;
-  color: #2d6243;
+  background: var(--accent-bg);
+  color: var(--moss);
 }
 .amber {
-  background: #f7edd7;
-  color: #895a12;
+  background: rgba(212, 177, 58, 0.14);
+  color: var(--hazard);
 }
 .red {
-  background: #f5e2e0;
-  color: #9d3c36;
+  background: rgba(176, 106, 56, 0.16);
+  color: #d3895d;
 }
 
 .timelineBody {
@@ -135,20 +135,20 @@
 }
 
 .timelineBody strong {
-  color: #25352b;
+  color: var(--bone);
   font-size: 12px;
 }
 
 .timelineBody p {
   margin-top: 5px;
-  color: #5f6d63;
+  color: var(--ash);
   font-size: 11px;
 }
 
 .timelineBody small {
   display: block;
   margin-top: 7px;
-  color: #929a94;
+  color: var(--ash);
   font-size: 9px;
 }
 
@@ -156,9 +156,9 @@
 .risk {
   display: inline-flex;
   border-radius: 4px;
-  background: #edf1ee;
+  background: var(--border);
   padding: 4px 7px;
-  color: #5d6a61;
+  color: var(--ash);
   font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
@@ -166,7 +166,7 @@
 
 .empty,
 .emptyState {
-  color: #7e8981;
+  color: var(--ash);
   font-size: 12px;
 }
 
@@ -181,7 +181,7 @@
 
 .emptyState h3 {
   margin: 8px 0 0;
-  color: #34443a;
+  color: var(--bone);
   font-size: 14px;
 }
 
@@ -196,7 +196,7 @@
 .formGrid label {
   display: grid;
   gap: 5px;
-  color: #657168;
+  color: var(--text);
   font-size: 10px;
   font-weight: 700;
 }
@@ -224,10 +224,10 @@
   justify-items: center;
   gap: 12px;
   background:
-    linear-gradient(#dbe5dd 1px, transparent 1px),
-    linear-gradient(90deg, #dbe5dd 1px, transparent 1px), #edf2ee;
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px), var(--border);
   background-size: 20px 20px;
-  color: #4e6c59;
+  color: var(--moss);
 }
 
 .zoneMap span {
@@ -237,7 +237,7 @@
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.86);
   padding: 4px 6px;
-  color: #526057;
+  color: var(--ash);
   font-size: 8px;
 }
 
@@ -252,29 +252,29 @@
 
 .zoneContent h3 {
   margin: 15px 0 0;
-  color: #233329;
+  color: var(--bone);
   font-size: 15px;
 }
 
 .zoneContent p {
   margin-top: 7px;
-  color: #6e7a72;
+  color: var(--ash);
   font-size: 10px;
   line-height: 1.5;
 }
 
 .risk_low {
-  background: #e5efe8;
-  color: #2d6243;
+  background: var(--accent-bg);
+  color: var(--moss);
 }
 .risk_medium {
-  background: #f7edd7;
-  color: #895a12;
+  background: rgba(212, 177, 58, 0.14);
+  color: var(--hazard);
 }
 .risk_high,
 .risk_critical {
-  background: #f5e2e0;
-  color: #9d3c36;
+  background: rgba(176, 106, 56, 0.16);
+  color: #d3895d;
 }
 
 .twoColumns {
@@ -288,18 +288,18 @@
   align-items: flex-start;
   gap: 10px;
   margin-bottom: 18px;
-  color: #365340;
+  color: var(--moss);
 }
 
 .sectionHeading h3 {
   margin: 0;
-  color: #233329;
+  color: var(--bone);
   font-size: 14px;
 }
 
 .sectionHeading p {
   margin-top: 3px;
-  color: #879188;
+  color: var(--ash);
   font-size: 9px;
 }
 
@@ -313,8 +313,8 @@
 }
 
 .statusLine {
-  background: #e9f1eb;
-  color: #2e6243;
+  background: var(--accent-bg);
+  color: var(--moss);
 }
 
 .statusLine strong,
@@ -325,14 +325,14 @@
 
 .statusLine span {
   margin-top: 3px;
-  color: #5f7767;
+  color: var(--moss-bright);
   font-size: 9px;
 }
 
 .notice {
   margin-top: 10px;
-  background: #f7edd7;
-  color: #815714;
+  background: rgba(212, 177, 58, 0.14);
+  color: var(--hazard);
 }
 
 .notice p {
@@ -348,14 +348,14 @@
 .definitionList > div {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #edf0ed;
+  border-bottom: 1px solid var(--border);
   padding: 10px 0;
-  color: #6d7971;
+  color: var(--ash);
   font-size: 10px;
 }
 
 .definitionList strong {
-  color: #26362c;
+  color: var(--bone);
 }
 
 .formGrid {
@@ -376,14 +376,14 @@
 .sessionTimeoutForm > label {
   display: grid;
   gap: 6px;
-  color: #657168;
+  color: var(--text);
   font-size: 10px;
   font-weight: 700;
 }
 
 .sessionTimeoutForm > p {
   margin: 0;
-  color: #6d7971;
+  color: var(--ash);
   font-size: 10px;
   line-height: 1.55;
 }
@@ -392,9 +392,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 46px;
   overflow: hidden;
-  border: 1px solid #d7ded8;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--bg-panel);
 }
 
 .inputWithSuffix input {
@@ -403,7 +403,7 @@
   border: 0;
   outline: 0;
   padding: 0 10px;
-  color: #25352b;
+  color: var(--bone);
   font: inherit;
   font-size: 12px;
 }
@@ -411,9 +411,9 @@
 .inputWithSuffix span {
   display: grid;
   place-items: center;
-  border-left: 1px solid #e1e6e2;
-  background: #f5f7f5;
-  color: #69756d;
+  border-left: 1px solid var(--border);
+  background: rgba(16, 18, 13, 0.4);
+  color: var(--ash);
   font-size: 10px;
   font-weight: 750;
 }

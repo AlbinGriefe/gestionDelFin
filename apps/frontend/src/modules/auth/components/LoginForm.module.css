@@ -1,35 +1,44 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 17px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 .label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #555;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--moss, #7a8c4e);
 }
 
 .input {
   width: 100%;
-  padding: 8px 10px;
-  border: 0.5px solid #ccc;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(122, 140, 78, 0.25);
+  border-radius: 7px;
+  font-family: "JetBrains Mono", monospace;
   font-size: 13px;
-  color: #111;
-  background: #fff;
+  color: var(--bone, #d9d2c0);
+  background: rgba(16, 18, 13, 0.7);
   box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
-
+.input::placeholder {
+  color: rgba(140, 137, 126, 0.5);
+}
 .input:focus {
   outline: none;
-  border-color: #378add;
+  border-color: var(--moss-bright, #9bb05e);
+  box-shadow: 0 0 0 3px rgba(122, 140, 78, 0.18);
 }
 
 .inputWrapper {
@@ -37,58 +46,123 @@
   display: flex;
   align-items: center;
 }
-
 .inputWrapper .input {
-  padding-right: 70px;
+  padding-right: 76px;
 }
 
 .showPasswordBtn {
   position: absolute;
   right: 10px;
-  background: none;
-  border: none;
-  font-size: 12px;
-  color: #666;
-  cursor: pointer;
   padding: 0;
+  border: none;
+  background: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ash, #8c897e);
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
-
 .showPasswordBtn:hover {
-  color: #111;
+  color: var(--moss-bright, #9bb05e);
 }
 
 .submitBtn {
+  position: relative;
   width: 100%;
-  padding: 9px;
-  background: #185fa5;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
+  margin-top: 6px;
+  padding: 12px;
+  border: 1px solid rgba(122, 140, 78, 0.4);
+  border-radius: 7px;
+  background: linear-gradient(180deg, #6f8146, #58683a);
+  font-family: "Oswald", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #14160f;
   cursor: pointer;
-  margin-top: 4px;
+  overflow: hidden;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
-
-.submitBtn:hover {
-  background: #0c447c;
+.submitBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 8px 22px rgba(122, 140, 78, 0.3);
+  transform: translateY(-1px);
 }
-
+.submitBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
 .submitBtn:disabled {
-  background: #aaa;
-  cursor: not-allowed;
+  cursor: progress;
+  color: var(--bone, #d9d2c0);
+  background: linear-gradient(180deg, #30352b, #262a22);
+  border-color: rgba(122, 140, 78, 0.2);
 }
 
-.error {
-  font-size: 12px;
-  color: #a32d2d;
-  text-align: center;
-  margin-top: 4px;
+.scan {
+  display: inline-flex;
+  gap: 4px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.scan span {
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--moss-bright, #9bb05e);
+  animation: scan 0.9s ease-in-out infinite;
+}
+.scan span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.scan span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.scan span:nth-child(4) {
+  animation-delay: 0.45s;
 }
 
+.error,
 .success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 6px;
   font-size: 12px;
-  color: #3b6d11;
-  text-align: center;
-  margin-top: 4px;
+  border-left: 3px solid;
+}
+.error {
+  color: #e6b89c;
+  background: rgba(176, 106, 56, 0.14);
+  border-color: var(--rust, #b06a38);
+}
+.success {
+  color: #c2cf9a;
+  background: rgba(122, 140, 78, 0.14);
+  border-color: var(--moss, #7a8c4e);
+}
+
+@keyframes scan {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan span {
+    animation: none;
+  }
 }

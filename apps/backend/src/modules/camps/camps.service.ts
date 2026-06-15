@@ -1,5 +1,5 @@
 import type { camps_cmp_status } from "../../generated/prisma/client.js";
-import { Prisma } from "../../lib/prisma.js";
+import prisma, { Prisma } from "../../lib/prisma.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
@@ -478,6 +478,28 @@ export class CampsService {
       diseaseHealthThreshold: Number(rules.cor_disease_threshold),
       updatedAt: rules.cor_updated_at.toISOString(),
     };
+  }
+
+  async listCampLocations() {
+    const camps = await prisma.camps.findMany({
+      select: {
+        id_camp: true,
+        cmp_name: true,
+        cmp_status: true,
+        cmp_latitude: true,
+        cmp_longitude: true,
+      },
+      orderBy: { id_camp: "asc" },
+    });
+
+    return camps.map((camp) => ({
+      id: camp.id_camp,
+      name: camp.cmp_name,
+      status: camp.cmp_status,
+      latitude: camp.cmp_latitude !== null ? Number(camp.cmp_latitude) : null,
+      longitude:
+        camp.cmp_longitude !== null ? Number(camp.cmp_longitude) : null,
+    }));
   }
 }
 

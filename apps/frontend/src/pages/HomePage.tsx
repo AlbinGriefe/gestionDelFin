@@ -7,6 +7,7 @@ import {
   HeartPulse,
   Radio,
   RefreshCw,
+  Trophy,
   Truck,
   UserCheck,
   UsersRound,
@@ -14,6 +15,7 @@ import {
 import { Link } from "react-router-dom";
 
 import { httpClient } from "../shared/api/httpClient";
+import type { AchievementsResponse } from "../modules/achievements/types/achievements.types";
 import styles from "./HomePage.module.css";
 
 type Dashboard = {
@@ -78,6 +80,9 @@ const eventLabels: Record<string, string> = {
 
 export default function HomePage() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  const [progress, setProgress] = useState<
+    AchievementsResponse["summary"] | null
+  >(null);
   const [loading, setLoading] = useState(true);
 
   const loadDashboard = async () => {
@@ -91,6 +96,9 @@ export default function HomePage() {
 
   useEffect(() => {
     void loadDashboard();
+    httpClient<AchievementsResponse>("/achievements")
+      .then((response) => setProgress(response.summary))
+      .catch(() => undefined);
   }, []);
 
   if (loading && !dashboard) {
@@ -173,6 +181,29 @@ export default function HomePage() {
           <RefreshCw size={17} />
         </button>
       </section>
+
+      {progress && (
+        <Link to="/achievements" className={styles.levelStrip}>
+          <div className={styles.levelIcon}>
+            <Trophy size={20} />
+          </div>
+          <div className={styles.levelInfo}>
+            <span>Progreso del campamento</span>
+            <strong>
+              Nivel {progress.level} · {progress.unlockedCount}/{progress.total}{" "}
+              logros
+            </strong>
+            <div className={styles.levelBar}>
+              <span style={{ width: `${progress.levelProgressPct}%` }} />
+            </div>
+          </div>
+          <div className={styles.levelPts}>
+            <strong>{progress.totalPoints}</strong>
+            <span>pts</span>
+          </div>
+          <ArrowRight size={16} />
+        </Link>
+      )}
 
       <section className={styles.metrics}>
         {metrics.map((metric) => {

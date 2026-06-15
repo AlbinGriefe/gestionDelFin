@@ -9,11 +9,13 @@ import {
   Compass,
   LayoutDashboard,
   LogOut,
+  Map as MapIcon,
   Menu,
   Radio,
   Settings,
   ShieldCheck,
   TentTree,
+  Trophy,
   Truck,
   UserRoundCog,
   UsersRound,
@@ -83,11 +85,22 @@ const navigation = [
     ],
   },
   { to: "/events", label: "Eventos", icon: Radio, roles: ["all"] },
+  { to: "/achievements", label: "Logros", icon: Trophy, roles: ["all"] },
   {
     to: "/camps",
     label: "Campamentos",
     icon: Building2,
     roles: ["administrador sistema"],
+  },
+  {
+    to: "/map",
+    label: "Mapa",
+    icon: MapIcon,
+    roles: [
+      "administrador sistema",
+      "gestion recursos",
+      "encargado de viajes y comunicacion",
+    ],
   },
   {
     to: "/users",
@@ -119,7 +132,9 @@ const pageTitles: Record<string, string> = {
   "/zones": "Zonas de exploracion",
   "/transfers": "Traslados",
   "/events": "Eventos narrativos",
+  "/achievements": "Logros y progreso",
   "/camps": "Campamentos",
+  "/map": "Mapa de campamentos",
   "/users": "Usuarios",
   "/sessions": "Sesiones",
   "/settings": "Configuracion",
@@ -276,7 +291,7 @@ export default function AppShell() {
             <ChevronDown size={16} />
           </label>
         </header>
-        <div className={styles.content}>
+        <div className={styles.content} key={location.pathname}>
           <Outlet />
         </div>
       </main>

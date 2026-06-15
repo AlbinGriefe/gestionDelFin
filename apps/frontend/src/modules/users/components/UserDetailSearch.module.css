@@ -1,14 +1,14 @@
 .tabs {
   display: flex;
-  border-bottom: 0.5px solid #eee;
-  background: #fff;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--bg-panel);
 }
 
 .tab {
   padding: 10px 16px;
   font-size: 13px;
   cursor: pointer;
-  color: #888;
+  color: var(--ash);
   border-bottom: 2px solid transparent;
   margin-bottom: -0.5px;
   background: none;
@@ -18,18 +18,18 @@
 }
 
 .tab:hover {
-  color: #444;
+  color: var(--text);
 }
 
 .tabActive {
-  color: #185fa5;
-  border-bottom-color: #185fa5;
+  color: var(--moss);
+  border-bottom-color: var(--moss);
   font-weight: 500;
 }
 
 .body {
   padding: 16px;
-  background: #fff;
+  background: var(--bg-panel);
 }
 
 .metaRow {
@@ -38,7 +38,7 @@
   flex-wrap: wrap;
   margin-bottom: 14px;
   padding-bottom: 14px;
-  border-bottom: 0.5px solid #eee;
+  border-bottom: 0.5px solid var(--border);
 }
 
 .metaItem {
@@ -49,12 +49,12 @@
 
 .metaLabel {
   font-size: 11px;
-  color: #aaa;
+  color: var(--ash);
 }
 
 .metaValue {
   font-size: 13px;
-  color: #111;
+  color: var(--bone);
   font-weight: 500;
 }
 
@@ -71,8 +71,8 @@
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
-  background: #eaf3de;
-  color: #3b6d11;
+  background: var(--accent-bg);
+  color: var(--moss-bright);
 }
 
 .badgeInactive {
@@ -81,8 +81,8 @@
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
-  background: #f1efe8;
-  color: #5f5e5a;
+  background: rgba(16, 18, 13, 0.4);
+  color: var(--ash);
 }
 
 .table {
@@ -96,16 +96,16 @@
   padding: 8px 14px;
   font-weight: 500;
   font-size: 11px;
-  color: #888;
-  border-bottom: 0.5px solid #eee;
-  background: #f9f9f7;
+  color: var(--ash);
+  border-bottom: 0.5px solid var(--border);
+  background: rgba(16, 18, 13, 0.4);
 }
 
 .table td {
   padding: 8px 14px;
-  border-bottom: 0.5px solid #eee;
-  color: #111;
-  background: #fff;
+  border-bottom: 0.5px solid var(--border);
+  color: var(--bone);
+  background: var(--bg-panel);
 }
 
 .table tr:last-child td {
@@ -115,7 +115,7 @@
 .empty {
   padding: 24px;
   text-align: center;
-  color: #aaa;
+  color: var(--ash);
   font-size: 13px;
-  background: #fff;
+  background: var(--bg-panel);
 }

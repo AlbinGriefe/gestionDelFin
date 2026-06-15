@@ -33,14 +33,14 @@ export default function SessionsPage() {
     <div
       style={{
         padding: "24px 32px",
-        background: "#f9f9f7",
+        background: "rgba(16,18,13,0.4)",
         minHeight: "100vh",
       }}
     >
       <h1>Sesiones activas</h1>
       <p
         style={{
-          color: "#666",
+          color: "var(--ash)",
           fontSize: 13,
           marginBottom: 24,
           textAlign: "center",

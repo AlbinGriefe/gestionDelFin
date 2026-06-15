@@ -5,6 +5,7 @@ import { validateBody } from "../../api/v1/middlewares/validate-body.js";
 import {
   createCampController,
   getCampByIdController,
+  listCampLocationsController,
   listCampsController,
   updateCampController,
   updateCampOperationalRulesController,
@@ -19,6 +20,7 @@ const campsRouter = Router();
 
 campsRouter.use(authenticate);
 campsRouter.get("/", listCampsController);
+campsRouter.get("/locations", listCampLocationsController);
 campsRouter.get("/:campId", getCampByIdController);
 campsRouter.post(
   "/",

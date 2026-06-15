@@ -5,7 +5,7 @@
   overflow: hidden;
   background-position: center;
   background-size: cover;
-  color: #ffffff;
+  color: var(--bone);
 }
 
 .overlay {
@@ -40,7 +40,7 @@
 
 .eyebrow {
   margin-bottom: 12px;
-  color: #b8d0bf;
+  color: var(--accent-bg);
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -49,7 +49,7 @@
 .content h1 {
   max-width: 590px;
   margin: 0;
-  color: #ffffff;
+  color: var(--bone);
   font-size: clamp(40px, 6vw, 72px);
   font-weight: 760;
   line-height: 1.02;
@@ -58,7 +58,7 @@
 .description {
   max-width: 510px;
   margin-top: 22px;
-  color: #d8e1da;
+  color: var(--border);
   font-size: 16px;
   line-height: 1.6;
 }
@@ -70,16 +70,16 @@
   gap: 10px;
   margin-top: 30px;
   border-radius: 6px;
-  background: #d7eadc;
+  background: var(--accent-bg);
   padding: 0 18px;
-  color: #173624;
+  color: var(--bone);
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
 }
 
 .primaryAction:hover {
-  background: #ffffff;
+  background: var(--bg-panel);
 }
 
 .signals {
@@ -87,7 +87,7 @@
   flex-wrap: wrap;
   gap: 18px;
   margin-top: 72px;
-  color: #d4ddd6;
+  color: var(--border);
   font-size: 11px;
   font-weight: 650;
 }

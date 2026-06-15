@@ -9,38 +9,38 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--bg-panel);
   font-size: 13px;
   cursor: pointer;
-  color: #111;
+  color: var(--bone);
   text-align: left;
 }
 
 .trigger:hover {
-  border-color: #aaa;
+  border-color: var(--ash);
 }
 
 .triggerOpen {
   border-radius: 8px 8px 0 0;
-  border-bottom-color: #eee;
+  border-bottom-color: var(--border);
 }
 
 .triggerSelected {
-  border-color: #378add;
-  background: #e6f1fb;
-  color: #0c447c;
+  border-color: var(--moss-bright);
+  background: var(--accent-bg);
+  color: #58683a;
 }
 
 .placeholder {
-  color: #aaa;
+  color: var(--ash);
 }
 
 .chevron {
   display: inline-block;
   font-size: 10px;
-  color: #aaa;
+  color: var(--ash);
   transition: transform 0.2s;
   margin-left: 8px;
   flex-shrink: 0;
@@ -52,20 +52,20 @@
 
 .panel {
   width: 100%;
-  border: 0.5px solid #ddd;
+  border: 0.5px solid var(--border);
   border-top: none;
   border-radius: 0 0 8px 8px;
-  background: #f9f9f7;
+  background: rgba(16, 18, 13, 0.4);
   overflow: hidden;
 }
 
 .sectionTitle {
   font-size: 11px;
   font-weight: 500;
-  color: #888;
+  color: var(--ash);
   padding: 6px 12px;
-  background: #f1efea;
-  border-bottom: 0.5px solid #eee;
+  background: rgba(16, 18, 13, 0.4);
+  border-bottom: 0.5px solid var(--border);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -75,7 +75,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 0.5px solid #eee;
+  border-bottom: 0.5px solid var(--border);
   cursor: pointer;
   transition: background 0.1s;
   gap: 8px;
@@ -86,22 +86,22 @@
 }
 
 .item:hover {
-  background: #fff;
+  background: var(--bg-panel);
 }
 
 .itemActive {
-  background: #e6f1fb;
+  background: var(--accent-bg);
 }
 
 .itemMain {
   font-size: 13px;
   font-weight: 500;
-  color: #111;
+  color: var(--bone);
 }
 
 .itemSub {
   font-size: 11px;
-  color: #888;
+  color: var(--ash);
   margin-top: 2px;
 }
 

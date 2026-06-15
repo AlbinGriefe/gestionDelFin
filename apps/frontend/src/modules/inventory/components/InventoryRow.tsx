@@ -35,15 +35,15 @@ function getStatus(quantity: number, minQuantity: number) {
 }
 
 const STATUS_CONFIG = {
-  critical: { label: "Crítico", bg: "#FDECEA", color: "#8B2020" },
-  low: { label: "Bajo", bg: "#FEF3E2", color: "#7A4500" },
-  ok: { label: "OK", bg: "#EAF3DE", color: "#3B6D11" },
+  critical: { label: "Crítico", bg: "rgba(176,106,56,0.14)", color: "#e6b89c" },
+  low: { label: "Bajo", bg: "rgba(212,177,58,0.14)", color: "var(--hazard)" },
+  ok: { label: "OK", bg: "var(--accent-bg)", color: "var(--moss-bright)" },
 };
 
 const BAR_COLOR = {
-  critical: "#A32D2D",
-  low: "#C87800",
-  ok: "#3B6D11",
+  critical: "#e6b89c",
+  low: "var(--hazard)",
+  ok: "var(--moss-bright)",
 };
 
 interface InventoryRowProps {
@@ -98,8 +98,11 @@ export default function InventoryRow({
             className={styles.typeBadge}
             style={
               item.resource.type.isPriority
-                ? { background: "#FEF3E2", color: "#7A4500" }
-                : { background: "#F4F4F2", color: "#555" }
+                ? {
+                    background: "rgba(212,177,58,0.14)",
+                    color: "var(--hazard)",
+                  }
+                : { background: "rgba(16,18,13,0.4)", color: "var(--text)" }
             }
           >
             {item.resource.type.isPriority ? "⚑ " : ""}

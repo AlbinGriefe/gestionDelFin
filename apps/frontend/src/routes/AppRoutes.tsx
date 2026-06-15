@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import AppShell from "../layouts/AppShell";
+import AchievementsPage from "../pages/AchievementsPage";
+import MapPage from "../pages/MapPage";
 import { CampsProvider } from "../modules/camps/context/CampsProvider";
 import { DailyProcessesProvider } from "../modules/daily-processes/context/DailyProcessesProvider";
 import { ExpeditionsProvider } from "../modules/expeditions/context/ExpeditionsProvider";
@@ -164,6 +166,21 @@ export default function AppRoutes() {
           }
         />
         <Route path="/events" element={<EventsPage />} />
+        <Route path="/achievements" element={<AchievementsPage />} />
+        <Route
+          path="/map"
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                "administrador sistema",
+                "gestion recursos",
+                "encargado de viajes y comunicacion",
+              ]}
+            >
+              <MapPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/zones"
           element={

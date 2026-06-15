@@ -43,7 +43,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div style={{ padding: "24px 32px", background: "#f9f9f7" }}>
+    <div style={{ padding: "24px 32px", background: "rgba(16,18,13,0.4)" }}>
       <h1>Gestión de Usuarios</h1>
       <div
         style={{
@@ -57,8 +57,8 @@ export default function UsersPage() {
           onClick={handleCreate}
           style={{
             padding: "8px 14px",
-            background: "#185FA5",
-            color: "white",
+            background: "var(--moss)",
+            color: "var(--bone)",
             border: "none",
             borderRadius: 8,
             fontSize: 13,
