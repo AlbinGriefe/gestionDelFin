@@ -240,3 +240,7 @@ scanline
 estacion
 identificate
 cartografia
+aiven
+sslcert
+sslca
+segun
