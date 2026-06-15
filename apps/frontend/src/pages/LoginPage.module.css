@@ -1,74 +1,229 @@
 .page {
+  --bg-deep: #1a1d16;
+  --bg-panel: #262a22;
+  --bg-elevated: #30352b;
+  --moss: #7a8c4e;
+  --moss-bright: #9bb05e;
+  --rust: #b06a38;
+  --hazard: #d4b13a;
+  --bone: #d9d2c0;
+  --ash: #8c897e;
+
   position: relative;
   display: grid;
   min-height: 100svh;
   place-items: center;
-  background:
-    linear-gradient(#e3e8e4 1px, transparent 1px),
-    linear-gradient(90deg, #e3e8e4 1px, transparent 1px), #f4f6f4;
-  background-size: 32px 32px;
+  overflow: hidden;
   padding: 24px;
+  background:
+    radial-gradient(
+      ellipse 90% 55% at 50% -5%,
+      rgba(216, 205, 168, 0.28),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #2b2f28 0%, #23271f 42%, var(--bg-deep) 100%);
+  color: var(--bone);
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.haze {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 70% 40% at 50% 8%,
+    rgba(212, 177, 138, 0.18),
+    transparent 70%
+  );
+  animation: breathe 9s ease-in-out infinite;
+}
+
+.skyline {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+  height: 46vh;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 220px 40px rgba(0, 0, 0, 0.65);
+}
+
+.grain {
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 0.6s steps(2) infinite;
+}
+
+.vine {
+  position: absolute;
+  top: 0;
+  right: 8%;
+  width: 3px;
+  height: 180px;
+  pointer-events: none;
+  background: linear-gradient(var(--moss), rgba(122, 140, 78, 0));
+  transform-origin: top center;
+  animation: sway 7s ease-in-out infinite;
+}
+.vine::before,
+.vine::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 60% 0 60% 0;
+  background: var(--moss-bright);
+  opacity: 0.7;
+}
+.vine::before {
+  top: 70px;
+  left: -7px;
+}
+.vine::after {
+  top: 120px;
+  left: 3px;
 }
 
 .back {
   position: absolute;
-  top: 24px;
-  left: 24px;
+  top: 22px;
+  left: 22px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #4e5e53;
+  color: var(--ash);
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+}
+.back:hover {
+  color: var(--moss-bright);
 }
 
 .login {
-  width: min(410px, 100%);
+  position: relative;
+  z-index: 2;
+  width: min(420px, 100%);
   text-align: center;
+  animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .brand {
+  position: relative;
   display: grid;
-  width: 46px;
-  height: 46px;
-  margin: 0 auto 15px;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
   place-items: center;
-  border-radius: 7px;
-  background: #244b36;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 850;
+  border-radius: 8px;
+  background: linear-gradient(160deg, var(--bg-elevated), #1e2219);
+  border: 1px solid rgba(122, 140, 78, 0.35);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.brandMark {
+  font-family: "Oswald", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--moss-bright);
+}
+.hazard {
+  position: absolute;
+  bottom: -1px;
+  left: -1px;
+  right: -1px;
+  height: 6px;
+  border-radius: 0 0 8px 8px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--hazard) 0 7px,
+    #1a1d16 7px 14px
+  );
+  opacity: 0.85;
 }
 
-.login > span {
-  color: #627067;
+.kicker {
+  color: var(--moss);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .login h1 {
-  margin: 7px 0 0;
-  color: #17211b;
-  font-size: 27px;
-  font-weight: 760;
+  margin: 9px 0 0;
+  font-family: "Oswald", sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--bone);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .login > p {
-  margin-top: 8px;
-  color: #707c73;
-  font-size: 12px;
+  margin: 10px auto 0;
+  max-width: 340px;
+  color: var(--ash);
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
 .formSurface {
-  margin-top: 24px;
-  border: 1px solid #d8dfda;
-  border-radius: 7px;
-  background: #ffffff;
-  padding: 24px;
+  position: relative;
+  margin-top: 26px;
+  padding: 26px 24px;
   text-align: left;
-  box-shadow: 0 12px 30px rgba(29, 48, 36, 0.08);
+  border: 1px solid rgba(122, 140, 78, 0.22);
+  border-radius: 9px;
+  background: linear-gradient(
+    180deg,
+    rgba(48, 53, 43, 0.94),
+    rgba(34, 38, 30, 0.96)
+  );
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+.formSurface::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--moss) 30%,
+    var(--moss-bright) 50%,
+    var(--moss) 70%,
+    transparent
+  );
+  opacity: 0.6;
+}
+
+.cornerIvy {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
 }
 
 .login > small {
@@ -77,6 +232,67 @@
   justify-content: center;
   gap: 6px;
   margin-top: 16px;
-  color: #7c887f;
-  font-size: 9px;
+  color: var(--ash);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+.freq {
+  margin-top: 7px !important;
+  color: rgba(122, 140, 78, 0.7) !important;
+  font-family: "JetBrains Mono", monospace;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-4%, 3%);
+  }
+  100% {
+    transform: translate(3%, -2%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .haze,
+  .vine,
+  .grain,
+  .login {
+    animation: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .login h1 {
+    font-size: 25px;
+  }
 }

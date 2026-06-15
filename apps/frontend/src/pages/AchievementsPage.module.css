@@ -1,0 +1,240 @@
+.page {
+  display: grid;
+  gap: 18px;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--bg-panel), #20241c);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+
+.levelBadge {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  flex: 0 0 96px;
+  border-radius: 12px;
+  border: 1px solid var(--accent-border);
+  background: rgba(122, 140, 78, 0.14);
+  color: var(--moss-bright);
+}
+
+.levelBadge span {
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.levelBadge strong {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1;
+  color: var(--bone);
+}
+
+.heroInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.kicker {
+  color: var(--moss);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.heroInfo h2 {
+  margin: 5px 0 12px;
+  font-family: var(--font-display);
+  color: var(--bone);
+  font-size: 20px;
+}
+
+.levelBar {
+  height: 9px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.levelBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--moss), var(--moss-bright));
+  transition: width 0.5s ease;
+}
+
+.heroInfo small {
+  display: block;
+  margin-top: 7px;
+  color: var(--ash);
+  font-size: 11px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  padding: 16px;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.card.unlocked {
+  border-color: var(--accent-border);
+}
+
+.card.unlocked:hover {
+  transform: translateY(-2px);
+}
+
+.card.locked {
+  opacity: 0.72;
+}
+
+.cardIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 9px;
+}
+
+.unlocked .cardIcon {
+  border: 1px solid var(--accent-border);
+  background: rgba(122, 140, 78, 0.16);
+  color: var(--moss-bright);
+  box-shadow: 0 0 14px rgba(122, 140, 78, 0.25);
+}
+
+.locked .cardIcon {
+  border: 1px solid var(--border);
+  background: rgba(16, 18, 13, 0.5);
+  color: var(--ash);
+}
+
+.cardBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardBody strong {
+  font-family: var(--font-display);
+  color: var(--bone);
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+.cardBody p {
+  margin: 4px 0 9px;
+  color: var(--ash);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.awarded {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(122, 140, 78, 0.16);
+  color: var(--moss-bright);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.progressBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ash);
+}
+
+.progressRow small {
+  color: var(--ash);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.points {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--hazard);
+}
+
+.locked .points {
+  color: var(--ash);
+}
+
+.loading,
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 200px;
+  color: var(--ash);
+  font-size: 13px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  color: var(--moss);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

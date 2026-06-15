@@ -76,7 +76,19 @@ export default function LoginForm() {
       {success && <p className={styles.success}>{success}</p>}
 
       <button type="submit" className={styles.submitBtn} disabled={loading}>
-        {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+        {loading ? (
+          <>
+            <span className={styles.scan} aria-hidden>
+              <span />
+              <span />
+              <span />
+              <span />
+            </span>
+            Verificando acceso...
+          </>
+        ) : (
+          "Entrar al campamento"
+        )}
       </button>
     </form>
   );

@@ -49,7 +49,7 @@ export default function PersonsPage() {
     <div
       style={{
         padding: "24px 32px",
-        background: "#f9f9f7",
+        background: "rgba(16,18,13,0.4)",
         minHeight: "100vh",
       }}
     >
@@ -67,8 +67,8 @@ export default function PersonsPage() {
             onClick={handleCreate}
             style={{
               padding: "8px 14px",
-              background: "#185FA5",
-              color: "white",
+              background: "var(--moss)",
+              color: "var(--bone)",
               border: "none",
               borderRadius: 8,
               fontSize: 13,

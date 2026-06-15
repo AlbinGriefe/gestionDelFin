@@ -1,15 +1,15 @@
 .row {
   cursor: pointer;
-  background-color: #fff;
+  background-color: var(--bg-panel);
 }
 
 .row:hover td {
-  background: #f9f9f7;
+  background: rgba(16, 18, 13, 0.4);
 }
 
 .td {
   padding: 10px 14px;
-  border-bottom: 0.5px solid #eee;
+  border-bottom: 0.5px solid var(--border);
   vertical-align: middle;
 }
 
@@ -20,19 +20,19 @@
   border-radius: 20px;
   font-size: 10px;
   font-weight: 500;
-  background: #e6f1fb;
-  color: #185fa5;
+  background: var(--accent-bg);
+  color: var(--moss);
   vertical-align: middle;
 }
 
 .toggleBtn {
   background: none;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #666;
+  color: var(--ash);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -48,7 +48,7 @@
 }
 
 .detailCell {
-  background: #f9f9f7;
+  background: rgba(16, 18, 13, 0.4);
   padding: 12px 14px 14px;
 }
 
@@ -61,21 +61,21 @@
 
 .revokeBtn {
   background: none;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #a32d2d;
+  color: #e6b89c;
 }
 
 .revokeBtn:hover:not(:disabled) {
-  background: #fdecea;
-  border-color: #e0a0a0;
+  background: rgba(176, 106, 56, 0.14);
+  border-color: #d3895d;
 }
 
 .revokeBtn:disabled {
-  color: #ccc;
-  border-color: #eee;
+  color: var(--border);
+  border-color: var(--border);
   cursor: not-allowed;
 }

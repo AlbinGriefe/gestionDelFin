@@ -4,19 +4,19 @@
   place-content: center;
   justify-items: center;
   gap: 10px;
-  background: #f4f6f4;
+  background: var(--bg-deep);
   padding: 24px;
-  color: #536158;
+  color: var(--ash);
   text-align: center;
 }
 
 .page > svg {
   margin-bottom: 12px;
-  color: #9d3c36;
+  color: #d3895d;
 }
 
 .page span {
-  color: #9d3c36;
+  color: #d3895d;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -25,7 +25,7 @@
 .page h1 {
   max-width: 520px;
   margin: 0;
-  color: #17211b;
+  color: var(--bone);
   font-size: 30px;
   font-weight: 760;
 }
@@ -40,7 +40,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 20px;
-  color: #244b36;
+  color: var(--moss);
   font-size: 13px;
   font-weight: 750;
   text-decoration: none;

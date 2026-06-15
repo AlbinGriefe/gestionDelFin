@@ -15,10 +15,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
-  active: { bg: "#EAF3DE", color: "#3B6D11" },
-  inactive: { bg: "#F1EFE8", color: "#5F5E5A" },
-  destroyed: { bg: "#FDECEA", color: "#8B2020" },
-  abandoned: { bg: "#FEF3E2", color: "#7A4500" },
+  active: { bg: "var(--accent-bg)", color: "var(--moss-bright)" },
+  inactive: { bg: "rgba(16,18,13,0.4)", color: "var(--ash)" },
+  destroyed: { bg: "rgba(176,106,56,0.14)", color: "#e6b89c" },
+  abandoned: { bg: "rgba(212,177,58,0.14)", color: "var(--hazard)" },
 };
 
 interface CampRowProps {
@@ -60,7 +60,7 @@ export default function CampRow({ camp, onEdit }: CampRowProps) {
                 width: 80,
                 height: 6,
                 borderRadius: 4,
-                background: "#eee",
+                background: "var(--border)",
                 overflow: "hidden",
               }}
             >
@@ -71,19 +71,19 @@ export default function CampRow({ camp, onEdit }: CampRowProps) {
                   borderRadius: 4,
                   background:
                     utilizationRate >= 90
-                      ? "#A32D2D"
+                      ? "#e6b89c"
                       : utilizationRate >= 70
-                        ? "#7A4500"
-                        : "#3B6D11",
+                        ? "var(--hazard)"
+                        : "var(--moss-bright)",
                 }}
               />
             </div>
-            <span style={{ fontSize: 12, color: "#666" }}>
+            <span style={{ fontSize: 12, color: "var(--ash)" }}>
               {utilizationRate.toFixed(0)}%
             </span>
           </div>
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {camp.occupancy.activePersons} / {camp.maxCapacity}
         </td>
         <td className={styles.td}>

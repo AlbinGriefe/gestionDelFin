@@ -7,19 +7,34 @@
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  color: #17211b;
-  background: #f4f6f4;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --text: #657168;
-  --text-h: #17211b;
-  --bg: #f4f6f4;
-  --border: #dbe2dc;
-  --accent: #244b36;
-  --accent-bg: #e5efe8;
-  --accent-border: #9db6a5;
-  --shadow: 0 10px 24px rgba(23, 33, 27, 0.09);
+
+  --bg-deep: #1a1d16;
+  --bg-panel: #262a22;
+  --bg-elevated: #30352b;
+  --moss: #7a8c4e;
+  --moss-bright: #9bb05e;
+  --rust: #b06a38;
+  --hazard: #d4b13a;
+  --bone: #d9d2c0;
+  --ash: #8c897e;
+
+  --bg: var(--bg-deep);
+  --text: #a7a294;
+  --text-h: var(--bone);
+  --border: rgba(122, 140, 78, 0.18);
+  --accent: var(--moss);
+  --accent-bg: rgba(122, 140, 78, 0.14);
+  --accent-border: rgba(122, 140, 78, 0.42);
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.5);
+
+  --font-display: "Oswald", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  color: var(--text);
+  background: var(--bg-deep);
 }
 
 * {
@@ -29,13 +44,32 @@
 
 html {
   min-width: 320px;
-  background: #f4f6f4;
+  background: var(--bg-deep);
 }
 
 body {
+  position: relative;
   min-width: 320px;
   min-height: 100svh;
   margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(
+      ellipse 120% 80% at 50% -10%,
+      rgba(122, 140, 78, 0.07),
+      transparent 55%
+    ),
+    var(--bg-deep);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 button,
@@ -50,11 +84,13 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #557e65;
+  outline: 2px solid var(--moss-bright);
   outline-offset: 2px;
 }
 
 #root {
+  position: relative;
+  z-index: 1;
   min-height: 100svh;
 }
 
@@ -63,4 +99,28 @@ h2,
 h3,
 p {
   margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid var(--bg-deep);
+  border-radius: 8px;
+  background: rgba(122, 140, 78, 0.4);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 140, 78, 0.6);
 }
