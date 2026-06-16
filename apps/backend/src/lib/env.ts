@@ -9,6 +9,10 @@ const envSchema = z.object({
   API_PREFIX: z.string().min(1).default("/api/v1"),
   CORS_ORIGIN: z.string().min(1).default("*"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required."),
+  DATABASE_SSL_ACCEPT_INVALID_CERTS: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 characters."),
   JWT_EXPIRES_IN_HOURS: z.coerce.number().int().positive().default(12),
   SESSION_TIMEOUT_MINUTES: z.coerce.number().int().positive().default(20),
