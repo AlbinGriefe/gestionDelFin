@@ -29,7 +29,7 @@ async function login(page: Page, account: DemoAccount) {
   await page.goto("/login");
   await page.getByLabel(/usuario/i).fill(account.username);
   await page.getByLabel(/contrase/i).fill(account.password!);
-  await page.getByRole("button", { name: /iniciar sesi/i }).click();
+  await page.getByRole("button", { name: /entrar al campamento/i }).click();
   await expect(page).toHaveURL(/\/home$/);
   await expect(page.getByText("Poblacion activa")).toBeVisible();
 }

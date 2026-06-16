@@ -39,6 +39,19 @@ export async function listCampsController(
   }
 }
 
+export async function listCampLocationsController(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  try {
+    const result = await campsService.listCampLocations();
+    response.status(200).json(createSuccessResponse(result, request.requestId));
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getCampByIdController(
   request: Request,
   response: Response,

@@ -9,9 +9,9 @@
 }
 
 .modal {
-  background: #fff;
+  background: var(--bg-panel);
   border-radius: 12px;
-  border: 0.5px solid #ddd;
+  border: 0.5px solid var(--border);
   width: calc(100% - 32px);
   max-width: 600px;
   max-height: calc(100vh - 48px);
@@ -25,26 +25,26 @@
   justify-content: space-between;
   align-items: center;
   padding: 14px 16px;
-  border-bottom: 0.5px solid #eee;
+  border-bottom: 0.5px solid var(--border);
 }
 
 .title {
   font-size: 14px;
   font-weight: 500;
-  color: #111;
+  color: var(--bone);
 }
 
 .closeBtn {
   background: none;
   border: none;
   font-size: 16px;
-  color: #aaa;
+  color: var(--ash);
   cursor: pointer;
   line-height: 1;
 }
 
 .closeBtn:hover {
-  color: #555;
+  color: var(--text);
 }
 
 .body {
@@ -55,7 +55,7 @@
 .sectionTitle {
   font-size: 11px;
   font-weight: 500;
-  color: #888;
+  color: var(--ash);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: 16px 0 12px;
@@ -84,30 +84,30 @@
   display: block;
   font-size: 12px;
   font-weight: 500;
-  color: #666;
+  color: var(--ash);
   margin-bottom: 5px;
 }
 
 .optional {
   font-weight: 400;
-  color: #aaa;
+  color: var(--ash);
   margin-left: 4px;
 }
 
 .input {
   width: 100%;
   padding: 8px 10px;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
   font-size: 13px;
-  color: #111;
-  background: #fff;
+  color: var(--bone);
+  background: var(--bg-panel);
   box-sizing: border-box;
 }
 
 .input:focus {
   outline: none;
-  border-color: #378add;
+  border-color: var(--moss-bright);
 }
 
 .addMemberRow {
@@ -119,7 +119,7 @@
 
 .addBtn {
   padding: 8px 14px;
-  background: #185fa5;
+  background: var(--moss);
   color: white;
   border: none;
   border-radius: 8px;
@@ -129,17 +129,17 @@
 }
 
 .addBtn:hover:not(:disabled) {
-  background: #0c447c;
+  background: #58683a;
 }
 
 .addBtn:disabled {
-  background: #aaa;
+  background: var(--ash);
   cursor: not-allowed;
 }
 
 .emptyMembers {
   font-size: 13px;
-  color: #999;
+  color: var(--ash);
   text-align: center;
   padding: 8px 0;
 }
@@ -155,16 +155,16 @@
   align-items: flex-end;
   gap: 10px;
   padding: 10px;
-  border: 0.5px solid #eee;
+  border: 0.5px solid var(--border);
   border-radius: 8px;
-  background: #f9f9f7;
+  background: rgba(16, 18, 13, 0.4);
 }
 
 .memberName {
   flex: 1;
   font-size: 13px;
   font-weight: 500;
-  color: #333;
+  color: var(--bone);
   min-width: 0;
 }
 
@@ -176,45 +176,45 @@
 .miniLabel {
   display: block;
   font-size: 11px;
-  color: #888;
+  color: var(--ash);
   margin-bottom: 3px;
 }
 
 .miniInput {
   width: 90px;
   padding: 6px 8px;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 6px;
   font-size: 12px;
-  color: #111;
-  background: #fff;
+  color: var(--bone);
+  background: var(--bg-panel);
   box-sizing: border-box;
 }
 
 .miniInput:focus {
   outline: none;
-  border-color: #378add;
+  border-color: var(--moss-bright);
 }
 
 .removeBtn {
   background: none;
-  border: 0.5px solid #ccc;
+  border: 0.5px solid var(--border);
   border-radius: 6px;
   width: 28px;
   height: 28px;
   font-size: 13px;
-  color: #a32d2d;
+  color: #e6b89c;
   cursor: pointer;
 }
 
 .removeBtn:hover {
-  background: #fdecea;
-  border-color: #e0a0a0;
+  background: rgba(176, 106, 56, 0.14);
+  border-color: #d3895d;
 }
 
 .error {
   font-size: 12px;
-  color: #a32d2d;
+  color: #e6b89c;
   margin-top: 6px;
   text-align: center;
 }
@@ -224,27 +224,27 @@
   justify-content: flex-end;
   gap: 8px;
   padding: 12px 16px;
-  border-top: 0.5px solid #eee;
-  background: #f9f9f7;
+  border-top: 0.5px solid var(--border);
+  background: rgba(16, 18, 13, 0.4);
 }
 
 .btnSecondary {
   padding: 8px 16px;
   background: none;
-  color: #666;
-  border: 0.5px solid #ccc;
+  color: var(--ash);
+  border: 0.5px solid var(--border);
   border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
 }
 
 .btnSecondary:hover {
-  background: #f1f1f1;
+  background: rgba(16, 18, 13, 0.4);
 }
 
 .btnPrimary {
   padding: 8px 16px;
-  background: #185fa5;
+  background: var(--moss);
   color: white;
   border: none;
   border-radius: 8px;
@@ -254,10 +254,45 @@
 }
 
 .btnPrimary:hover {
-  background: #0c447c;
+  background: #58683a;
 }
 
 .btnPrimary:disabled {
-  background: #aaa;
+  background: var(--ash);
   cursor: not-allowed;
+}
+
+.overlay {
+  animation: overlayFade 0.2s ease both;
+}
+
+.modal {
+  animation: modalRise 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes overlayFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .modal {
+    animation: none;
+  }
 }

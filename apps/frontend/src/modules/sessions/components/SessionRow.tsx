@@ -25,8 +25,8 @@ export default function SessionRow({ session, onRevoke }: SessionRowProps) {
 
   const isActive = !session.isExpired;
   const stateStyle = isActive
-    ? { bg: "#EAF3DE", color: "#3B6D11" }
-    : { bg: "#F1EFE8", color: "#5F5E5A" };
+    ? { bg: "var(--accent-bg)", color: "var(--moss-bright)" }
+    : { bg: "rgba(16,18,13,0.4)", color: "var(--ash)" };
 
   return (
     <>
@@ -38,13 +38,13 @@ export default function SessionRow({ session, onRevoke }: SessionRowProps) {
           )}
         </td>
         <td className={styles.td}>{session.camp.name}</td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {session.ipAddress}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {fmt(session.loginAt)}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {fmt(session.expiresAt)}
         </td>
         <td className={styles.td}>

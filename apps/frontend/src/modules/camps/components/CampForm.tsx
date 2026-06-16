@@ -2,6 +2,9 @@ import { useState } from "react";
 import type { CampSummary, CampWriteInput } from "../types/camps.types";
 import styles from "./CampForm.module.css";
 import { toast } from "sonner";
+import CampMap from "./CampMap";
+import { useCamps } from "../context/useCamps";
+import { isValidPos, type MapPos } from "./campSites";
 
 type CampStatus = "active" | "inactive" | "destroyed" | "abandoned";
 
@@ -24,6 +27,7 @@ export default function CampForm({
   onClose,
 }: CampFormProps) {
   const isEditing = !!initialData;
+  const { camps } = useCamps();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +46,18 @@ export default function CampForm({
   const [status, setStatus] = useState<CampStatus>(
     initialData?.status ?? "active",
   );
+
+  const mapValue: MapPos | null = isValidPos(
+    longitude === "" ? null : Number(longitude),
+    latitude === "" ? null : Number(latitude),
+  )
+    ? { x: Number(longitude), y: Number(latitude) }
+    : null;
+
+  const handleMapChange = (pos: MapPos) => {
+    setLongitude(String(pos.x));
+    setLatitude(String(pos.y));
+  };
 
   const handleSubmit = async () => {
     setError("");
@@ -114,29 +130,37 @@ export default function CampForm({
             </div>
           </div>
 
+          <p className={styles.sectionTitle}>Ubicación en el mapa</p>
+          <CampMap
+            mode="select"
+            camps={camps.filter((camp) => camp.id !== initialData?.id)}
+            value={mapValue}
+            onChange={handleMapChange}
+          />
+
           <div className={styles.formRow}>
             <div>
               <label className={styles.label}>
-                Latitud <span className={styles.optional}>(opcional)</span>
+                Posición X <span className={styles.optional}>(0-1)</span>
               </label>
               <input
                 className={styles.input}
-                value={latitude}
-                onChange={(e) => setLatitude(e.target.value)}
-                placeholder="ej. 9.9281"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                placeholder="clic en el mapa"
                 type="number"
                 step="any"
               />
             </div>
             <div>
               <label className={styles.label}>
-                Longitud <span className={styles.optional}>(opcional)</span>
+                Posición Y <span className={styles.optional}>(0-1)</span>
               </label>
               <input
                 className={styles.input}
-                value={longitude}
-                onChange={(e) => setLongitude(e.target.value)}
-                placeholder="ej. -84.0907"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                placeholder="clic en el mapa"
                 type="number"
                 step="any"
               />

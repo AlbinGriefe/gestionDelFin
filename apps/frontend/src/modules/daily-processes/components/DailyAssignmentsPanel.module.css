@@ -1,8 +1,8 @@
 .panel {
   margin-bottom: 14px;
-  border: 1px solid #dbe2dc;
+  border: 1px solid var(--border);
   border-radius: 7px;
-  background: #ffffff;
+  background: var(--bg-panel);
   padding: 16px;
 }
 
@@ -17,18 +17,18 @@
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  color: #365842;
+  color: var(--moss);
 }
 
 .header h2 {
   margin: 0;
-  color: #26362c;
+  color: var(--bone);
   font-size: 14px;
 }
 
 .header p {
   margin-top: 3px;
-  color: #849087;
+  color: var(--ash);
   font-size: 9px;
 }
 
@@ -39,9 +39,9 @@
   gap: 6px;
   border: 0;
   border-radius: 6px;
-  background: #244b36;
+  background: var(--moss);
   padding: 0 12px;
-  color: #ffffff;
+  color: var(--bg-panel);
   font-size: 9px;
   font-weight: 750;
   cursor: pointer;
@@ -61,7 +61,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(180px, 0.7fr) 110px;
   gap: 12px;
   align-items: center;
-  border-top: 1px solid #edf0ed;
+  border-top: 1px solid var(--border);
   padding: 9px 0;
 }
 
@@ -71,23 +71,23 @@
 }
 
 .list strong {
-  color: #2b3a30;
+  color: var(--bone);
   font-size: 10px;
 }
 
 .list div span {
   margin-top: 2px;
-  color: #89928c;
+  color: var(--ash);
   font-size: 8px;
 }
 
 .list select {
   height: 34px;
-  border: 1px solid #d6ddd8;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--bg-panel);
   padding: 0 8px;
-  color: #35453a;
+  color: var(--bone);
   font-size: 9px;
 }
 
@@ -101,13 +101,13 @@
 }
 
 .compatible {
-  background: #e5efe8;
-  color: #2f6243;
+  background: var(--accent-bg);
+  color: var(--moss);
 }
 
 .penalty {
-  background: #f5e2e0;
-  color: #9d3c36;
+  background: rgba(176, 106, 56, 0.16);
+  color: #d3895d;
 }
 
 @media (max-width: 620px) {

@@ -57,8 +57,9 @@ export default function UserForm({
           fontWeight: 500,
           padding: "1px 7px",
           borderRadius: 20,
-          background: c.status === "active" ? "#EAF3DE" : "#F1EFE8",
-          color: c.status === "active" ? "#3B6D11" : "#5F5E5A",
+          background:
+            c.status === "active" ? "var(--accent-bg)" : "rgba(16,18,13,0.4)",
+          color: c.status === "active" ? "var(--moss-bright)" : "var(--ash)",
         }}
       >
         {c.status === "active" ? "Activo" : "Inactivo"}
@@ -77,8 +78,10 @@ export default function UserForm({
           fontWeight: 500,
           padding: "1px 7px",
           borderRadius: 20,
-          background: r.isSystemRole ? "#E6F1FB" : "#F1EFE8",
-          color: r.isSystemRole ? "#0C447C" : "#5F5E5A",
+          background: r.isSystemRole
+            ? "var(--accent-bg)"
+            : "rgba(16,18,13,0.4)",
+          color: r.isSystemRole ? "#58683a" : "var(--ash)",
         }}
       >
         {r.isSystemRole ? "Sistema" : "Personalizado"}
@@ -162,7 +165,7 @@ export default function UserForm({
             onClick={() => setActiveTab("password")}
           >
             Contraseña{" "}
-            {!isEditing && <span style={{ color: "#A32D2D" }}>*</span>}
+            {!isEditing && <span style={{ color: "#e6b89c" }}>*</span>}
           </button>
         </div>
 
@@ -254,7 +257,7 @@ export default function UserForm({
                 <label className={styles.label}>
                   {isEditing ? "Nueva contraseña" : "Contraseña"}
                   {!isEditing && (
-                    <span style={{ color: "#A32D2D", marginLeft: 4 }}>*</span>
+                    <span style={{ color: "#e6b89c", marginLeft: 4 }}>*</span>
                   )}
                 </label>
                 <div className={styles.inputWrapper}>

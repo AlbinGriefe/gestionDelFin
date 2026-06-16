@@ -128,13 +128,13 @@ function AlertItem({ alert }: { alert: InventorySummary }) {
             className={styles.progressFill}
             style={{
               width: `${pct}%`,
-              background: isCritical ? "#A32D2D" : "#7A4500",
+              background: isCritical ? "#e6b89c" : "var(--hazard)",
             }}
           />
         </div>
         <span
           className={styles.alertNumbers}
-          style={{ color: isCritical ? "#A32D2D" : "#7A4500" }}
+          style={{ color: isCritical ? "#e6b89c" : "var(--hazard)" }}
         >
           {alert.quantity} / {alert.minQuantity} {alert.resource.unit}
         </span>

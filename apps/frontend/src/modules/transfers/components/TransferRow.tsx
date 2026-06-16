@@ -25,15 +25,15 @@ const STATE_LABELS: Record<string, string> = {
 };
 
 const STATE_STYLES: Record<string, { bg: string; color: string }> = {
-  pending: { bg: "#FEF3E2", color: "#7A4500" },
-  accepted: { bg: "#E6F1FB", color: "#185FA5" },
-  declined: { bg: "#FDECEA", color: "#8B2020" },
-  scheduled: { bg: "#E6F1FB", color: "#185FA5" },
-  in_transit: { bg: "#FEF3E2", color: "#7A4500" },
-  delivered: { bg: "#EAF3DE", color: "#3B6D11" },
-  returned: { bg: "#F1EFE8", color: "#5F5E5A" },
-  completed: { bg: "#EAF3DE", color: "#3B6D11" },
-  cancelled: { bg: "#F1EFE8", color: "#5F5E5A" },
+  pending: { bg: "rgba(212,177,58,0.14)", color: "var(--hazard)" },
+  accepted: { bg: "var(--accent-bg)", color: "var(--moss)" },
+  declined: { bg: "rgba(176,106,56,0.14)", color: "#e6b89c" },
+  scheduled: { bg: "var(--accent-bg)", color: "var(--moss)" },
+  in_transit: { bg: "rgba(212,177,58,0.14)", color: "var(--hazard)" },
+  delivered: { bg: "var(--accent-bg)", color: "var(--moss-bright)" },
+  returned: { bg: "rgba(16,18,13,0.4)", color: "var(--ash)" },
+  completed: { bg: "var(--accent-bg)", color: "var(--moss-bright)" },
+  cancelled: { bg: "rgba(16,18,13,0.4)", color: "var(--ash)" },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -64,7 +64,7 @@ export default function TransferRow({ transfer, onManage }: TransferRowProps) {
         <td className={styles.td}>
           {TYPE_LABELS[transfer.type] ?? transfer.type}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {transfer.counts.persons > 0 && `${transfer.counts.persons} pers.`}
           {transfer.counts.persons > 0 &&
             transfer.counts.resources > 0 &&
@@ -74,7 +74,7 @@ export default function TransferRow({ transfer, onManage }: TransferRowProps) {
             transfer.counts.resources === 0 &&
             "—"}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {fmt(transfer.requestedDate)}
         </td>
         <td className={styles.td}>

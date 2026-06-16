@@ -19,7 +19,19 @@ function App() {
       <IdleManager>
         <AppRoutes />
       </IdleManager>
-      <Toaster position="top-right" duration={3000} />
+      <Toaster
+        position="top-right"
+        duration={3000}
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: "var(--bg-panel)",
+            color: "var(--bone)",
+            border: "1px solid var(--accent-border)",
+            fontFamily: "Inter, sans-serif",
+          },
+        }}
+      />
     </>
   );
 }

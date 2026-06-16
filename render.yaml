@@ -3,12 +3,11 @@ services:
     name: gestiondelfin-api
     runtime: node
     plan: free
-    region: oregon
-    buildCommand: npm ci && npm run backend:prisma:generate && npm run backend:build
-    preDeployCommand: npm run backend:prisma:migrate:deploy
-    startCommand: npm run backend:start
+    rootDir: .
+    buildCommand: npm ci --include=dev && npm run backend:prisma:generate && npm run backend:build
+    startCommand: npm run backend:prisma:migrate:deploy && npm run backend:start
     healthCheckPath: /api/v1/health
-    autoDeployTrigger: commit
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,14 +15,8 @@ services:
         value: /api/v1
       - key: AI_PROVIDER
         value: rules
-      - key: JWT_EXPIRES_IN_HOURS
-        value: "12"
-      - key: SESSION_TIMEOUT_MINUTES
-        value: "20"
-      - key: AI_TIMEOUT_MS
-        value: "180000"
-      - key: DATABASE_SSL_ACCEPT_INVALID_CERTS
-        value: "false"
+      - key: DATABASE_SSL
+        value: "true"
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET

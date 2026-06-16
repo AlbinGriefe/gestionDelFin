@@ -16,8 +16,8 @@ export default function ProfessionRow({
   const [isOpen, setIsOpen] = useState(false);
 
   const activeStyle = profession.isActive
-    ? { bg: "#EAF3DE", color: "#3B6D11" }
-    : { bg: "#F1EFE8", color: "#5F5E5A" };
+    ? { bg: "var(--accent-bg)", color: "var(--moss-bright)" }
+    : { bg: "rgba(16,18,13,0.4)", color: "var(--ash)" };
 
   return (
     <>
@@ -25,16 +25,19 @@ export default function ProfessionRow({
         <td className={styles.td} style={{ fontWeight: 500 }}>
           {profession.name}
         </td>
-        <td className={styles.td} style={{ color: "#555", maxWidth: 260 }}>
+        <td
+          className={styles.td}
+          style={{ color: "var(--text)", maxWidth: 260 }}
+        >
           {profession.description}
         </td>
         <td className={styles.td}>
           {profession.collectsResources ? "Sí" : "No"}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {profession.foodGeneratedPerDay}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {profession.waterGeneratedPerDay}
         </td>
         <td className={styles.td}>

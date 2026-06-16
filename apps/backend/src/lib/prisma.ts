@@ -20,10 +20,15 @@ const sslQueryParams = new Set([
   "sslaccept",
   "ssl-mode",
   "sslmode",
+  "sslca",
   "sslcert",
   "sslidentity",
   "sslpassword",
 ]);
+
+function isEnabled(value: string | undefined) {
+  return value?.toLowerCase() === "true";
+}
 
 function normalizeDatabaseUrl(urlString: string): MariaDbConnectionConfig {
   try {
@@ -40,10 +45,13 @@ function normalizeDatabaseUrl(urlString: string): MariaDbConnectionConfig {
       ""
     ).toLowerCase();
     const ssl = url.searchParams.get("ssl")?.toLowerCase();
+    const forceSsl = isEnabled(process.env.DATABASE_SSL);
     const acceptsInvalidCerts =
-      process.env.DATABASE_SSL_ACCEPT_INVALID_CERTS === "true" ||
+      forceSsl ||
+      isEnabled(process.env.DATABASE_SSL_ACCEPT_INVALID_CERTS) ||
       sslAccept === "accept_invalid_certs";
     const requiresSsl =
+      forceSsl ||
       ssl === "true" ||
       Boolean(sslAccept) ||
       ["required", "require", "verify_ca", "verify_identity"].includes(sslMode);
@@ -53,7 +61,7 @@ function normalizeDatabaseUrl(urlString: string): MariaDbConnectionConfig {
       port: url.port ? Number.parseInt(url.port, 10) : 3306,
       user: decodeURIComponent(url.username),
       password: decodeURIComponent(url.password),
-      database: decodeURIComponent(url.pathname.replace(/^\//, "")),
+      database: decodeURIComponent(url.pathname.replace(/^\/+/, "")),
     };
 
     const passthroughConfig = config as Record<string, unknown>;
@@ -75,7 +83,6 @@ function normalizeDatabaseUrl(urlString: string): MariaDbConnectionConfig {
 
 const adapter = new PrismaMariaDb(normalizeDatabaseUrl(connectionString));
 
-// Reuse a single client during development reloads.
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") {

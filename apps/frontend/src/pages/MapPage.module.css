@@ -1,0 +1,68 @@
+.page {
+  display: grid;
+  gap: 16px;
+}
+
+.intro span {
+  color: var(--moss);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.intro h2 {
+  margin: 5px 0 0;
+  font-family: var(--font-display);
+  color: var(--bone);
+  font-size: 22px;
+}
+
+.intro p {
+  margin-top: 6px;
+  color: var(--ash);
+  font-size: 12.5px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg-panel);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ash);
+  font-size: 11px;
+}
+
+.legend i {
+  display: inline-block;
+}
+
+.dotActive {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--moss-bright);
+  box-shadow: 0 0 8px rgba(122, 140, 78, 0.6);
+}
+
+.lineActive {
+  width: 22px;
+  height: 0;
+  border-top: 2px dashed var(--hazard);
+}
+
+.lineDone {
+  width: 22px;
+  height: 0;
+  border-top: 2px dashed var(--moss-bright);
+  opacity: 0.55;
+}

@@ -1,114 +1,102 @@
 # Despliegue en Render, Aiven y Vercel
 
-## Render: API
+Stack en capas gratuitas:
 
-El repositorio incluye `render.yaml` para crear el backend como Blueprint.
-Render debe leerlo desde la raiz del repo.
+- Base de datos MySQL en Aiven.
+- API (Express) en Render.
+- Frontend (Vite) en Vercel.
 
-Variables solicitadas por el Blueprint:
+El orden importa por la dependencia cruzada: la API necesita la URL del
+frontend para CORS y el frontend necesita la URL de la API.
+
+## 1. Aiven: MySQL
+
+1. Crea un servicio MySQL en el plan gratuito.
+2. Toma los datos de conexion: host, puerto, usuario, password y base.
+3. Aiven exige TLS. Arma el `DATABASE_URL` con SSL:
 
 ```text
-DATABASE_URL=<Aiven MySQL URL>
-JWT_SECRET=<secreto largo>
-CRON_SECRET=<secreto largo>
-CORS_ORIGIN=*
+mysql://USUARIO:PASSWORD@HOST:PUERTO/BASE?ssl-mode=REQUIRED
 ```
 
-Para Aiven, usa la URL de MySQL con TLS. Si Aiven entrega un certificado que no
-puede validarse desde Render, `?sslaccept=accept_invalid_certs` funciona para
-Prisma y el backend lo traduce al modo TLS compatible con `mariadb`.
+Si el adapter pide el certificado de la autoridad, descarga el CA de Aiven y
+referencia su ruta con `sslcert`/`sslca` segun lo solicite el driver.
 
-El Blueprint configura:
+## 2. Render: API
+
+El repositorio incluye `render.yaml` (Blueprint) con build, migracion y arranque.
 
 - Build: `npm ci && npm run backend:prisma:generate && npm run backend:build`
-- Pre-deploy: `npm run backend:prisma:migrate:deploy`
-- Start: `npm run backend:start`
+- Start: `npm run backend:prisma:migrate:deploy && npm run backend:start`
 - Healthcheck: `/api/v1/health`
 
-No ejecutes la seed automaticamente en cada arranque. La seed de demostracion se
-ejecuta manualmente una sola vez con las seis variables `SEED_*_PASSWORD`.
+La migracion corre en el arranque porque es idempotente; no se depende de un
+comando pre-deploy.
 
-## Vercel: frontend
+Pasos:
+
+1. New > Web Service > conecta el repositorio (rama `main`).
+2. Render detecta `render.yaml`. Plan: Free.
+3. Configura las variables marcadas como `sync: false`:
+
+```text
+DATABASE_URL=<Aiven MySQL con SSL>
+JWT_SECRET=<secreto largo>
+CRON_SECRET=<secreto largo>
+CORS_ORIGIN=*           # temporal, se cierra en el paso 5
+```
+
+`NODE_ENV`, `API_PREFIX`, `AI_PROVIDER` y `DATABASE_SSL` ya vienen en
+`render.yaml`. `PORT` lo provee Render automaticamente.
+
+4. Despliega y verifica `https://<api>.onrender.com/api/v1/health`.
+
+Nota: el plan Free de Render suspende el servicio tras inactividad; el primer
+request luego de dormir tarda unos segundos.
+
+## 3. Seed de demostracion (una sola vez)
+
+Desde la consola/Shell del servicio en Render, con las seis variables
+`SEED_*_PASSWORD` definidas:
+
+```text
+npm run backend:seed
+```
+
+No ejecutar la seed en cada arranque.
+
+## 4. Vercel: frontend
 
 - Framework: Vite
 - Root Directory: `apps/frontend`
 - Build Command: `npm run build`
 - Output Directory: `dist`
-- Variable: `VITE_API_URL=https://<api-render>.onrender.com/api/v1`
+- Variable: `VITE_API_URL=https://<api>.onrender.com/api/v1`
 
-Agrega una regla de fallback para que las rutas de React entreguen `index.html`;
-el repo ya la incluye en `apps/frontend/vercel.json`.
+Agrega una regla de fallback para que las rutas de React entreguen `index.html`.
 
-## Cierre de CORS
+## 5. Cerrar CORS
 
-Tras desplegar Vercel:
+En Render, ajusta `CORS_ORIGIN=https://<frontend>.vercel.app` y vuelve a
+desplegar.
 
-1. Copia la URL final del frontend.
-2. En Render, cambia `CORS_ORIGIN` de `*` a esa URL exacta.
-3. Redepliega la API.
+## 6. Proceso diario (cron)
 
-## Proceso diario
-
-Configura una llamada diaria desde Render Cron, cron-job.org o un servicio
-equivalente:
+Render Cron como servicio aparte puede no estar en el plan free. Alternativa
+gratuita: un cron externo (por ejemplo cron-job.org) que llame a diario:
 
 ```text
-POST https://<api-render>.onrender.com/api/v1/daily-processes/cron/run
+POST https://<api>.onrender.com/api/v1/daily-processes/cron/run
 X-Cron-Secret: <CRON_SECRET>
 ```
 
 El proceso es idempotente por campamento y fecha. La ejecucion manual permanece
 disponible para Gestion de recursos.
 
-## Verificacion publica
+## 7. Verificacion publica
 
 1. Abre `/api/v1/health`.
 2. Inicia sesion con cada rol.
 3. Cambia de campamento con `admin`.
 4. Ejecuta `E2E_BASE_URL=https://<frontend>.vercel.app npm run test:e2e`.
 5. Confirma que CORS solo permita la URL final de Vercel.
-
-## Railway: alternativa anterior
-
-### Railway: MySQL
-
-1. Crea un servicio MySQL.
-2. Copia su URL privada en `DATABASE_URL` del servicio backend.
-3. No ejecutes la seed automaticamente en cada arranque.
-
-### Railway: API
-
-Directorio raiz del repositorio:
-
-- Build: `npm ci && npm run backend:prisma:generate && npm run backend:build`
-- Pre-deploy: `npm run backend:prisma:migrate:deploy`
-- Start: `npm run backend:start`
-- Healthcheck: `/api/v1/health`
-
-Variables minimas:
-
-```text
-NODE_ENV=production
-PORT=<provisto por Railway>
-API_PREFIX=/api/v1
-DATABASE_URL=<Railway MySQL>
-JWT_SECRET=<secreto largo>
-CRON_SECRET=<secreto largo>
-CORS_ORIGIN=https://<frontend>.vercel.app
-AI_PROVIDER=rules
-```
-
-La seed de demostracion se ejecuta manualmente una sola vez con las seis
-variables `SEED_*_PASSWORD`.
-
-### Railway Cron
-
-Configura una llamada diaria:
-
-```text
-POST https://<api>.railway.app/api/v1/daily-processes/cron/run
-X-Cron-Secret: <CRON_SECRET>
-```
-
-El proceso es idempotente por campamento y fecha. La ejecucion manual permanece
-disponible para Gestion de recursos.

@@ -21,11 +21,11 @@ const STATE_LABELS: Record<string, string> = {
 };
 
 const STATE_STYLES: Record<string, { bg: string; color: string }> = {
-  planned: { bg: "#E6F1FB", color: "#185FA5" },
-  in_progress: { bg: "#FEF3E2", color: "#7A4500" },
-  returned: { bg: "#EAF3DE", color: "#3B6D11" },
-  failed: { bg: "#FDECEA", color: "#8B2020" },
-  cancelled: { bg: "#F1EFE8", color: "#5F5E5A" },
+  planned: { bg: "var(--accent-bg)", color: "var(--moss)" },
+  in_progress: { bg: "rgba(212,177,58,0.14)", color: "var(--hazard)" },
+  returned: { bg: "var(--accent-bg)", color: "var(--moss-bright)" },
+  failed: { bg: "rgba(176,106,56,0.14)", color: "#e6b89c" },
+  cancelled: { bg: "rgba(16,18,13,0.4)", color: "var(--ash)" },
 };
 
 const MANAGEABLE_STATES = ["planned", "in_progress"];
@@ -49,16 +49,16 @@ export default function ExpeditionRow({
         <td className={styles.td} style={{ fontWeight: 500 }}>
           {expedition.name}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {fmt(expedition.leavingDate)}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {expedition.estimatedDays}
           {expedition.extraDays > 0 && (
             <span className={styles.extra}> (+{expedition.extraDays})</span>
           )}
         </td>
-        <td className={styles.td} style={{ color: "#555" }}>
+        <td className={styles.td} style={{ color: "var(--text)" }}>
           {expedition.membersCount}
         </td>
         <td className={styles.td}>
