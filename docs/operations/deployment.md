@@ -46,8 +46,8 @@ CRON_SECRET=<secreto largo>
 CORS_ORIGIN=*           # temporal, se cierra en el paso 5
 ```
 
-`NODE_ENV`, `API_PREFIX` y `AI_PROVIDER` ya vienen en `render.yaml`. `PORT` lo
-provee Render automaticamente.
+`NODE_ENV`, `API_PREFIX`, `AI_PROVIDER` y `DATABASE_SSL` ya vienen en
+`render.yaml`. `PORT` lo provee Render automaticamente.
 
 4. Despliega y verifica `https://<api>.onrender.com/api/v1/health`.
 
@@ -90,8 +90,8 @@ POST https://<api>.onrender.com/api/v1/daily-processes/cron/run
 X-Cron-Secret: <CRON_SECRET>
 ```
 
-El proceso es idempotente por campamento y fecha. La ejecucion manual
-permanece disponible para Gestion de recursos.
+El proceso es idempotente por campamento y fecha. La ejecucion manual permanece
+disponible para Gestion de recursos.
 
 ## 7. Verificacion publica
 
