@@ -14,7 +14,7 @@ export default function PlayPage() {
       <section className={styles.content}>
         <div className={styles.brand}>Gestion del Fin</div>
         <p className={styles.eyebrow}>Sistema de coordinacion de campamentos</p>
-        <h1>Decisiones claras cuando cada recurso cuenta.</h1>
+        <h1>El juego que no es un juego</h1>
         <p className={styles.description}>
           Administra personas, suministros, expediciones y eventos desde un
           centro operativo conectado.
