@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 
 import { useAuth } from "../../auth/context/useAuth";
+import { isAdministrator, normalizeRoleName } from "../../../shared/auth/roles";
 import { usePersons } from "../context/usePersons";
 import type { PersonDetail } from "../types/persons.types";
 import {
@@ -19,13 +20,6 @@ import {
   type ProfessionRecommendation,
 } from "../api/person-workflow.api";
 import styles from "./PersonWorkflowPanel.module.css";
-
-function normalizeRole(roleName: string) {
-  return roleName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
 
 function reasonList(value: unknown) {
   if (Array.isArray(value)) return value.map(String);
@@ -50,10 +44,10 @@ export default function PersonWorkflowPanel({ personId, onClose }: Props) {
   const [doctorId, setDoctorId] = useState<number>();
   const [busy, setBusy] = useState(false);
 
-  const role = normalizeRole(user?.roleName ?? "");
-  const isAdmin = role === "administrador sistema";
+  const role = normalizeRoleName(user?.roleName ?? "");
+  const isAdmin = Boolean(user && isAdministrator(user.roleName));
   const isResourceManager =
-    role.includes("gestion") && role.includes("recurso");
+    isAdmin || (role.includes("gestion") && role.includes("recurso"));
 
   const doctors = useMemo(
     () =>
@@ -61,7 +55,7 @@ export default function PersonWorkflowPanel({ personId, onClose }: Props) {
         (item) =>
           item.admissionStatus === "accepted" &&
           item.isActive &&
-          normalizeRole(item.profession?.name ?? "") === "medico",
+          normalizeRoleName(item.profession?.name ?? "") === "medico",
       ),
     [persons],
   );

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { randomUUID } from "node:crypto";
 
 import { env } from "../../lib/env.js";
+import { isSuperAdminRole } from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import { addMinutes, getServerNow } from "../../shared/helpers/server-time.js";
 import type {
@@ -16,17 +17,32 @@ import type {
 } from "./auth.types.js";
 import { authRepository, type AuthUserRecord } from "./auth.repository.js";
 
-function buildPublicUserProfile(
+async function buildPublicUserProfile(
   user: AuthUserRecord,
   activeCampId: number,
-): PublicUserProfile {
-  const availableCamps = user.user_camp_memberships.map((membership) => ({
-    id: membership.camps.id_camp,
-    name: membership.camps.cmp_name,
-  }));
+): Promise<PublicUserProfile> {
+  const activeMembershipCamps = user.user_camp_memberships
+    .filter((membership) => membership.camps.cmp_status === "active")
+    .map((membership) => ({
+      id: membership.camps.id_camp,
+      name: membership.camps.cmp_name,
+    }));
+  const activePrimaryCamp =
+    user.camps.cmp_status === "active"
+      ? { id: user.camps.id_camp, name: user.camps.cmp_name }
+      : null;
+  const availableCamps = isSuperAdminRole(user.roles.rls_name)
+    ? (await authRepository.listActiveCamps()).map((camp) => ({
+        id: camp.id_camp,
+        name: camp.cmp_name,
+      }))
+    : activePrimaryCamp &&
+        !activeMembershipCamps.some((camp) => camp.id === activePrimaryCamp.id)
+      ? [activePrimaryCamp, ...activeMembershipCamps]
+      : activeMembershipCamps;
   const activeCamp =
     availableCamps.find((camp) => camp.id === activeCampId) ??
-    (user.id_camp === activeCampId
+    (activePrimaryCamp && user.id_camp === activeCampId
       ? { id: user.camps.id_camp, name: user.camps.cmp_name }
       : null);
 
@@ -155,7 +171,7 @@ export class AuthService {
       expiresInHours: env.JWT_EXPIRES_IN_HOURS,
       sessionTimeoutMinutes,
       serverTime: now.toISOString(),
-      user: buildPublicUserProfile(user, user.id_camp),
+      user: await buildPublicUserProfile(user, user.id_camp),
     };
   }
 
@@ -203,7 +219,7 @@ export class AuthService {
     await authRepository.touchSession(session.id_user_session, nextExpiry);
 
     return {
-      ...buildPublicUserProfile(user, session.id_camp),
+      ...(await buildPublicUserProfile(user, session.id_camp)),
       sessionId: payload.sid,
       sessionExpiresAt: nextExpiry.toISOString(),
       sessionTimeoutMinutes,
@@ -236,10 +252,17 @@ export class AuthService {
     const membership = user?.user_camp_memberships.find(
       (item) => item.id_camp === campId && item.ucm_is_active,
     );
+    const isSuperAdmin = user ? isSuperAdminRole(user.roles.rls_name) : false;
     const camp =
-      membership?.camps ?? (await authRepository.findCampById(campId));
+      membership?.camps ??
+      (isSuperAdmin ? await authRepository.findCampById(campId) : null);
 
-    if (!user || !membership || !camp || camp.cmp_status !== "active") {
+    if (
+      !user ||
+      (!membership && !isSuperAdmin) ||
+      !camp ||
+      camp.cmp_status !== "active"
+    ) {
       throw new AppError(
         403,
         "The selected camp is unavailable for this user.",
@@ -276,7 +299,7 @@ export class AuthService {
       expiresInHours: env.JWT_EXPIRES_IN_HOURS,
       sessionTimeoutMinutes,
       serverTime: now.toISOString(),
-      user: buildPublicUserProfile(user, campId),
+      user: await buildPublicUserProfile(user, campId),
     };
   }
 }

@@ -39,6 +39,14 @@ export default function UserForm({
   const [campId, setCampId] = useState<number | null>(
     initialData?.camp?.id ?? null,
   );
+  const [assignedCampIds, setAssignedCampIds] = useState<number[]>(() => {
+    const assigned = initialData?.assignedCamps.map((camp) => camp.id) ?? [];
+    return assigned.length > 0
+      ? assigned
+      : initialData?.camp?.id
+        ? [initialData.camp.id]
+        : [];
+  });
   const [roleId, setRoleId] = useState<number | null>(
     initialData?.role?.id ?? null,
   );
@@ -95,6 +103,24 @@ export default function UserForm({
     sublabel: `${p.campName}${p.documentNumber ? ` · Doc: ${p.documentNumber}` : ""} · ${p.linkedUsersCount} vinculado(s)`,
   }));
 
+  const handlePrimaryCampChange = (item: CatalogItem) => {
+    setCampId(item.id);
+    setAssignedCampIds((prev) =>
+      prev.includes(item.id) ? prev : [...prev, item.id],
+    );
+  };
+
+  const handleAssignedCampToggle = (nextCampId: number) => {
+    setAssignedCampIds((prev) => {
+      if (prev.includes(nextCampId)) {
+        if (nextCampId === campId) return prev;
+        return prev.filter((id) => id !== nextCampId);
+      }
+
+      return [...prev, nextCampId];
+    });
+  };
+
   const handleSubmit = async () => {
     setError("");
 
@@ -102,6 +128,7 @@ export default function UserForm({
       return setError("El nombre de usuario es obligatorio.");
 
     if (!roleId) return setError("Selecciona un rol.");
+    if (!campId) return setError("Selecciona un campamento principal.");
     if (!isEditing && !password.trim())
       return setError("La contraseña es obligatoria al crear un usuario.");
 
@@ -118,10 +145,12 @@ export default function UserForm({
         );
     }
 
+    const campIds = Array.from(new Set([campId, ...assignedCampIds]));
     const payload: UserWriteInput = {
       usr_username: username.trim(),
       usr_email: email.trim() || null,
-      id_camp: campId ?? undefined,
+      id_camp: campId,
+      campIds,
       id_role: roleId,
       id_person: personId ?? null,
       usr_is_active: isActive,
@@ -208,7 +237,7 @@ export default function UserForm({
                     sectionTitle="campamentos"
                     items={campItems}
                     selectedId={campId}
-                    onChange={(item) => setCampId(item.id)}
+                    onChange={handlePrimaryCampChange}
                   />
                 </div>
                 <div>
@@ -220,6 +249,33 @@ export default function UserForm({
                     selectedId={roleId}
                     onChange={(item) => setRoleId(item.id)}
                   />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Campamentos asignados</label>
+                <div className={styles.campAssignmentList}>
+                  {catalogs.camps.map((camp) => {
+                    const checked = assignedCampIds.includes(camp.id);
+                    const isPrimary = camp.id === campId;
+
+                    return (
+                      <label key={camp.id} className={styles.campAssignment}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={isPrimary}
+                          onChange={() => handleAssignedCampToggle(camp.id)}
+                        />
+                        <span>{camp.name}</span>
+                        {isPrimary && (
+                          <strong className={styles.primaryCamp}>
+                            Principal
+                          </strong>
+                        )}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 

@@ -1,4 +1,8 @@
 import prisma, { Prisma } from "../../lib/prisma.js";
+import {
+  canAccessCamp,
+  canManageDailyProcesses,
+} from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import { getServerNow } from "../../shared/helpers/server-time.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
@@ -27,21 +31,8 @@ import type {
   RunDailyProcessInput,
 } from "./daily-processes.types.js";
 
-function normalizeRole(roleName: string) {
-  return roleName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-}
-
-function isSystemAdministrator(user: AuthenticatedUser) {
-  return normalizeRole(user.roleName) === "administrador sistema";
-}
-
 function canTriggerDailyProcess(user: AuthenticatedUser) {
-  const role = normalizeRole(user.roleName);
-  return role.includes("gestion") && role.includes("recurso");
+  return canManageDailyProcesses(user.roleName);
 }
 
 function ensureCanTrigger(user: AuthenticatedUser) {
@@ -55,13 +46,15 @@ function ensureCanTrigger(user: AuthenticatedUser) {
 }
 
 function ensureCampScope(actor: AuthenticatedUser, campId: number) {
-  if (!isSystemAdministrator(actor) && actor.campId !== campId) {
-    throw new AppError(
-      403,
-      "You can only manage the daily process for your assigned camp.",
-      "DAILY_PROCESS_FORBIDDEN_CAMP",
-    );
+  if (canAccessCamp(actor, campId)) {
+    return;
   }
+
+  throw new AppError(
+    403,
+    "You can only manage the daily process for your assigned camp.",
+    "DAILY_PROCESS_FORBIDDEN_CAMP",
+  );
 }
 
 function dateOnly(value: Date) {

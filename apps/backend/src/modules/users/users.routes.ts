@@ -13,7 +13,7 @@ import { createUserSchema, updateUserSchema } from "./users.schemas.js";
 
 const usersRouter = Router();
 
-usersRouter.use(authenticate, requireRoles("Administrador sistema"));
+usersRouter.use(authenticate, requireRoles("SuperAdmin"));
 usersRouter.get("/catalogs", getUsersCatalogsController);
 usersRouter.get("/", listUsersController);
 usersRouter.get("/:userId", getUserByIdController);

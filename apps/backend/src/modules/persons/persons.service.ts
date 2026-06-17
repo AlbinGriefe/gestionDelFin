@@ -1,5 +1,6 @@
 import type { Prisma } from "../../generated/prisma/client.js";
 import { randomUUID } from "node:crypto";
+import { canAccessCamp, isAdministratorRole } from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import { generateInitialStats } from "./person-stats.js";
@@ -20,13 +21,30 @@ import type {
 } from "./persons.types.js";
 
 function ensureSystemAdministrator(actor: AuthenticatedUser) {
-  if (actor.roleName.trim().toLowerCase() !== "administrador sistema") {
+  if (!isAdministratorRole(actor.roleName)) {
     throw new AppError(
       403,
       "Only system administrators can manage people.",
       "PERSONS_ADMIN_REQUIRED",
     );
   }
+}
+
+function resolveCampFilter(
+  filters: PersonListFilters,
+  actor: AuthenticatedUser,
+) {
+  const requestedCampId = filters.campId ?? actor.campId;
+
+  if (!canAccessCamp(actor, requestedCampId)) {
+    throw new AppError(
+      403,
+      "Person is outside your camp.",
+      "PERSONS_FORBIDDEN",
+    );
+  }
+
+  return requestedCampId;
 }
 
 function toIsoDateOnly(value: Date | null | undefined) {
@@ -182,10 +200,7 @@ export class PersonsService {
   }
 
   async listPersons(filters: PersonListFilters, actor: AuthenticatedUser) {
-    const resolvedCampId =
-      actor.roleName.trim().toLowerCase() === "administrador sistema"
-        ? (filters.campId ?? actor.campId)
-        : actor.campId;
+    const resolvedCampId = resolveCampFilter(filters, actor);
     const search = filters.search?.trim();
     const admissionStatus =
       filters.admissionStatus ??
@@ -237,10 +252,7 @@ export class PersonsService {
     if (!person) {
       throw new AppError(404, "Person not found.", "PERSON_NOT_FOUND");
     }
-    if (
-      actor.roleName.trim().toLowerCase() !== "administrador sistema" &&
-      person.id_camp !== actor.campId
-    ) {
+    if (!canAccessCamp(actor, person.id_camp)) {
       throw new AppError(
         403,
         "Person is outside your camp.",
@@ -277,6 +289,13 @@ export class PersonsService {
   async createPerson(input: PersonWriteInput, actor: AuthenticatedUser) {
     ensureSystemAdministrator(actor);
     const campId = input.id_camp ?? actor.campId;
+    if (!canAccessCamp(actor, campId)) {
+      throw new AppError(
+        403,
+        "Person is outside your camp.",
+        "PERSONS_FORBIDDEN",
+      );
+    }
     const camp = await personsRepository.findCampById(campId);
     if (!camp)
       throw new AppError(404, "Camp not found.", "PERSON_CAMP_NOT_FOUND");
@@ -358,8 +377,22 @@ export class PersonsService {
     if (!existing) {
       throw new AppError(404, "Person not found.", "PERSON_NOT_FOUND");
     }
+    if (!canAccessCamp(actor, existing.id_camp)) {
+      throw new AppError(
+        403,
+        "Person is outside your camp.",
+        "PERSONS_FORBIDDEN",
+      );
+    }
 
     const nextCampId = input.id_camp ?? existing.id_camp;
+    if (!canAccessCamp(actor, nextCampId)) {
+      throw new AppError(
+        403,
+        "Person is outside your camp.",
+        "PERSONS_FORBIDDEN",
+      );
+    }
     const camp = await personsRepository.findCampById(nextCampId);
     if (!camp || camp.cmp_status !== "active") {
       throw new AppError(

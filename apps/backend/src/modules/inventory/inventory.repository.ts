@@ -48,10 +48,16 @@ export type InventoryDetailRecord = Prisma.storageGetPayload<{
 }>;
 
 export class InventoryRepository {
-  async listCatalogs(input: { campId?: number }) {
+  async listCatalogs(input: { campIds?: number[] }) {
     const [camps, resourceTypes, resources] = await prisma.$transaction([
       prisma.camps.findMany({
-        where: input.campId ? { id_camp: input.campId } : undefined,
+        where: input.campIds
+          ? {
+              id_camp: {
+                in: input.campIds,
+              },
+            }
+          : undefined,
         orderBy: {
           cmp_name: "asc",
         },

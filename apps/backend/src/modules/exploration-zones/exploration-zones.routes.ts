@@ -18,13 +18,21 @@ explorationZonesRouter.get("/", listExplorationZonesController);
 explorationZonesRouter.get("/:zoneId", getExplorationZoneController);
 explorationZonesRouter.post(
   "/",
-  requireRoles("Administrador sistema"),
+  requireRoles(
+    "SuperAdmin",
+    "Administrador sistema",
+    "Encargado de viajes y comunicacion",
+  ),
   validateBody(createExplorationZoneSchema),
   createExplorationZoneController,
 );
 explorationZonesRouter.patch(
   "/:zoneId",
-  requireRoles("Administrador sistema"),
+  requireRoles(
+    "SuperAdmin",
+    "Administrador sistema",
+    "Encargado de viajes y comunicacion",
+  ),
   validateBody(updateExplorationZoneSchema),
   updateExplorationZoneController,
 );

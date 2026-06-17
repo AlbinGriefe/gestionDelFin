@@ -65,7 +65,7 @@ export default function AppRoutes() {
         <Route
           path="/users"
           element={
-            <ProtectedRoute allowedRoles={["administrador sistema"]}>
+            <ProtectedRoute allowedRoles={["SuperAdmin"]}>
               <UsersProvider>
                 <UsersPage />
               </UsersProvider>
@@ -75,7 +75,7 @@ export default function AppRoutes() {
         <Route
           path="/camps"
           element={
-            <ProtectedRoute allowedRoles={["administrador sistema"]}>
+            <ProtectedRoute allowedRoles={["SuperAdmin"]}>
               <CampsProvider>
                 <CampsPage />
               </CampsProvider>
@@ -105,7 +105,7 @@ export default function AppRoutes() {
         <Route
           path="/professions"
           element={
-            <ProtectedRoute allowedRoles={["administrador sistema"]}>
+            <ProtectedRoute allowedRoles={["SuperAdmin"]}>
               <ProfessionsProvider>
                 <ProfessionsPage />
               </ProfessionsProvider>
@@ -125,7 +125,9 @@ export default function AppRoutes() {
         <Route
           path="/daily-processes"
           element={
-            <ProtectedRoute allowedRoles={["gestion recursos"]}>
+            <ProtectedRoute
+              allowedRoles={["administrador sistema", "gestion recursos"]}
+            >
               <InventoryProvider>
                 <DailyProcessesProvider>
                   <DailyProcessesPage />
@@ -197,7 +199,7 @@ export default function AppRoutes() {
         <Route
           path="/settings"
           element={
-            <ProtectedRoute allowedRoles={["administrador sistema"]}>
+            <ProtectedRoute allowedRoles={["SuperAdmin"]}>
               <SettingsPage />
             </ProtectedRoute>
           }

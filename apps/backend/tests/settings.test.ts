@@ -13,10 +13,15 @@ import { settingsService } from "../src/modules/settings/settings.service.js";
 const administrator = {
   id: 1,
   username: "admin",
-  roleName: "Administrador sistema",
+  email: "admin@example.com",
+  roleName: "SuperAdmin",
   campId: 1,
+  campName: "Base Alpha",
   personId: 1,
+  availableCamps: [{ id: 1, name: "Base Alpha" }],
   sessionId: "test-session",
+  sessionExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+  sessionTimeoutMinutes: 20,
 };
 
 describe("system settings", () => {

@@ -74,6 +74,11 @@ const nullablePositiveInteger = z.preprocess((value) => {
   return parseOptionalInteger(value);
 }, z.number().int().positive().nullable().optional());
 
+const campIdsSchema = z
+  .array(z.coerce.number().int().positive())
+  .max(100)
+  .optional();
+
 const usernameSchema = z
   .string()
   .trim()
@@ -121,6 +126,7 @@ export const createUserSchema = z.object({
   id_person: nullablePositiveInteger,
   id_role: z.coerce.number().int().positive(),
   id_camp: optionalPositiveInteger,
+  campIds: campIdsSchema,
   usr_username: usernameSchema,
   usr_email: emailSchema,
   usr_password: passwordSchema,
@@ -132,6 +138,7 @@ export const updateUserSchema = z
     id_person: nullablePositiveInteger,
     id_role: optionalPositiveInteger,
     id_camp: optionalPositiveInteger,
+    campIds: campIdsSchema,
     usr_username: z.preprocess(
       emptyStringToUndefined,
       usernameSchema.optional(),

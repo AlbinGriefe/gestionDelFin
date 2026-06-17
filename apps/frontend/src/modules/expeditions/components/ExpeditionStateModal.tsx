@@ -206,13 +206,19 @@ export default function ExpeditionStateModal({
                 <div className={styles.memberList}>
                   {detail?.members.map((m) => (
                     <div key={m.personId} className={styles.memberCard}>
-                      <span className={styles.memberName}>{m.fullName}</span>
+                      <span className={styles.memberName}>
+                        {m.fullName}
+                        <small>
+                          {m.resourceName ?? "Sin recurso asignado"}
+                        </small>
+                      </span>
                       <input
                         className={styles.miniInput}
                         type="number"
                         min={0}
                         step="any"
                         placeholder="0"
+                        disabled={!m.resourceId}
                         value={memberFindings[m.personId] ?? ""}
                         onChange={(e) =>
                           setMemberFindings((prev) => ({

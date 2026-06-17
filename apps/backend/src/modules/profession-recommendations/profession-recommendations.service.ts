@@ -1,4 +1,5 @@
 import { AppError } from "../../shared/errors/app-error.js";
+import { canAccessCamp, isAdministratorRole } from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import type { PersonStatsSummary } from "../persons/persons.types.js";
 import { textAiProvider } from "../text-ai/resilient-text-provider.js";
@@ -8,11 +9,24 @@ import {
 } from "./profession-recommendations.repository.js";
 
 function ensureAdmin(actor: AuthenticatedUser) {
-  if (actor.roleName.trim().toLowerCase() !== "administrador sistema") {
+  if (!isAdministratorRole(actor.roleName)) {
     throw new AppError(
       403,
       "Only system administrators can manage profession recommendations.",
       "PROFESSION_RECOMMENDATION_ADMIN_REQUIRED",
+    );
+  }
+}
+
+function ensureRecommendationCampAccess(
+  actor: AuthenticatedUser,
+  campId: number,
+) {
+  if (!canAccessCamp(actor, campId)) {
+    throw new AppError(
+      403,
+      "You can only manage recommendations from your assigned camp.",
+      "PROFESSION_RECOMMENDATION_FORBIDDEN_CAMP",
     );
   }
 }
@@ -75,6 +89,7 @@ export class ProfessionRecommendationsService {
         "PROFESSION_RECOMMENDATION_PERSON_NOT_FOUND",
       );
     }
+    ensureRecommendationCampAccess(actor, person.id_camp);
     if (!person.prn_is_active || person.prn_admission_status !== "accepted") {
       throw new AppError(
         409,
@@ -149,6 +164,16 @@ export class ProfessionRecommendationsService {
   ) {
     ensureAdmin(actor);
     try {
+      const existing =
+        await professionRecommendationsRepository.findById(recommendationId);
+      if (!existing) {
+        throw new AppError(
+          404,
+          "Profession recommendation not found.",
+          "PROFESSION_RECOMMENDATION_NOT_FOUND",
+        );
+      }
+      ensureRecommendationCampAccess(actor, existing.persons.id_camp);
       const confirmed = await professionRecommendationsRepository.confirm({
         recommendationId,
         actorUserId: actor.id,

@@ -20,6 +20,7 @@ integration("clean database migration and seed", () => {
   it("contains the complete reproducible demo dataset", async () => {
     const counts = {
       camps: await prisma.camps.count(),
+      roles: await prisma.roles.count(),
       users: await prisma.users.count(),
       memberships: await prisma.user_camp_memberships.count(),
       professions: await prisma.professions.count(),
@@ -30,6 +31,7 @@ integration("clean database migration and seed", () => {
 
     expect(counts).toEqual({
       camps: 2,
+      roles: 5,
       users: 6,
       memberships: 7,
       professions: 7,
@@ -47,23 +49,51 @@ integration("clean database migration and seed", () => {
 
     const adminToken = await login("admin", adminPassword!);
     const resourceToken = await login("gestion_alpha", resourcePassword!);
+    const alpha = await prisma.camps.findUniqueOrThrow({
+      where: { cmp_name: "Base Alpha" },
+    });
+    const beta = await prisma.camps.findUniqueOrThrow({
+      where: { cmp_name: "Refugio Beta" },
+    });
+    const food = await prisma.resources.findFirstOrThrow({
+      where: { rss_name: { contains: "comida" } },
+    });
 
     const dashboard = await request(app)
       .get("/api/v1/dashboard")
       .set("Authorization", `Bearer ${adminToken}`);
     expect(dashboard.status).toBe(200);
+    expect(dashboard.body.data.role).toBe("SuperAdmin");
     expect(dashboard.body.data.camp.name).toBe("Base Alpha");
 
-    const deniedInventoryWrite = await request(app)
+    const allowedInventoryWrite = await request(app)
       .post("/api/v1/inventory/adjustments")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ storageId: 1, quantity: 1, reason: "Permission test" });
-    expect(deniedInventoryWrite.status).toBe(403);
+      .send({
+        id_camp: alpha.id_camp,
+        id_resource: food.id_resource,
+        mode: "delta",
+        quantity: 1,
+        reason: "Permission test",
+      });
+    expect(allowedInventoryWrite.status).toBe(200);
 
     const allowedInventoryRead = await request(app)
       .get("/api/v1/inventory?page=1&pageSize=10")
       .set("Authorization", `Bearer ${resourceToken}`);
     expect(allowedInventoryRead.status).toBe(200);
+
+    const forbiddenInventoryWrite = await request(app)
+      .post("/api/v1/inventory/adjustments")
+      .set("Authorization", `Bearer ${resourceToken}`)
+      .send({
+        id_camp: beta.id_camp,
+        id_resource: food.id_resource,
+        mode: "delta",
+        quantity: 1,
+        reason: "Cross-camp permission test",
+      });
+    expect(forbiddenInventoryWrite.status).toBe(403);
   });
 
   it("switches the administrator camp by replacing the active session", async () => {

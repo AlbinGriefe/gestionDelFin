@@ -1,4 +1,5 @@
 import { AppError } from "../../shared/errors/app-error.js";
+import { canAccessCamp, isSuperAdminRole } from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
   inventoryRepository,
@@ -14,22 +15,16 @@ import type {
   InventoryThresholdsInput,
 } from "./inventory.types.js";
 
-function isSystemAdministrator(user: AuthenticatedUser) {
-  return user.roleName.trim().toLocaleLowerCase() === "administrador sistema";
-}
-
 function ensureCampScope(actor: AuthenticatedUser, targetCampId: number) {
-  if (isSystemAdministrator(actor)) {
+  if (canAccessCamp(actor, targetCampId)) {
     return;
   }
 
-  if (actor.campId !== targetCampId) {
-    throw new AppError(
-      403,
-      "You can only access inventory from your assigned camp.",
-      "INVENTORY_FORBIDDEN_CAMP_SCOPE",
-    );
-  }
+  throw new AppError(
+    403,
+    "You can only access inventory from your assigned camp.",
+    "INVENTORY_FORBIDDEN_CAMP_SCOPE",
+  );
 }
 
 function toNumber(value: unknown) {
@@ -127,11 +122,13 @@ function mapInventoryDetail(
 
 export class InventoryService {
   async getCatalogs(actor: AuthenticatedUser): Promise<InventoryCatalogs> {
-    const accessibleCampId = isSystemAdministrator(actor)
-      ? undefined
-      : actor.campId;
+    const accessibleCampIds = actor.availableCamps.map((camp) => camp.id);
     const result = await inventoryRepository.listCatalogs({
-      campId: accessibleCampId,
+      campIds: isSuperAdminRole(actor.roleName)
+        ? undefined
+        : accessibleCampIds.length
+          ? accessibleCampIds
+          : [actor.campId],
     });
 
     return {
@@ -165,7 +162,7 @@ export class InventoryService {
 
     const resolvedCampId =
       filters.campId ??
-      (isSystemAdministrator(actor) ? undefined : actor.campId);
+      (isSuperAdminRole(actor.roleName) ? undefined : actor.campId);
     const search = filters.search?.trim();
 
     const where = {

@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 
+import { canManageUsers } from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
@@ -21,6 +22,7 @@ function serializeUserState(input: {
   id_person: number | null;
   id_role: number;
   id_camp: number;
+  campIds?: number[];
   usr_username: string;
   usr_email: string | null;
   usr_is_active: boolean;
@@ -29,6 +31,7 @@ function serializeUserState(input: {
     id_person: input.id_person,
     id_role: input.id_role,
     id_camp: input.id_camp,
+    campIds: input.campIds ?? [input.id_camp],
     usr_username: input.usr_username,
     usr_email: input.usr_email,
     usr_is_active: input.usr_is_active,
@@ -52,6 +55,10 @@ function mapUserSummary(record: UserSummaryRecord): UserSummary {
       id: record.camps.id_camp,
       name: record.camps.cmp_name,
     },
+    assignedCamps: record.user_camp_memberships.map((membership) => ({
+      id: membership.camps.id_camp,
+      name: membership.camps.cmp_name,
+    })),
     role: {
       id: record.roles.id_role,
       name: record.roles.rls_name,
@@ -209,6 +216,43 @@ async function resolveValidatedPerson(
   return person;
 }
 
+function uniqueCampIds(campIds: number[]) {
+  return [...new Set(campIds.filter((campId) => Number.isInteger(campId)))];
+}
+
+function sameNumberSet(left: number[], right: number[]) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const rightSet = new Set(right);
+  return left.every((item) => rightSet.has(item));
+}
+
+async function validateActiveCampAssignments(campIds: number[]) {
+  const camps = await usersRepository.findCampsByIds(campIds);
+
+  if (camps.length !== campIds.length) {
+    throw new AppError(
+      404,
+      "One or more camps were not found.",
+      "USER_CAMP_NOT_FOUND",
+    );
+  }
+
+  const inactiveCamp = camps.find((camp) => camp.cmp_status !== "active");
+
+  if (inactiveCamp) {
+    throw new AppError(
+      400,
+      "Users can only be assigned to active camps.",
+      "USER_INVALID_CAMP_STATUS",
+    );
+  }
+
+  return camps;
+}
+
 export class UsersService {
   async getCatalogs(): Promise<UsersCatalogs> {
     const result = await usersRepository.listCatalogs();
@@ -298,6 +342,14 @@ export class UsersService {
   }
 
   async createUser(input: UserWriteInput, actor: AuthenticatedUser) {
+    if (!canManageUsers(actor.roleName)) {
+      throw new AppError(
+        403,
+        "Only SuperAdmin users can manage user accounts.",
+        "USER_SUPERADMIN_REQUIRED",
+      );
+    }
+
     if (!input.id_role) {
       throw new AppError(400, "A role is required.", "USER_ROLE_REQUIRED");
     }
@@ -312,20 +364,11 @@ export class UsersService {
 
     const person = await resolveValidatedPerson(input.id_person);
     const resolvedCampId = input.id_camp ?? person?.id_camp ?? actor.campId;
-
-    const camp = await usersRepository.findCampById(resolvedCampId);
-
-    if (!camp) {
-      throw new AppError(404, "Camp not found.", "USER_CAMP_NOT_FOUND");
-    }
-
-    if (camp.cmp_status !== "active") {
-      throw new AppError(
-        400,
-        "Users can only be assigned to active camps.",
-        "USER_INVALID_CAMP_STATUS",
-      );
-    }
+    const membershipCampIds = uniqueCampIds([
+      resolvedCampId,
+      ...(input.campIds ?? []),
+    ]);
+    await validateActiveCampAssignments(membershipCampIds);
 
     const role = await usersRepository.findRoleById(input.id_role);
 
@@ -368,12 +411,16 @@ export class UsersService {
         action: "created",
         actorUserId: actor.id,
         description: "User account created.",
-        newValue: serializeUserState(userData),
+        newValue: serializeUserState({
+          ...userData,
+          campIds: membershipCampIds,
+        }),
       },
     ];
 
     const createdUser = await usersRepository.createUser({
       data: userData,
+      membershipCampIds,
       auditEvents,
     });
 
@@ -388,6 +435,14 @@ export class UsersService {
     input: UserWriteInput,
     actor: AuthenticatedUser,
   ) {
+    if (!canManageUsers(actor.roleName)) {
+      throw new AppError(
+        403,
+        "Only SuperAdmin users can manage user accounts.",
+        "USER_SUPERADMIN_REQUIRED",
+      );
+    }
+
     const existingUser = await usersRepository.findUserById(userId);
 
     if (!existingUser) {
@@ -396,20 +451,16 @@ export class UsersService {
 
     const person = await resolveValidatedPerson(input.id_person, userId);
     const nextCampId = input.id_camp ?? person?.id_camp ?? existingUser.id_camp;
-
-    const camp = await usersRepository.findCampById(nextCampId);
-
-    if (!camp) {
-      throw new AppError(404, "Camp not found.", "USER_CAMP_NOT_FOUND");
-    }
-
-    if (camp.cmp_status !== "active") {
-      throw new AppError(
-        400,
-        "Users can only be assigned to active camps.",
-        "USER_INVALID_CAMP_STATUS",
-      );
-    }
+    const currentMembershipCampIds = uniqueCampIds(
+      existingUser.user_camp_memberships.map(
+        (membership) => membership.id_camp,
+      ),
+    );
+    const nextMembershipCampIds = uniqueCampIds([
+      nextCampId,
+      ...(input.campIds ?? currentMembershipCampIds),
+    ]);
+    await validateActiveCampAssignments(nextMembershipCampIds);
 
     const nextRoleId = input.id_role ?? existingUser.id_role;
     const role = await usersRepository.findRoleById(nextRoleId);
@@ -449,8 +500,14 @@ export class UsersService {
           : existingUser.usr_is_active,
     };
 
-    const currentSnapshot = serializeUserState(existingUser);
-    const nextSnapshot = serializeUserState(nextState);
+    const currentSnapshot = serializeUserState({
+      ...existingUser,
+      campIds: currentMembershipCampIds,
+    });
+    const nextSnapshot = serializeUserState({
+      ...nextState,
+      campIds: nextMembershipCampIds,
+    });
     const updateData: Record<string, unknown> = {};
     const currentState = existingUser as Record<string, unknown>;
 
@@ -470,6 +527,10 @@ export class UsersService {
     }
 
     const campChanged = existingUser.id_camp !== nextState.id_camp;
+    const membershipsChanged = !sameNumberSet(
+      currentMembershipCampIds,
+      nextMembershipCampIds,
+    );
     const roleChanged = existingUser.id_role !== nextState.id_role;
     const deactivated =
       existingUser.usr_is_active && nextState.usr_is_active === false;
@@ -523,6 +584,20 @@ export class UsersService {
       });
     }
 
+    if (membershipsChanged) {
+      auditEvents.push({
+        action: "camp_memberships_changed",
+        actorUserId: actor.id,
+        description: "User camp memberships changed.",
+        oldValue: {
+          campIds: currentMembershipCampIds,
+        },
+        newValue: {
+          campIds: nextMembershipCampIds,
+        },
+      });
+    }
+
     if (linkedPersonChanged) {
       auditEvents.push({
         action: "person_link_changed",
@@ -560,7 +635,7 @@ export class UsersService {
 
     const invalidateSessions = resolveSessionInvalidationPlan({
       campChanged,
-      roleChanged,
+      roleChanged: roleChanged || membershipsChanged,
       passwordChanged,
       deactivated,
     });
@@ -569,6 +644,7 @@ export class UsersService {
       userId,
       currentCampId: existingUser.id_camp,
       data: updateData,
+      membershipCampIds: membershipsChanged ? nextMembershipCampIds : undefined,
       invalidateSessions,
       auditEvents,
     });

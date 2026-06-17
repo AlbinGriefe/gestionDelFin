@@ -4,6 +4,7 @@ import type {
   system_settings_sts_value_type,
 } from "../../generated/prisma/client.js";
 import { AppError } from "../../shared/errors/app-error.js";
+import { isSuperAdminRole } from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import { settingsRepository } from "./settings.repository.js";
 import type {
@@ -13,14 +14,14 @@ import type {
 } from "./settings.types.js";
 
 function isSystemAdministrator(user: AuthenticatedUser) {
-  return user.roleName.trim().toLocaleLowerCase() === "administrador sistema";
+  return isSuperAdminRole(user.roleName);
 }
 
 function ensureSystemAdministrator(user: AuthenticatedUser) {
   if (!isSystemAdministrator(user)) {
     throw new AppError(
       403,
-      "You do not have permission to manage system settings.",
+      "Only SuperAdmin users can manage system settings.",
       "SETTINGS_FORBIDDEN_ROLE",
     );
   }

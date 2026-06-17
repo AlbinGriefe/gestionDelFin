@@ -26,15 +26,8 @@ import { toast } from "sonner";
 
 import { useAuth } from "../modules/auth/context/useAuth";
 import { useIdleSession } from "../modules/auth/context/useIdleSession";
+import { normalizeRoleName, roleMatches } from "../shared/auth/roles";
 import styles from "./AppShell.module.css";
-
-function normalizeRole(roleName: string) {
-  return roleName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-}
 
 const navigation = [
   { to: "/home", label: "Resumen", icon: LayoutDashboard, roles: ["all"] },
@@ -54,7 +47,7 @@ const navigation = [
     to: "/daily-processes",
     label: "Proceso diario",
     icon: CalendarClock,
-    roles: ["gestion recursos"],
+    roles: ["administrador sistema", "gestion recursos"],
   },
   {
     to: "/professions",
@@ -66,7 +59,7 @@ const navigation = [
     to: "/expeditions",
     label: "Expediciones",
     icon: Compass,
-    roles: ["encargado de viajes y comunicacion"],
+    roles: ["administrador sistema", "encargado de viajes y comunicacion"],
   },
   {
     to: "/zones",
@@ -90,7 +83,7 @@ const navigation = [
     to: "/camps",
     label: "Campamentos",
     icon: Building2,
-    roles: ["administrador sistema"],
+    roles: ["SuperAdmin"],
   },
   {
     to: "/map",
@@ -106,19 +99,19 @@ const navigation = [
     to: "/users",
     label: "Usuarios",
     icon: UserRoundCog,
-    roles: ["administrador sistema"],
+    roles: ["SuperAdmin"],
   },
   {
     to: "/sessions",
     label: "Sesiones",
     icon: Activity,
-    roles: ["administrador sistema"],
+    roles: ["SuperAdmin"],
   },
   {
     to: "/settings",
     label: "Configuracion",
     icon: Settings,
-    roles: ["administrador sistema"],
+    roles: ["SuperAdmin"],
   },
 ];
 
@@ -158,9 +151,11 @@ export default function AppShell() {
 
   if (!user) return null;
 
-  const role = normalizeRole(user.roleName);
+  const role = normalizeRoleName(user.roleName);
   const visibleNavigation = navigation.filter(
-    (item) => item.roles.includes("all") || item.roles.includes(role),
+    (item) =>
+      item.roles.includes("all") ||
+      item.roles.some((allowedRole) => roleMatches(role, allowedRole)),
   );
 
   const handleCampChange = async (campId: number) => {

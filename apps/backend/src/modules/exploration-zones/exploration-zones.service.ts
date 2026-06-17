@@ -1,20 +1,12 @@
 import prisma from "../../lib/prisma.js";
+import {
+  canAccessCamp,
+  canManageZones,
+  isSuperAdminRole,
+} from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import type { exploration_zones_exz_risk } from "../../generated/prisma/client.js";
-
-function isAdmin(actor: AuthenticatedUser) {
-  return actor.roleName.trim().toLowerCase() === "administrador sistema";
-}
-
-function canManageZones(actor: AuthenticatedUser) {
-  const role = actor.roleName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-  return role.includes("viaje") || role.includes("comunic");
-}
 
 function mapZone(record: {
   id_exploration_zone: number;
@@ -46,7 +38,9 @@ export class ExplorationZonesService {
     input: { campId?: number; active?: boolean },
     actor: AuthenticatedUser,
   ) {
-    const campId = isAdmin(actor) ? input.campId : actor.campId;
+    const campId = isSuperAdminRole(actor.roleName)
+      ? input.campId
+      : actor.campId;
     const zones = await prisma.exploration_zones.findMany({
       where: {
         ...(campId ? { id_camp: campId } : {}),
@@ -64,7 +58,7 @@ export class ExplorationZonesService {
     if (!zone) {
       throw new AppError(404, "Exploration zone not found.", "ZONE_NOT_FOUND");
     }
-    if (!isAdmin(actor) && zone.id_camp !== actor.campId) {
+    if (!canAccessCamp(actor, zone.id_camp)) {
       throw new AppError(403, "Zone is outside your camp.", "ZONE_FORBIDDEN");
     }
     return mapZone(zone);
@@ -82,7 +76,7 @@ export class ExplorationZonesService {
     },
     actor: AuthenticatedUser,
   ) {
-    if (!canManageZones(actor)) {
+    if (!canManageZones(actor.roleName)) {
       throw new AppError(
         403,
         "Travel manager role required.",
@@ -94,6 +88,9 @@ export class ExplorationZonesService {
     });
     if (!camp)
       throw new AppError(404, "Camp not found.", "ZONE_CAMP_NOT_FOUND");
+    if (!canAccessCamp(actor, input.campId)) {
+      throw new AppError(403, "Zone is outside your camp.", "ZONE_FORBIDDEN");
+    }
     const zone = await prisma.exploration_zones.create({
       data: {
         id_camp: input.campId,
@@ -120,7 +117,7 @@ export class ExplorationZonesService {
     },
     actor: AuthenticatedUser,
   ) {
-    if (!canManageZones(actor)) {
+    if (!canManageZones(actor.roleName)) {
       throw new AppError(
         403,
         "Travel manager role required.",
@@ -132,6 +129,9 @@ export class ExplorationZonesService {
     });
     if (!existing) {
       throw new AppError(404, "Exploration zone not found.", "ZONE_NOT_FOUND");
+    }
+    if (!canAccessCamp(actor, existing.id_camp)) {
+      throw new AppError(403, "Zone is outside your camp.", "ZONE_FORBIDDEN");
     }
     const zone = await prisma.exploration_zones.update({
       where: { id_exploration_zone: zoneId },

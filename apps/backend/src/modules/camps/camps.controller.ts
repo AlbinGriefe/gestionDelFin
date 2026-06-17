@@ -45,7 +45,9 @@ export async function listCampLocationsController(
   next: NextFunction,
 ) {
   try {
-    const result = await campsService.listCampLocations();
+    const result = await campsService.listCampLocations(
+      getAuthenticatedUser(request),
+    );
     response.status(200).json(createSuccessResponse(result, request.requestId));
   } catch (error) {
     next(error);

@@ -24,19 +24,19 @@ campsRouter.get("/locations", listCampLocationsController);
 campsRouter.get("/:campId", getCampByIdController);
 campsRouter.post(
   "/",
-  requireRoles("Administrador sistema"),
+  requireRoles("SuperAdmin"),
   validateBody(createCampSchema),
   createCampController,
 );
 campsRouter.patch(
   "/:campId",
-  requireRoles("Administrador sistema"),
+  requireRoles("SuperAdmin"),
   validateBody(updateCampSchema),
   updateCampController,
 );
 campsRouter.put(
   "/:campId/operational-rules",
-  requireRoles("Administrador sistema"),
+  requireRoles("SuperAdmin"),
   validateBody(updateCampOperationalRulesSchema),
   updateCampOperationalRulesController,
 );
