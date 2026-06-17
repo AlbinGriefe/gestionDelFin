@@ -27,6 +27,17 @@ type SignOutReason =
   | "security";
 
 export class AuthRepository {
+  async listActiveCamps() {
+    return prisma.camps.findMany({
+      where: {
+        cmp_status: "active",
+      },
+      orderBy: {
+        cmp_name: "asc",
+      },
+    });
+  }
+
   async findUserByIdentity(identity: string) {
     return prisma.users.findFirst({
       where: {

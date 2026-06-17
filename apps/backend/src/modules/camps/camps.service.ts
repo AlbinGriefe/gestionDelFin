@@ -1,5 +1,10 @@
 import type { camps_cmp_status } from "../../generated/prisma/client.js";
 import prisma, { Prisma } from "../../lib/prisma.js";
+import {
+  canAccessCamp,
+  canManageCamps,
+  isSuperAdminRole,
+} from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
@@ -15,10 +20,6 @@ import type {
   CampSummary,
   CampWriteInput,
 } from "./camps.types.js";
-
-function isSystemAdministrator(user: AuthenticatedUser) {
-  return user.roleName.trim().toLocaleLowerCase() === "administrador sistema";
-}
 
 function serializeCampState(input: {
   cmp_name: string;
@@ -197,6 +198,7 @@ function validateStatusTransition(input: {
 export class CampsService {
   async listCamps(filters: CampListFilters, actor: AuthenticatedUser) {
     const search = filters.search?.trim();
+    const assignedCampIds = actor.availableCamps.map((camp) => camp.id);
     const where = {
       ...(filters.status ? { cmp_status: filters.status } : {}),
       ...(search
@@ -207,7 +209,13 @@ export class CampsService {
             ],
           }
         : {}),
-      ...(!isSystemAdministrator(actor) ? { id_camp: actor.campId } : {}),
+      ...(!isSuperAdminRole(actor.roleName)
+        ? {
+            id_camp: {
+              in: assignedCampIds.length ? assignedCampIds : [actor.campId],
+            },
+          }
+        : {}),
     };
 
     const result = await campsRepository.listCamps({
@@ -237,7 +245,7 @@ export class CampsService {
       throw new AppError(404, "Camp not found.", "CAMP_NOT_FOUND");
     }
 
-    if (!isSystemAdministrator(actor) && actor.campId !== campId) {
+    if (!canAccessCamp(actor, campId)) {
       throw new AppError(
         403,
         "You can only access your assigned camp.",
@@ -250,6 +258,14 @@ export class CampsService {
   }
 
   async createCamp(input: CampWriteInput, actor: AuthenticatedUser) {
+    if (!canManageCamps(actor.roleName)) {
+      throw new AppError(
+        403,
+        "Only SuperAdmin users can create camps.",
+        "CAMP_SUPERADMIN_REQUIRED",
+      );
+    }
+
     const name = input.cmp_name?.trim();
     const location = input.cmp_location?.trim();
 
@@ -313,6 +329,14 @@ export class CampsService {
     input: CampWriteInput,
     actor: AuthenticatedUser,
   ) {
+    if (!canManageCamps(actor.roleName)) {
+      throw new AppError(
+        403,
+        "Only SuperAdmin users can update camps.",
+        "CAMP_SUPERADMIN_REQUIRED",
+      );
+    }
+
     const existingCamp = await campsRepository.findCampById(campId);
 
     if (!existingCamp) {
@@ -428,10 +452,10 @@ export class CampsService {
     input: CampOperationalRulesInput,
     actor: AuthenticatedUser,
   ) {
-    if (!isSystemAdministrator(actor)) {
+    if (!canManageCamps(actor.roleName)) {
       throw new AppError(
         403,
-        "Only system administrators can update operational rules.",
+        "Only SuperAdmin users can update operational rules.",
         "CAMP_RULES_ADMIN_REQUIRED",
       );
     }
@@ -480,8 +504,16 @@ export class CampsService {
     };
   }
 
-  async listCampLocations() {
+  async listCampLocations(actor: AuthenticatedUser) {
+    const assignedCampIds = actor.availableCamps.map((camp) => camp.id);
     const camps = await prisma.camps.findMany({
+      where: isSuperAdminRole(actor.roleName)
+        ? undefined
+        : {
+            id_camp: {
+              in: assignedCampIds.length ? assignedCampIds : [actor.campId],
+            },
+          },
       select: {
         id_camp: true,
         cmp_name: true,

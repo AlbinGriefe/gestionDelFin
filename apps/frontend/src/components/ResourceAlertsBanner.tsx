@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { inventoryApi } from "../modules/inventory/api/inventory.api";
 import { useAuth } from "../modules/auth/context/useAuth";
 import type { InventorySummary } from "../modules/inventory/types/inventory.types";
+import { roleMatches } from "../shared/auth/roles";
 import styles from "./ResourceAlertsBanner.module.css";
 
 const ALERT_ROLES = ["administrador sistema", "gestion recursos"];
@@ -13,8 +14,9 @@ export default function ResourceAlertsBanner() {
   const [collapsed, setCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const canSeeAlerts =
-    user && ALERT_ROLES.includes(user.roleName.trim().toLowerCase());
+  const canSeeAlerts = Boolean(
+    user && ALERT_ROLES.some((role) => roleMatches(user.roleName, role)),
+  );
 
   const fetchAlerts = useCallback(async () => {
     if (!canSeeAlerts) return;

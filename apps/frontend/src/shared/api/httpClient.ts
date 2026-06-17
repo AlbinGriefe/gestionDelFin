@@ -79,7 +79,10 @@ export async function httpClient<T>(
         code = "UNKNOWN";
     }
 
-    const error = new ApiError(code, result.error.message);
+    const error = new ApiError(code, result.error.message, {
+      serverCode: result.error.code,
+      details: result.error.details,
+    });
 
     if (options.showError !== false) {
       toast.error(mapErrorToMessage(error));

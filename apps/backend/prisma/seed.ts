@@ -225,8 +225,12 @@ async function main() {
 
   const roleDefinitions = [
     {
+      name: "SuperAdmin",
+      description: "Administracion global del sistema y de usuarios.",
+    },
+    {
       name: "administrador sistema",
-      description: "Acceso total al sistema.",
+      description: "Administrador operativo limitado a campamentos asignados.",
     },
     {
       name: "trabajador",
@@ -399,7 +403,7 @@ async function main() {
       email: "admin@base-alpha.com",
       camp: campA,
       passwordKey: "admin",
-      roleName: "administrador sistema",
+      roleName: "SuperAdmin",
       professionName: "Diplomatico",
       name: "Carlos",
       lastname: "Ramirez",

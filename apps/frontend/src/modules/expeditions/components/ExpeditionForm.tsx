@@ -16,6 +16,7 @@ interface ExpeditionFormProps {
 type DraftMember = {
   id_person: number;
   fullName: string;
+  resourceId: string;
   rationsAssigned: string;
   roleInExpedition: string;
 };
@@ -56,6 +57,7 @@ export default function ExpeditionForm({
       {
         id_person: person.id,
         fullName: person.fullName,
+        resourceId: "",
         rationsAssigned: "0",
         roleInExpedition: "",
       },
@@ -87,6 +89,7 @@ export default function ExpeditionForm({
 
     const memberPayload: ExpeditionMemberInput[] = members.map((m) => ({
       id_person: m.id_person,
+      id_resource: m.resourceId ? Number(m.resourceId) : null,
       rationsAssigned: Number(m.rationsAssigned) || 0,
       roleInExpedition: m.roleInExpedition.trim() || null,
     }));
@@ -219,6 +222,25 @@ export default function ExpeditionForm({
                 <div key={m.id_person} className={styles.memberCard}>
                   <div className={styles.memberName}>{m.fullName}</div>
                   <div className={styles.memberFields}>
+                    <div>
+                      <label className={styles.miniLabel}>Recurso</label>
+                      <select
+                        className={styles.miniSelect}
+                        value={m.resourceId}
+                        onChange={(e) =>
+                          updateMember(m.id_person, {
+                            resourceId: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Sin recurso</option>
+                        {(catalogs?.resources ?? []).map((resource) => (
+                          <option key={resource.id} value={resource.id}>
+                            {resource.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <div>
                       <label className={styles.miniLabel}>Raciones</label>
                       <input

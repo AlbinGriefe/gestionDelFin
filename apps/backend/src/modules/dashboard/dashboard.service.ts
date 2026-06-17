@@ -1,22 +1,17 @@
 import prisma from "../../lib/prisma.js";
+import {
+  isAdministratorRole,
+  isResourceManagerRole,
+  isTravelManagerRole,
+} from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
-
-function normalizeRole(roleName: string) {
-  return roleName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-}
 
 export class DashboardService {
   async getDashboard(actor: AuthenticatedUser) {
     const campId = actor.campId;
-    const role = normalizeRole(actor.roleName);
-    const isAdmin = role === "administrador sistema";
-    const isResourceManager =
-      role.includes("gestion") && role.includes("recurso");
-    const isTravelManager = role.includes("viaje") || role.includes("comunic");
+    const isAdmin = isAdministratorRole(actor.roleName);
+    const isResourceManager = isResourceManagerRole(actor.roleName) || isAdmin;
+    const isTravelManager = isTravelManagerRole(actor.roleName) || isAdmin;
 
     const [
       camp,

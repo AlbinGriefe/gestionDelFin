@@ -1,4 +1,9 @@
 import { AppError } from "../../shared/errors/app-error.js";
+import {
+  canAccessCamp,
+  canManageExpeditions,
+  isSuperAdminRole,
+} from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
   calculateMissionProbability,
@@ -22,29 +27,8 @@ import type {
   ExpeditionSummary,
 } from "./expeditions.types.js";
 
-function normalizeRoleName(roleName: string) {
-  return roleName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLocaleLowerCase();
-}
-
-function isSystemAdministrator(user: AuthenticatedUser) {
-  return normalizeRoleName(user.roleName) === "administrador sistema";
-}
-
-function canManageExpeditions(user: AuthenticatedUser) {
-  const normalizedRole = normalizeRoleName(user.roleName);
-  return (
-    normalizedRole.includes("viaje") ||
-    normalizedRole.includes("comunic") ||
-    normalizedRole.includes("explor")
-  );
-}
-
 function ensureExpeditionManager(user: AuthenticatedUser) {
-  if (!canManageExpeditions(user)) {
+  if (!canManageExpeditions(user.roleName)) {
     throw new AppError(
       403,
       "You do not have permission to manage expeditions.",
@@ -54,17 +38,15 @@ function ensureExpeditionManager(user: AuthenticatedUser) {
 }
 
 function ensureCampScope(user: AuthenticatedUser, campId: number) {
-  if (isSystemAdministrator(user)) {
+  if (canAccessCamp(user, campId)) {
     return;
   }
 
-  if (user.campId !== campId) {
-    throw new AppError(
-      403,
-      "You can only access expeditions from your assigned camp.",
-      "EXPEDITIONS_FORBIDDEN_CAMP_SCOPE",
-    );
-  }
+  throw new AppError(
+    403,
+    "You can only access expeditions from your assigned camp.",
+    "EXPEDITIONS_FORBIDDEN_CAMP_SCOPE",
+  );
 }
 
 function buildFullName(name: string, lastname: string) {
@@ -248,9 +230,7 @@ export class ExpeditionsService {
     filters: ExpeditionCatalogFilters,
     actor: AuthenticatedUser,
   ): Promise<ExpeditionCatalogs> {
-    const campId =
-      filters.campId ??
-      (isSystemAdministrator(actor) ? undefined : actor.campId);
+    const campId = filters.campId ?? actor.campId;
 
     if (campId) {
       ensureCampScope(actor, campId);
@@ -298,7 +278,7 @@ export class ExpeditionsService {
 
     const resolvedCampId =
       filters.campId ??
-      (isSystemAdministrator(actor) ? undefined : actor.campId);
+      (isSuperAdminRole(actor.roleName) ? undefined : actor.campId);
     const search = filters.search?.trim();
     const where = {
       ...(resolvedCampId ? { id_camp: resolvedCampId } : {}),

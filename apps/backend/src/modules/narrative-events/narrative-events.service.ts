@@ -1,14 +1,11 @@
 import prisma from "../../lib/prisma.js";
+import { canAccessCamp, isSuperAdminRole } from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import type {
   narrative_events_nre_status,
   narrative_events_nre_type,
 } from "../../generated/prisma/client.js";
-
-function isAdmin(actor: AuthenticatedUser) {
-  return actor.roleName.trim().toLowerCase() === "administrador sistema";
-}
 
 function mapEvent(record: Awaited<ReturnType<typeof findEvent>>) {
   if (!record) return null;
@@ -46,7 +43,16 @@ export class NarrativeEventsService {
     },
     actor: AuthenticatedUser,
   ) {
-    const campId = isAdmin(actor) ? input.campId : actor.campId;
+    const campId = isSuperAdminRole(actor.roleName)
+      ? input.campId
+      : (input.campId ?? actor.campId);
+    if (campId && !canAccessCamp(actor, campId)) {
+      throw new AppError(
+        403,
+        "Narrative event is outside your camp.",
+        "NARRATIVE_EVENT_FORBIDDEN",
+      );
+    }
     const where = {
       ...(campId ? { id_camp: campId } : {}),
       ...(input.type ? { nre_type: input.type } : {}),
@@ -82,7 +88,7 @@ export class NarrativeEventsService {
         "NARRATIVE_EVENT_NOT_FOUND",
       );
     }
-    if (!isAdmin(actor) && event.id_camp !== actor.campId) {
+    if (!canAccessCamp(actor, event.id_camp)) {
       throw new AppError(
         403,
         "Narrative event is outside your camp.",

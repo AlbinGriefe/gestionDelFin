@@ -1,4 +1,8 @@
 import { AppError } from "../../shared/errors/app-error.js";
+import {
+  canAccessCamp,
+  canManageProfessions,
+} from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
   applyBulkProfessionChange,
@@ -22,12 +26,8 @@ import type {
   TemporaryReassignmentInput,
 } from "./professions.types.js";
 
-function isSystemAdministrator(user: AuthenticatedUser) {
-  return user.roleName.trim().toLowerCase() === "administrador sistema";
-}
-
 function ensureCanManageProfessions(user: AuthenticatedUser) {
-  if (isSystemAdministrator(user)) {
+  if (canManageProfessions(user.roleName)) {
     return;
   }
 
@@ -360,7 +360,7 @@ export class ProfessionsService {
     campId: number,
     actor: AuthenticatedUser,
   ): Promise<ProfessionCoverageResult> {
-    if (!isSystemAdministrator(actor) && actor.campId !== campId) {
+    if (!canAccessCamp(actor, campId)) {
       throw new AppError(
         403,
         "You can only view coverage for your assigned camp.",

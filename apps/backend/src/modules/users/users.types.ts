@@ -14,6 +14,7 @@ export interface UserWriteInput {
   id_person?: number | null;
   id_role?: number;
   id_camp?: number;
+  campIds?: number[];
   usr_username?: string;
   usr_email?: string | null;
   usr_password?: string;
@@ -55,6 +56,10 @@ export interface UserSummary {
     id: number;
     name: string;
   };
+  assignedCamps: Array<{
+    id: number;
+    name: string;
+  }>;
   role: {
     id: number;
     name: string;

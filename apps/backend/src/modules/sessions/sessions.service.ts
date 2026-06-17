@@ -1,4 +1,5 @@
 import { AppError } from "../../shared/errors/app-error.js";
+import { isSuperAdminRole } from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
   sessionsRepository,
@@ -11,7 +12,7 @@ import type {
 } from "./sessions.types.js";
 
 function isSystemAdministrator(user: AuthenticatedUser) {
-  return user.roleName.trim().toLocaleLowerCase() === "administrador sistema";
+  return isSuperAdminRole(user.roleName);
 }
 
 function mapSession(

@@ -1,4 +1,5 @@
 import prisma from "../../lib/prisma.js";
+import { canAccessCamp, canManageInventory } from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import { applyPersonProgression } from "../persons/person-progression.service.js";
@@ -11,8 +12,7 @@ function normalize(value: string) {
 }
 
 function ensureResourceManager(actor: AuthenticatedUser) {
-  const role = normalize(actor.roleName);
-  if (!(role.includes("gestion") && role.includes("recurso"))) {
+  if (!canManageInventory(actor.roleName)) {
     throw new AppError(
       403,
       "Only resource managers can register care actions.",
@@ -66,6 +66,13 @@ export class CareActionsService {
           404,
           "Doctor or patient not found.",
           "CARE_PERSON_NOT_FOUND",
+        );
+      }
+      if (!canAccessCamp(actor, doctor.id_camp)) {
+        throw new AppError(
+          403,
+          "You can only register care actions for your assigned camp.",
+          "CARE_ACTION_FORBIDDEN_CAMP",
         );
       }
       if (

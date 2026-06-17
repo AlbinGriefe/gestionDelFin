@@ -9,7 +9,7 @@ export const careActionsRouter = Router();
 careActionsRouter.use(authenticate);
 careActionsRouter.post(
   "/heal",
-  requireRoles("Administrador sistema"),
+  requireRoles("SuperAdmin", "Administrador sistema", "Gestión recursos"),
   validateBody(healPersonSchema),
   healPersonController,
 );

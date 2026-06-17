@@ -9,6 +9,7 @@ import PersonForm from "../modules/persons/components/PersonForm";
 import PersonWorkflowPanel from "../modules/persons/components/PersonWorkflowPanel";
 import styles from "./PersonsPage.module.css";
 import { useAuth } from "../modules/auth/context/useAuth";
+import { isAdministrator } from "../shared/auth/roles";
 
 export default function PersonsPage() {
   const { createPerson, updatePerson } = usePersons();
@@ -19,8 +20,7 @@ export default function PersonsPage() {
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [workflowPersonId, setWorkflowPersonId] = useState<number | null>(null);
-  const isAdmin =
-    user?.roleName.trim().toLowerCase() === "administrador sistema";
+  const isAdmin = Boolean(user && isAdministrator(user.roleName));
 
   const handleCreate = () => {
     setSelectedPerson(null);

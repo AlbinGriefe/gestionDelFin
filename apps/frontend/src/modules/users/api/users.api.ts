@@ -34,6 +34,7 @@ async function createUser(data: UserWriteInput) {
   return httpClient<UserDetail>("/users", {
     method: "POST",
     body: JSON.stringify(data),
+    showError: false,
   });
 }
 
@@ -41,6 +42,7 @@ async function updateUser(userId: number, data: UserWriteInput) {
   return httpClient<UserDetail>(`/users/${userId}`, {
     method: "PATCH",
     body: JSON.stringify(data),
+    showError: false,
   });
 }
 

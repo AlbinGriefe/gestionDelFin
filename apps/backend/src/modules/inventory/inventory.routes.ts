@@ -14,7 +14,12 @@ import {
   updateInventoryThresholdsSchema,
 } from "./inventory.schemas.js";
 
-const inventoryWriterRoles = ["Gestión recursos", "Gestion recursos"] as const;
+const inventoryWriterRoles = [
+  "SuperAdmin",
+  "Administrador sistema",
+  "Gestión recursos",
+  "Gestion recursos",
+] as const;
 
 const inventoryRouter = Router();
 

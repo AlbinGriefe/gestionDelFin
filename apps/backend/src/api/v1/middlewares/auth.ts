@@ -1,6 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { authService } from "../../../modules/auth/auth.service.js";
+import {
+  isSuperAdminRole,
+  normalizeRoleName,
+} from "../../../shared/auth/roles.js";
 import { AppError } from "../../../shared/errors/app-error.js";
 
 function extractBearerToken(request: Request) {
@@ -40,9 +44,14 @@ export function requireRoles(...allowedRoles: string[]) {
       return;
     }
 
-    const currentRole = request.auth.roleName.trim().toLocaleLowerCase();
+    const currentRole = normalizeRoleName(request.auth.roleName);
+    if (isSuperAdminRole(request.auth.roleName)) {
+      next();
+      return;
+    }
+
     const isAllowed = allowedRoles.some(
-      (role) => role.trim().toLocaleLowerCase() === currentRole,
+      (role) => normalizeRoleName(role) === currentRole,
     );
 
     if (!isAllowed) {

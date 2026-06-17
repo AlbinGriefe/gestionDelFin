@@ -16,14 +16,10 @@ settingsRouter.get("/public", listPublicSettingsController);
 
 settingsRouter.use(authenticate);
 settingsRouter.get("/:key", getSettingByKeyController);
-settingsRouter.get(
-  "/",
-  requireRoles("Administrador sistema"),
-  listSettingsController,
-);
+settingsRouter.get("/", requireRoles("SuperAdmin"), listSettingsController);
 settingsRouter.put(
   "/:key",
-  requireRoles("Administrador sistema"),
+  requireRoles("SuperAdmin"),
   validateBody(updateSettingSchema),
   upsertSettingController,
 );

@@ -1,11 +1,8 @@
 import { AppError } from "../../shared/errors/app-error.js";
+import { canAccessCamp, isSuperAdminRole } from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import { eventsRepository } from "./events.repository.js";
 import type { EventListFilters, EventSummary } from "./events.types.js";
-
-function isSystemAdministrator(user: AuthenticatedUser) {
-  return user.roleName.trim().toLowerCase() === "administrador sistema";
-}
 
 function mapEvent(record: {
   id_event: number;
@@ -35,9 +32,17 @@ function mapEvent(record: {
 
 export class EventsService {
   async listEvents(filters: EventListFilters, actor: AuthenticatedUser) {
-    const resolvedCampId = isSystemAdministrator(actor)
+    const resolvedCampId = isSuperAdminRole(actor.roleName)
       ? filters.campId
       : (filters.campId ?? actor.campId);
+
+    if (resolvedCampId && !canAccessCamp(actor, resolvedCampId)) {
+      throw new AppError(
+        403,
+        "You can only access events from your assigned camp.",
+        "EVENT_FORBIDDEN_CAMP_SCOPE",
+      );
+    }
 
     const result = await eventsRepository.listEvents({
       ...filters,
@@ -69,11 +74,7 @@ export class EventsService {
       throw new AppError(404, "Event not found.", "EVENT_NOT_FOUND");
     }
 
-    if (
-      event.id_camp !== null &&
-      event.id_camp !== actor.campId &&
-      !isSystemAdministrator(actor)
-    ) {
+    if (event.id_camp !== null && !canAccessCamp(actor, event.id_camp)) {
       throw new AppError(
         403,
         "You can only access events from your assigned camp.",

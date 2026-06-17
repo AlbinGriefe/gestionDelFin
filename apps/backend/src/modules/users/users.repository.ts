@@ -25,6 +25,14 @@ function buildActiveSessionsFilter() {
 const userSummaryInclude = {
   camps: true,
   roles: true,
+  user_camp_memberships: {
+    where: {
+      ucm_is_active: true,
+    },
+    include: {
+      camps: true,
+    },
+  },
   persons: {
     select: {
       id_person: true,
@@ -180,6 +188,27 @@ export class UsersRepository {
     });
   }
 
+  async findCampsByIds(campIds: number[]) {
+    return prisma.camps.findMany({
+      where: {
+        id_camp: {
+          in: campIds,
+        },
+      },
+    });
+  }
+
+  async listActiveCamps() {
+    return prisma.camps.findMany({
+      where: {
+        cmp_status: "active",
+      },
+      orderBy: {
+        cmp_name: "asc",
+      },
+    });
+  }
+
   async findRoleById(roleId: number) {
     return prisma.roles.findUnique({
       where: {
@@ -219,12 +248,32 @@ export class UsersRepository {
 
   async createUser(input: {
     data: Prisma.usersUncheckedCreateInput;
+    membershipCampIds: number[];
     auditEvents: UserAuditEventInput[];
   }) {
     return prisma.$transaction(async (tx) => {
       const user = await tx.users.create({
         data: input.data,
       });
+
+      for (const campId of input.membershipCampIds) {
+        await tx.user_camp_memberships.upsert({
+          where: {
+            id_user_id_camp: {
+              id_user: user.id_user,
+              id_camp: campId,
+            },
+          },
+          create: {
+            id_user: user.id_user,
+            id_camp: campId,
+            ucm_is_active: true,
+          },
+          update: {
+            ucm_is_active: true,
+          },
+        });
+      }
 
       for (const event of input.auditEvents) {
         await tx.events.create({
@@ -254,6 +303,7 @@ export class UsersRepository {
     userId: number;
     currentCampId: number;
     data: Prisma.usersUncheckedUpdateInput;
+    membershipCampIds?: number[];
     invalidateSessions?: SessionInvalidationPlan;
     auditEvents: UserAuditEventInput[];
   }) {
@@ -280,6 +330,39 @@ export class UsersRepository {
             uss_sign_out_reason: input.invalidateSessions.reason,
           },
         });
+      }
+
+      if (input.membershipCampIds) {
+        await tx.user_camp_memberships.updateMany({
+          where: {
+            id_user: input.userId,
+            id_camp: {
+              notIn: input.membershipCampIds,
+            },
+          },
+          data: {
+            ucm_is_active: false,
+          },
+        });
+
+        for (const campId of input.membershipCampIds) {
+          await tx.user_camp_memberships.upsert({
+            where: {
+              id_user_id_camp: {
+                id_user: input.userId,
+                id_camp: campId,
+              },
+            },
+            create: {
+              id_user: input.userId,
+              id_camp: campId,
+              ucm_is_active: true,
+            },
+            update: {
+              ucm_is_active: true,
+            },
+          });
+        }
       }
 
       const resolvedCampId =

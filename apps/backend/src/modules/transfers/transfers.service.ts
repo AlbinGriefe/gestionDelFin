@@ -1,4 +1,9 @@
 import { AppError } from "../../shared/errors/app-error.js";
+import {
+  canAccessCamp,
+  canManageTransfers,
+  isSuperAdminRole,
+} from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
   calculateMissionProbability,
@@ -21,29 +26,8 @@ import type {
   TransferStateUpdateInput,
 } from "./transfers.types.js";
 
-function normalizeRoleName(roleName: string) {
-  return roleName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLocaleLowerCase();
-}
-
-function isSystemAdministrator(user: AuthenticatedUser) {
-  return normalizeRoleName(user.roleName) === "administrador sistema";
-}
-
-function canManageTransfers(user: AuthenticatedUser) {
-  const normalizedRole = normalizeRoleName(user.roleName);
-  return (
-    normalizedRole.includes("viaje") ||
-    normalizedRole.includes("comunic") ||
-    (normalizedRole.includes("gestion") && normalizedRole.includes("recurso"))
-  );
-}
-
 function ensureTransferManager(user: AuthenticatedUser) {
-  if (!canManageTransfers(user)) {
+  if (!canManageTransfers(user.roleName)) {
     throw new AppError(
       403,
       "You do not have permission to manage transfers.",
@@ -53,17 +37,15 @@ function ensureTransferManager(user: AuthenticatedUser) {
 }
 
 function ensureCampScope(user: AuthenticatedUser, campId: number) {
-  if (isSystemAdministrator(user)) {
+  if (canAccessCamp(user, campId)) {
     return;
   }
 
-  if (user.campId !== campId) {
-    throw new AppError(
-      403,
-      "You can only access transfers that involve your assigned camp.",
-      "TRANSFERS_FORBIDDEN_CAMP_SCOPE",
-    );
-  }
+  throw new AppError(
+    403,
+    "You can only access transfers that involve your assigned camp.",
+    "TRANSFERS_FORBIDDEN_CAMP_SCOPE",
+  );
 }
 
 function buildFullName(name: string, lastname: string) {
@@ -215,13 +197,13 @@ function ensureTransferVisibility(
   actor: AuthenticatedUser,
   transfer: TransferDetailRecord,
 ) {
-  if (isSystemAdministrator(actor)) {
+  if (isSuperAdminRole(actor.roleName)) {
     return;
   }
 
   if (
-    actor.campId !== transfer.id_origin_camp &&
-    actor.campId !== transfer.id_destiny_camp
+    !canAccessCamp(actor, transfer.id_origin_camp) &&
+    !canAccessCamp(actor, transfer.id_destiny_camp)
   ) {
     throw new AppError(
       403,
@@ -236,7 +218,7 @@ function ensureTransitionAuthority(
   transfer: TransferDetailRecord,
   nextState: TransferStateUpdateInput["nextState"],
 ) {
-  if (isSystemAdministrator(actor)) {
+  if (isSuperAdminRole(actor.roleName)) {
     return;
   }
 
@@ -309,9 +291,7 @@ export class TransfersService {
     filters: TransferCatalogFilters,
     actor: AuthenticatedUser,
   ): Promise<TransferCatalogs> {
-    const originCampId =
-      filters.originCampId ??
-      (isSystemAdministrator(actor) ? undefined : actor.campId);
+    const originCampId = filters.originCampId ?? actor.campId;
 
     if (originCampId) {
       ensureCampScope(actor, originCampId);
@@ -352,7 +332,7 @@ export class TransfersService {
 
     const resolvedCampId =
       filters.campId ??
-      (isSystemAdministrator(actor) ? undefined : actor.campId);
+      (isSuperAdminRole(actor.roleName) ? undefined : actor.campId);
     const search = filters.search?.trim();
     const where = {
       ...(filters.state ? { tfs_state: filters.state } : {}),

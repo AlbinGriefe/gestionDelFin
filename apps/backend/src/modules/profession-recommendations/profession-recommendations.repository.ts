@@ -50,6 +50,13 @@ export class ProfessionRecommendationsRepository {
     });
   }
 
+  async findById(recommendationId: number) {
+    return prisma.profession_recommendations.findUnique({
+      where: { id_profession_recommendation: recommendationId },
+      include: recommendationInclude,
+    });
+  }
+
   async create(input: {
     personId: number;
     actorUserId: number;

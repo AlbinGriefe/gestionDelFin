@@ -1,4 +1,5 @@
 import { AppError } from "../../shared/errors/app-error.js";
+import { canAccessCamp, isAdministratorRole } from "../../shared/auth/roles.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import type { PersonStatsSummary } from "../persons/persons.types.js";
 import { textAiProvider } from "../text-ai/resilient-text-provider.js";
@@ -8,11 +9,21 @@ import {
 } from "./admission-evaluations.repository.js";
 
 function ensureAdmin(actor: AuthenticatedUser) {
-  if (actor.roleName.trim().toLowerCase() !== "administrador sistema") {
+  if (!isAdministratorRole(actor.roleName)) {
     throw new AppError(
       403,
       "Only system administrators can evaluate admissions.",
       "ADMISSION_ADMIN_REQUIRED",
+    );
+  }
+}
+
+function ensureEvaluationCampAccess(actor: AuthenticatedUser, campId: number) {
+  if (!canAccessCamp(actor, campId)) {
+    throw new AppError(
+      403,
+      "You can only evaluate admissions from your assigned camp.",
+      "ADMISSION_FORBIDDEN_CAMP",
     );
   }
 }
@@ -77,6 +88,7 @@ export class AdmissionEvaluationsService {
         "ADMISSION_PERSON_NOT_FOUND",
       );
     }
+    ensureEvaluationCampAccess(actor, person.id_camp);
     if (!person.prn_is_active) {
       throw new AppError(
         400,
@@ -146,6 +158,16 @@ export class AdmissionEvaluationsService {
   ) {
     ensureAdmin(actor);
     try {
+      const existing =
+        await admissionEvaluationsRepository.findById(evaluationId);
+      if (!existing) {
+        throw new AppError(
+          404,
+          "Admission evaluation not found.",
+          "ADMISSION_EVALUATION_NOT_FOUND",
+        );
+      }
+      ensureEvaluationCampAccess(actor, existing.persons.id_camp);
       const confirmed = await admissionEvaluationsRepository.confirm({
         evaluationId,
         actorUserId: actor.id,
