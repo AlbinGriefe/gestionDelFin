@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { InventoryContext } from "./inventory.context";
 import { inventoryApi } from "../api/inventory.api";
+import { useAuth } from "../../auth/context/useAuth";
 
 import type {
   InventorySummary,
@@ -23,10 +24,22 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   const [catalogs, setCatalogs] = useState<InventoryCatalogs | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const { user } = useAuth();
+  const activeCampId = user?.campId;
+
   const [filters, setFilters] = useState<InventoryListFilters>({
     page: 1,
     pageSize: 20,
+    campId: activeCampId,
   });
+
+  useEffect(() => {
+    setFilters((prev) =>
+      prev.campId === activeCampId
+        ? prev
+        : { ...prev, campId: activeCampId, page: 1 },
+    );
+  }, [activeCampId]);
 
   const loadInventories = useCallback(async () => {
     setLoading(true);
