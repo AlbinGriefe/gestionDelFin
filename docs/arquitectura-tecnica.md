@@ -8,16 +8,16 @@
 
 ## Stack tecnológico
 
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | React 18 + TypeScript + Vite |
-| Backend | Node.js 20 + Express 5 + TypeScript |
-| ORM | Prisma (MySQL) |
-| IA (primario) | Ollama (LLM local) |
-| IA (fallback) | Motor de reglas determinístico |
-| CI | GitHub Actions |
-| Deploy backend | Render |
-| Deploy frontend | Vercel |
+| Capa            | Tecnología                          |
+| --------------- | ----------------------------------- |
+| Frontend        | React 18 + TypeScript + Vite        |
+| Backend         | Node.js 20 + Express 5 + TypeScript |
+| ORM             | Prisma (MySQL)                      |
+| IA (primario)   | Ollama (LLM local)                  |
+| IA (fallback)   | Motor de reglas determinístico      |
+| CI              | GitHub Actions                      |
+| Deploy backend  | Render                              |
+| Deploy frontend | Vercel                              |
 
 ---
 
@@ -110,6 +110,7 @@ El flujo es siempre: `Route → Controller → Service → Repository → Prisma
 Un **camp** (campamento) es la unidad central del sistema. Todo recurso, persona, expedición y usuario pertenece a un campamento. Esto permite que múltiples grupos gestionen sus propios campamentos de forma aislada dentro de la misma base de datos.
 
 Las reglas operacionales de cada campamento (`camp_operational_rules`) controlan:
+
 - Probabilidades base de éxito en expediciones y transferencias.
 - Probabilidad de enfermedades y recursos valiosos.
 - Criterios de admisión de personas (JSON configurable por campamento).
@@ -130,27 +131,27 @@ El endpoint `/daily-processes` ejecuta el ciclo de simulación del día:
 
 ## Módulos del sistema
 
-| Módulo | Descripción |
-|--------|-------------|
-| `auth` | Login, logout, sesiones, cambio de campamento |
-| `camps` | CRUD de campamentos, mapa interactivo |
-| `persons` | Personas bajo evaluación o admitidas; stats RPG |
-| `professions` | Oficios que determinan producción y bonificaciones |
-| `admission-evaluations` | Evaluaciones IA de admisión de personas |
-| `profession-recommendations` | Recomendaciones IA de oficio |
-| `expeditions` | Misiones fuera del campamento |
-| `exploration-zones` | Zonas geográficas con nivel de riesgo |
-| `transfers` | Movimiento de personas y recursos entre campamentos |
-| `inventory` | Stock de recursos por campamento |
-| `daily-processes` | Ciclo de simulación diaria |
-| `care-actions` | Atención médica entre personas |
-| `narrative-events` | Eventos aleatorios generados por el sistema |
-| `achievements` | Logros desbloqueados por usuarios |
-| `dashboard` | Métricas consolidadas del campamento |
-| `settings` | Parámetros del sistema |
-| `events` | Log de auditoría inmutable |
-| `sessions` | Gestión de sesiones activas |
-| `users` | CRUD de usuarios del sistema |
+| Módulo                       | Descripción                                         |
+| ---------------------------- | --------------------------------------------------- |
+| `auth`                       | Login, logout, sesiones, cambio de campamento       |
+| `camps`                      | CRUD de campamentos, mapa interactivo               |
+| `persons`                    | Personas bajo evaluación o admitidas; stats RPG     |
+| `professions`                | Oficios que determinan producción y bonificaciones  |
+| `admission-evaluations`      | Evaluaciones IA de admisión de personas             |
+| `profession-recommendations` | Recomendaciones IA de oficio                        |
+| `expeditions`                | Misiones fuera del campamento                       |
+| `exploration-zones`          | Zonas geográficas con nivel de riesgo               |
+| `transfers`                  | Movimiento de personas y recursos entre campamentos |
+| `inventory`                  | Stock de recursos por campamento                    |
+| `daily-processes`            | Ciclo de simulación diaria                          |
+| `care-actions`               | Atención médica entre personas                      |
+| `narrative-events`           | Eventos aleatorios generados por el sistema         |
+| `achievements`               | Logros desbloqueados por usuarios                   |
+| `dashboard`                  | Métricas consolidadas del campamento                |
+| `settings`                   | Parámetros del sistema                              |
+| `events`                     | Log de auditoría inmutable                          |
+| `sessions`                   | Gestión de sesiones activas                         |
+| `users`                      | CRUD de usuarios del sistema                        |
 
 ---
 
@@ -174,6 +175,7 @@ VITE_API_URL=https://tu-backend.onrender.com/api/v1
 ## CI / CD
 
 El pipeline `.github/workflows/ci.yml` ejecuta en cada push a `main`:
+
 1. Instalación de dependencias (pnpm workspaces).
 2. Type-check (`tsc --noEmit`).
 3. Linting (`eslint`).

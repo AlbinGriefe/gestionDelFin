@@ -62,11 +62,11 @@ pnpm --filter frontend dev   # Puerto 5173
 
 ## Estructura de branches
 
-| Branch | Propósito |
-|--------|-----------|
-| `main` | Producción; protegida, solo merge por PR |
-| `feature/*` | Nuevas funcionalidades |
-| `fix/*` | Corrección de bugs |
+| Branch      | Propósito                                |
+| ----------- | ---------------------------------------- |
+| `main`      | Producción; protegida, solo merge por PR |
+| `feature/*` | Nuevas funcionalidades                   |
+| `fix/*`     | Corrección de bugs                       |
 
 Convención de commits: `tipo: descripción en minúsculas`
 
@@ -87,15 +87,15 @@ pnpm --filter backend test mission-probability
 
 ### Cobertura de tests existentes
 
-| Test | Qué verifica |
-|------|-------------|
-| `person-stats.test.ts` | `generateInitialStats`, `advanceStats`, `healthPercentage` |
-| `person-progression.test.ts` | Subidas de nivel y condiciones de borde |
-| `mission-probability.test.ts` | `calculateMissionProbability`, `calculateLuckBonus`, `rollSucceeds` |
-| `text-ai.test.ts` | `ResilientTextProvider` con mocks de Ollama |
-| `settings.test.ts` | CRUD de configuración del sistema |
-| `database.integration.test.ts` | Conectividad a base de datos |
-| `person-contract.http.test.ts` | Endpoints HTTP de personas |
+| Test                           | Qué verifica                                                        |
+| ------------------------------ | ------------------------------------------------------------------- |
+| `person-stats.test.ts`         | `generateInitialStats`, `advanceStats`, `healthPercentage`          |
+| `person-progression.test.ts`   | Subidas de nivel y condiciones de borde                             |
+| `mission-probability.test.ts`  | `calculateMissionProbability`, `calculateLuckBonus`, `rollSucceeds` |
+| `text-ai.test.ts`              | `ResilientTextProvider` con mocks de Ollama                         |
+| `settings.test.ts`             | CRUD de configuración del sistema                                   |
+| `database.integration.test.ts` | Conectividad a base de datos                                        |
+| `person-contract.http.test.ts` | Endpoints HTTP de personas                                          |
 
 ---
 

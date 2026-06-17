@@ -8,15 +8,15 @@ El sistema simula la gestión de un campamento de supervivencia post-apocalípti
 
 Cada persona tiene 6 estadísticas numéricas, todas en rango 0–31 (`PERSON_STAT_MAX = 31`):
 
-| Stat | Rol en el juego |
-|------|-----------------|
-| `health` | Puntos de vida actuales. A 0, la persona no puede trabajar |
-| `maxHealth` | Vida máxima (techo de recuperación) |
-| `strength` | Afecta producción física y resultado de expediciones |
-| `satiety` | Saciedad; baja si no recibe raciones |
-| `hydration` | Hidratación; baja sin agua |
-| `luck` | Bonus en probabilidades de misiones |
-| `level` | Nivel 1–50 (`PERSON_LEVEL_MAX = 50`) |
+| Stat        | Rol en el juego                                            |
+| ----------- | ---------------------------------------------------------- |
+| `health`    | Puntos de vida actuales. A 0, la persona no puede trabajar |
+| `maxHealth` | Vida máxima (techo de recuperación)                        |
+| `strength`  | Afecta producción física y resultado de expediciones       |
+| `satiety`   | Saciedad; baja si no recibe raciones                       |
+| `hydration` | Hidratación; baja sin agua                                 |
+| `luck`      | Bonus en probabilidades de misiones                        |
+| `level`     | Nivel 1–50 (`PERSON_LEVEL_MAX = 50`)                       |
 
 **Generación inicial**: al registrar una persona nueva, cada stat se genera aleatoriamente en 0–10 (`randomInitialStat`). Salud máxima se fija igual a salud inicial (mínimo 1).
 
@@ -66,6 +66,7 @@ El ciclo del día (disparado manualmente por un operador) ejecuta en orden:
 ### 1. Asignación de tareas
 
 Cada persona activa recibe una tarea según su profesión:
+
 - Profesiones con `pfs_food_generated_per_day > 0` → `food_production`
 - Profesiones con `pfs_water_generated_per_day > 0` → `water_production`
 - Resto → `camp_support`
@@ -84,19 +85,20 @@ Las personas activas consumen alimentos y agua según configuración. Los movimi
 
 El sistema evalúa probabilidades de eventos aleatorios configuradas en `camp_operational_rules`:
 
-| Evento | Trigger | Efecto |
-|--------|---------|--------|
-| `disease` | `cor_disease_probability` | Persona al azar pierde salud; puede adquirir estado enfermo |
-| `scarcity` | Threshold de stock bajo | Alerta de recursos críticos |
-| `zombie_attack` | Variable | Pérdida de salud colectiva |
-| `valuable_resources` | `cor_valuable_probability` | Ganancia inesperada de recursos |
-| `traveler_loss` | En expediciones | Persona no regresa del campo |
+| Evento               | Trigger                    | Efecto                                                      |
+| -------------------- | -------------------------- | ----------------------------------------------------------- |
+| `disease`            | `cor_disease_probability`  | Persona al azar pierde salud; puede adquirir estado enfermo |
+| `scarcity`           | Threshold de stock bajo    | Alerta de recursos críticos                                 |
+| `zombie_attack`      | Variable                   | Pérdida de salud colectiva                                  |
+| `valuable_resources` | `cor_valuable_probability` | Ganancia inesperada de recursos                             |
+| `traveler_loss`      | En expediciones            | Persona no regresa del campo                                |
 
 ---
 
 ## Atención médica
 
 Un personaje con profesión médica puede aplicar `care_action` sobre un paciente:
+
 - Costo en comida: `pfs_healing_food_cost` (descontado del inventario del campamento)
 - Salud restaurada: `pfs_healing_amount` (sin superar `pst_max_health`)
 - Eliminar estado de enfermedad: si `cra_removed_sick = true`
@@ -126,8 +128,8 @@ El nivel de riesgo de la zona (`low | medium | high | critical`) puede penalizar
 Una transferencia mueve personas y/o recursos entre dos campamentos. Requiere aprobación de ambos lados:
 
 ```
-Campamento A solicita → Campamento B acepta → 
-  Campamento A aprueba salida → en_transit → 
+Campamento A solicita → Campamento B acepta →
+  Campamento A aprueba salida → en_transit →
   Campamento B confirma llegada → completed
 ```
 
