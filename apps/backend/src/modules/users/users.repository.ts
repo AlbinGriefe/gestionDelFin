@@ -198,6 +198,17 @@ export class UsersRepository {
     });
   }
 
+  async listActiveCamps() {
+    return prisma.camps.findMany({
+      where: {
+        cmp_status: "active",
+      },
+      orderBy: {
+        cmp_name: "asc",
+      },
+    });
+  }
+
   async findRoleById(roleId: number) {
     return prisma.roles.findUnique({
       where: {

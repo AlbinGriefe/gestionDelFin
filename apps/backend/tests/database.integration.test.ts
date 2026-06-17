@@ -39,6 +39,19 @@ integration("clean database migration and seed", () => {
       zones: 4,
       rules: 2,
     });
+
+    const admin = await prisma.users.findUniqueOrThrow({
+      where: { usr_username: "admin" },
+      include: {
+        roles: true,
+        user_camp_memberships: {
+          where: { ucm_is_active: true },
+        },
+      },
+    });
+
+    expect(admin.roles.rls_name).toBe("SuperAdmin");
+    expect(admin.user_camp_memberships).toHaveLength(counts.camps);
   });
 
   it("authenticates seeded roles and applies strict permissions", async () => {

@@ -7,6 +7,8 @@ import type {
 import CatalogSelect, {
   type CatalogItem,
 } from "../../../components/CatalogSelect";
+import { ApiError } from "../../../shared/api/apiError";
+import { isSuperAdmin, normalizeRoleName } from "../../../shared/auth/roles";
 import styles from "./UserForm.module.css";
 import { toast } from "sonner";
 
@@ -18,6 +20,104 @@ interface UserFormProps {
 }
 
 type Tab = "info" | "password";
+
+const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
+
+function getRoleDisplayName(roleName: string) {
+  const normalized = normalizeRoleName(roleName);
+
+  if (normalized === "superadmin") {
+    return "SuperAdmin";
+  }
+
+  if (normalized === "administrador sistema") {
+    return "Admin de campamento";
+  }
+
+  return roleName;
+}
+
+function getRoleDescription(role: UsersCatalogs["roles"][number]) {
+  const normalized = normalizeRoleName(role.name);
+
+  if (normalized === "superadmin") {
+    return "Acceso global a todos los campamentos.";
+  }
+
+  if (normalized === "administrador sistema") {
+    return "Gestiona solo campamentos asignados.";
+  }
+
+  return role.description;
+}
+
+function extractUserFormError(error: unknown): { message: string; tab: Tab } {
+  if (error instanceof ApiError) {
+    const details = error.details as
+      | {
+          fieldErrors?: Record<string, string[] | undefined>;
+        }
+      | null
+      | undefined;
+    const fieldErrors = details?.fieldErrors;
+
+    if (fieldErrors?.usr_password?.length) {
+      return {
+        message:
+          "La contrasena debe tener al menos 8 caracteres, una minuscula, una mayuscula y un numero.",
+        tab: "password",
+      };
+    }
+
+    if (fieldErrors?.usr_username?.length) {
+      return {
+        message:
+          "El nombre de usuario solo puede usar letras, numeros, puntos, guiones y guiones bajos.",
+        tab: "info",
+      };
+    }
+
+    if (fieldErrors?.usr_email?.length) {
+      return {
+        message: "El email no tiene un formato valido.",
+        tab: "info",
+      };
+    }
+
+    if (error.serverCode === "USER_PERSON_ALREADY_LINKED") {
+      return {
+        message: "La persona seleccionada ya esta vinculada a otro usuario.",
+        tab: "info",
+      };
+    }
+
+    if (error.serverCode === "USER_PERSON_CAMP_MISMATCH") {
+      return {
+        message: "La persona seleccionada pertenece a otro campamento.",
+        tab: "info",
+      };
+    }
+
+    if (error.serverCode === "USER_USERNAME_ALREADY_EXISTS") {
+      return {
+        message: "Ese nombre de usuario ya esta en uso.",
+        tab: "info",
+      };
+    }
+
+    if (error.serverCode === "USER_EMAIL_ALREADY_EXISTS") {
+      return {
+        message: "Ese email ya esta en uso.",
+        tab: "info",
+      };
+    }
+  }
+
+  return {
+    message: "No se pudo guardar el usuario. Revisa los campos.",
+    tab: "info",
+  };
+}
 
 export default function UserForm({
   initialData,
@@ -54,10 +154,15 @@ export default function UserForm({
     initialData?.person?.id ?? null,
   );
 
-  const campItems: CatalogItem[] = catalogs.camps.map((c) => ({
-    id: c.id,
-    label: c.name,
-    sublabel: c.location,
+  const selectedRole = catalogs.roles.find((role) => role.id === roleId);
+  const selectedRoleIsSuperAdmin = selectedRole
+    ? isSuperAdmin(selectedRole.name)
+    : false;
+
+  const campItems: CatalogItem[] = catalogs.camps.map((camp) => ({
+    id: camp.id,
+    label: camp.name,
+    sublabel: camp.location,
     meta: (
       <span
         style={{
@@ -66,19 +171,21 @@ export default function UserForm({
           padding: "1px 7px",
           borderRadius: 20,
           background:
-            c.status === "active" ? "var(--accent-bg)" : "rgba(16,18,13,0.4)",
-          color: c.status === "active" ? "var(--moss-bright)" : "var(--ash)",
+            camp.status === "active"
+              ? "var(--accent-bg)"
+              : "rgba(16,18,13,0.4)",
+          color: camp.status === "active" ? "var(--moss-bright)" : "var(--ash)",
         }}
       >
-        {c.status === "active" ? "Activo" : "Inactivo"}
+        {camp.status === "active" ? "Activo" : "Inactivo"}
       </span>
     ),
   }));
 
-  const roleItems: CatalogItem[] = catalogs.roles.map((r) => ({
-    id: r.id,
-    label: r.name,
-    sublabel: r.description,
+  const roleItems: CatalogItem[] = catalogs.roles.map((role) => ({
+    id: role.id,
+    label: getRoleDisplayName(role.name),
+    sublabel: getRoleDescription(role),
     meta: (
       <span
         style={{
@@ -86,21 +193,23 @@ export default function UserForm({
           fontWeight: 500,
           padding: "1px 7px",
           borderRadius: 20,
-          background: r.isSystemRole
+          background: role.isSystemRole
             ? "var(--accent-bg)"
             : "rgba(16,18,13,0.4)",
-          color: r.isSystemRole ? "#58683a" : "var(--ash)",
+          color: role.isSystemRole ? "#58683a" : "var(--ash)",
         }}
       >
-        {r.isSystemRole ? "Sistema" : "Personalizado"}
+        {role.isSystemRole ? "Sistema" : "Personalizado"}
       </span>
     ),
   }));
 
-  const personItems: CatalogItem[] = catalogs.persons.map((p) => ({
-    id: p.id,
-    label: p.fullName,
-    sublabel: `${p.campName}${p.documentNumber ? ` · Doc: ${p.documentNumber}` : ""} · ${p.linkedUsersCount} vinculado(s)`,
+  const personItems: CatalogItem[] = catalogs.persons.map((person) => ({
+    id: person.id,
+    label: person.fullName,
+    sublabel: `${person.campName}${
+      person.documentNumber ? ` - Doc: ${person.documentNumber}` : ""
+    } - ${person.linkedUsersCount} vinculado(s)`,
   }));
 
   const handlePrimaryCampChange = (item: CatalogItem) => {
@@ -111,6 +220,8 @@ export default function UserForm({
   };
 
   const handleAssignedCampToggle = (nextCampId: number) => {
+    if (selectedRoleIsSuperAdmin) return;
+
     setAssignedCampIds((prev) => {
       if (prev.includes(nextCampId)) {
         if (nextCampId === campId) return prev;
@@ -121,31 +232,84 @@ export default function UserForm({
     });
   };
 
+  const handleRoleChange = (item: CatalogItem) => {
+    const nextRole = catalogs.roles.find((role) => role.id === item.id);
+    const allCampIds = catalogs.camps.map((camp) => camp.id);
+
+    setRoleId(item.id);
+
+    if (nextRole && isSuperAdmin(nextRole.name)) {
+      setAssignedCampIds(allCampIds);
+      setCampId((currentCampId) => currentCampId ?? allCampIds[0] ?? null);
+      return;
+    }
+
+    if (selectedRoleIsSuperAdmin) {
+      setAssignedCampIds(campId ? [campId] : []);
+    }
+  };
+
+  const failValidation = (message: string, tab: Tab = "info") => {
+    setActiveTab(tab);
+    setError(message);
+  };
+
   const handleSubmit = async () => {
     setError("");
 
-    if (!username.trim())
-      return setError("El nombre de usuario es obligatorio.");
-
-    if (!roleId) return setError("Selecciona un rol.");
-    if (!campId) return setError("Selecciona un campamento principal.");
-    if (!isEditing && !password.trim())
-      return setError("La contraseña es obligatoria al crear un usuario.");
-
-    if (password.trim()) {
-      if (password.length < 8)
-        return setError("La contraseña debe tener al menos 8 caracteres.");
-      if (!/[a-z]/.test(password))
-        return setError(
-          "La contraseña debe incluir al menos una letra minúscula.",
-        );
-      if (!/[A-Z]/.test(password))
-        return setError(
-          "La contraseña debe incluir al menos una letra mayúscula.",
-        );
+    if (!username.trim()) {
+      return failValidation("El nombre de usuario es obligatorio.");
     }
 
-    const campIds = Array.from(new Set([campId, ...assignedCampIds]));
+    if (!USERNAME_PATTERN.test(username.trim())) {
+      return failValidation(
+        "El nombre de usuario solo puede usar letras, numeros, puntos, guiones y guiones bajos.",
+      );
+    }
+
+    if (!roleId) return failValidation("Selecciona un rol.");
+    if (!campId) return failValidation("Selecciona un campamento principal.");
+
+    if (!isEditing && !password.trim()) {
+      return failValidation(
+        "La contrasena es obligatoria al crear un usuario.",
+        "password",
+      );
+    }
+
+    if (password.trim()) {
+      if (password.length < 8) {
+        return failValidation(
+          "La contrasena debe tener al menos 8 caracteres.",
+          "password",
+        );
+      }
+
+      if (!/[a-z]/.test(password)) {
+        return failValidation(
+          "La contrasena debe incluir al menos una letra minuscula.",
+          "password",
+        );
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        return failValidation(
+          "La contrasena debe incluir al menos una letra mayuscula.",
+          "password",
+        );
+      }
+
+      if (!/[0-9]/.test(password)) {
+        return failValidation(
+          "La contrasena debe incluir al menos un numero.",
+          "password",
+        );
+      }
+    }
+
+    const campIds = selectedRoleIsSuperAdmin
+      ? catalogs.camps.map((camp) => camp.id)
+      : Array.from(new Set([campId, ...assignedCampIds]));
     const payload: UserWriteInput = {
       usr_username: username.trim(),
       usr_email: email.trim() || null,
@@ -162,6 +326,11 @@ export default function UserForm({
       await onSubmit(payload);
       toast.success("Usuario creado/actualizado con exito");
       onClose();
+    } catch (submitError) {
+      const formError = extractUserFormError(submitError);
+      setActiveTab(formError.tab);
+      setError(formError.message);
+      toast.error(formError.message);
     } finally {
       setLoading(false);
     }
@@ -169,16 +338,19 @@ export default function UserForm({
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.modal}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className={styles.header}>
           <span className={styles.title}>
             {isEditing ? "Editar usuario" : "Nuevo usuario"}
             {isEditing && (
-              <span className={styles.subtitle}>· {initialData.username}</span>
+              <span className={styles.subtitle}>- {initialData.username}</span>
             )}
           </span>
           <button className={styles.closeBtn} onClick={onClose}>
-            ✕
+            x
           </button>
         </div>
 
@@ -187,13 +359,13 @@ export default function UserForm({
             className={`${styles.tab} ${activeTab === "info" ? styles.tabActive : ""}`}
             onClick={() => setActiveTab("info")}
           >
-            Información
+            Informacion
           </button>
           <button
             className={`${styles.tab} ${activeTab === "password" ? styles.tabActive : ""}`}
             onClick={() => setActiveTab("password")}
           >
-            Contraseña{" "}
+            Contrasena{" "}
             {!isEditing && <span style={{ color: "#e6b89c" }}>*</span>}
           </button>
         </div>
@@ -208,7 +380,7 @@ export default function UserForm({
                   <input
                     className={styles.input}
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(event) => setUsername(event.target.value)}
                     placeholder="ej. jperez"
                   />
                 </div>
@@ -219,7 +391,7 @@ export default function UserForm({
                   <input
                     className={styles.input}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(event) => setEmail(event.target.value)}
                     placeholder="usuario@correo.com"
                   />
                 </div>
@@ -228,10 +400,7 @@ export default function UserForm({
               <p className={styles.sectionTitle}>Asociaciones</p>
               <div className={styles.formRow}>
                 <div>
-                  <label className={styles.label}>
-                    Campamento{" "}
-                    <span className={styles.optional}>(opcional)</span>
-                  </label>
+                  <label className={styles.label}>Campamento principal</label>
                   <CatalogSelect
                     placeholder="Seleccionar..."
                     sectionTitle="campamentos"
@@ -247,7 +416,7 @@ export default function UserForm({
                     sectionTitle="roles"
                     items={roleItems}
                     selectedId={roleId}
-                    onChange={(item) => setRoleId(item.id)}
+                    onChange={handleRoleChange}
                   />
                 </div>
               </div>
@@ -256,7 +425,9 @@ export default function UserForm({
                 <label className={styles.label}>Campamentos asignados</label>
                 <div className={styles.campAssignmentList}>
                   {catalogs.camps.map((camp) => {
-                    const checked = assignedCampIds.includes(camp.id);
+                    const checked =
+                      selectedRoleIsSuperAdmin ||
+                      assignedCampIds.includes(camp.id);
                     const isPrimary = camp.id === campId;
 
                     return (
@@ -264,7 +435,7 @@ export default function UserForm({
                         <input
                           type="checkbox"
                           checked={checked}
-                          disabled={isPrimary}
+                          disabled={selectedRoleIsSuperAdmin || isPrimary}
                           onChange={() => handleAssignedCampToggle(camp.id)}
                         />
                         <span>{camp.name}</span>
@@ -311,7 +482,7 @@ export default function UserForm({
             <>
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  {isEditing ? "Nueva contraseña" : "Contraseña"}
+                  {isEditing ? "Nueva contrasena" : "Contrasena"}
                   {!isEditing && (
                     <span style={{ color: "#e6b89c", marginLeft: 4 }}>*</span>
                   )}
@@ -321,8 +492,8 @@ export default function UserForm({
                     className={styles.input}
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="********"
                   />
                   <button
                     type="button"
@@ -334,7 +505,7 @@ export default function UserForm({
                 </div>
                 {isEditing && (
                   <p className={styles.hint}>
-                    Deja el campo vacío si no deseas cambiar la contraseña.
+                    Deja el campo vacio si no deseas cambiar la contrasena.
                   </p>
                 )}
               </div>

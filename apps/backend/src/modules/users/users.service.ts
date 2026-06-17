@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 
-import { canManageUsers } from "../../shared/auth/roles.js";
+import { canManageUsers, isSuperAdminRole } from "../../shared/auth/roles.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { AuthenticatedUser } from "../auth/auth.types.js";
 import {
@@ -253,6 +253,25 @@ async function validateActiveCampAssignments(campIds: number[]) {
   return camps;
 }
 
+async function resolveMembershipCampIds(input: {
+  roleName: string;
+  primaryCampId: number;
+  requestedCampIds?: number[];
+}) {
+  if (isSuperAdminRole(input.roleName)) {
+    const activeCamps = await usersRepository.listActiveCamps();
+    return uniqueCampIds([
+      input.primaryCampId,
+      ...activeCamps.map((camp) => camp.id_camp),
+    ]);
+  }
+
+  return uniqueCampIds([
+    input.primaryCampId,
+    ...(input.requestedCampIds ?? []),
+  ]);
+}
+
 export class UsersService {
   async getCatalogs(): Promise<UsersCatalogs> {
     const result = await usersRepository.listCatalogs();
@@ -362,19 +381,20 @@ export class UsersService {
       );
     }
 
-    const person = await resolveValidatedPerson(input.id_person);
-    const resolvedCampId = input.id_camp ?? person?.id_camp ?? actor.campId;
-    const membershipCampIds = uniqueCampIds([
-      resolvedCampId,
-      ...(input.campIds ?? []),
-    ]);
-    await validateActiveCampAssignments(membershipCampIds);
-
     const role = await usersRepository.findRoleById(input.id_role);
 
     if (!role) {
       throw new AppError(404, "Role not found.", "USER_ROLE_NOT_FOUND");
     }
+
+    const person = await resolveValidatedPerson(input.id_person);
+    const resolvedCampId = input.id_camp ?? person?.id_camp ?? actor.campId;
+    const membershipCampIds = await resolveMembershipCampIds({
+      roleName: role.rls_name,
+      primaryCampId: resolvedCampId,
+      requestedCampIds: input.campIds,
+    });
+    await validateActiveCampAssignments(membershipCampIds);
 
     if (person && person.id_camp !== resolvedCampId) {
       throw new AppError(
@@ -449,6 +469,13 @@ export class UsersService {
       throw new AppError(404, "User not found.", "USER_NOT_FOUND");
     }
 
+    const nextRoleId = input.id_role ?? existingUser.id_role;
+    const role = await usersRepository.findRoleById(nextRoleId);
+
+    if (!role) {
+      throw new AppError(404, "Role not found.", "USER_ROLE_NOT_FOUND");
+    }
+
     const person = await resolveValidatedPerson(input.id_person, userId);
     const nextCampId = input.id_camp ?? person?.id_camp ?? existingUser.id_camp;
     const currentMembershipCampIds = uniqueCampIds(
@@ -456,18 +483,12 @@ export class UsersService {
         (membership) => membership.id_camp,
       ),
     );
-    const nextMembershipCampIds = uniqueCampIds([
-      nextCampId,
-      ...(input.campIds ?? currentMembershipCampIds),
-    ]);
+    const nextMembershipCampIds = await resolveMembershipCampIds({
+      roleName: role.rls_name,
+      primaryCampId: nextCampId,
+      requestedCampIds: input.campIds ?? currentMembershipCampIds,
+    });
     await validateActiveCampAssignments(nextMembershipCampIds);
-
-    const nextRoleId = input.id_role ?? existingUser.id_role;
-    const role = await usersRepository.findRoleById(nextRoleId);
-
-    if (!role) {
-      throw new AppError(404, "Role not found.", "USER_ROLE_NOT_FOUND");
-    }
 
     if (person && person.id_camp !== nextCampId) {
       throw new AppError(
