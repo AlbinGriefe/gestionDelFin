@@ -188,3 +188,16 @@ Documentacion:
 - `docs/architecture/backend.md`
 - `docs/business-rules/ai-decisions.md`
 - `docs/operations/functional-review.md`
+
+## Documentacion completa del proyecto
+
+| Documento | Contenido |
+|-----------|-----------|
+| [Arquitectura técnica](docs/arquitectura-tecnica.md) | Stack, estructura del monorepo, diagrama de componentes, autenticación, CI/CD |
+| [Modelo de datos](docs/modelo-de-datos.md) | Diagrama ER, tablas, campos clave, enums, reglas de integridad |
+| [Referencia de API](docs/referencia-api.md) | Todos los endpoints REST con métodos, rutas y bodies |
+| [Sistema de IA](docs/sistema-ia.md) | ResilientTextProvider, Ollama, fallback de reglas, flujos de evaluación |
+| [Mecánicas de simulación](docs/mecanicas-de-juego.md) | Stats de personas, probabilidades, proceso diario, expediciones, transferencias |
+| [Flujos de UI](docs/mockups-y-flujos-ui.md) | Módulos del frontend, componentes reutilizables, flujos de navegación |
+| [Repositorio y desarrollo](docs/repositorio-y-desarrollo.md) | Setup local, tests, convenciones, deploy |
+| [Cierre y conclusiones](docs/cierre-conclusiones.md) | Resumen del proyecto, decisiones clave, limitaciones, recomendaciones |
