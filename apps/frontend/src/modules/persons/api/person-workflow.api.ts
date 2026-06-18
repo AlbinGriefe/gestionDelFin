@@ -2,6 +2,16 @@ import { httpClient } from "../../../shared/api/httpClient";
 
 export type AdmissionEvaluation = {
   id: number;
+  person: {
+    id: number;
+    fullName: string;
+    admissionStatus:
+      | "pending"
+      | "under_review"
+      | "observe"
+      | "accepted"
+      | "rejected";
+  };
   provider: string;
   modelName: string | null;
   confidence: number;

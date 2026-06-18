@@ -98,6 +98,7 @@ drawio
 edicion
 editarte
 ejecucion
+encontro
 enfer
 enfermeria
 entregable
@@ -130,6 +131,7 @@ imagenes
 implementacion
 infeccion
 informacion
+invalidos
 inicializacion
 instalacion
 integracion

@@ -184,7 +184,9 @@ export class AdmissionEvaluationsRepository {
               : status === "rejected"
                 ? "rejected"
                 : "admission_evaluated",
-          prr_old_value: json({ admissionStatus: "under_review" }),
+          prr_old_value: json({
+            admissionStatus: evaluation.persons.prn_admission_status,
+          }),
           prr_new_value: json({ admissionStatus: status }),
           prr_notes: input.userObservation?.trim() || null,
         },

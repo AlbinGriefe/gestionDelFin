@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../modules/auth/context/useAuth";
-import { roleMatches } from "../shared/auth/roles";
+import { canAccessRole } from "../shared/auth/roles";
 
 interface Props {
   children: React.ReactNode;
@@ -14,9 +14,7 @@ export default function ProtectedRoute({ children, allowedRoles }: Props) {
     return <Navigate to="/login" replace />;
   }
 
-  const isAllowed = allowedRoles?.some((role) =>
-    roleMatches(user.roleName, role),
-  );
+  const isAllowed = canAccessRole(user.roleName, allowedRoles);
 
   if (allowedRoles && !isAllowed) {
     return <Navigate to="/unauthorized" replace />;

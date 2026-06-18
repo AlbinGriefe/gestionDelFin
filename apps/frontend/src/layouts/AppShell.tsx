@@ -26,7 +26,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "../modules/auth/context/useAuth";
 import { useIdleSession } from "../modules/auth/context/useIdleSession";
-import { normalizeRoleName, roleMatches } from "../shared/auth/roles";
+import { canAccessRole } from "../shared/auth/roles";
 import styles from "./AppShell.module.css";
 
 const navigation = [
@@ -152,11 +152,8 @@ export default function AppShell() {
 
   if (!user) return null;
 
-  const role = normalizeRoleName(user.roleName);
-  const visibleNavigation = navigation.filter(
-    (item) =>
-      item.roles.includes("all") ||
-      item.roles.some((allowedRole) => roleMatches(role, allowedRole)),
+  const visibleNavigation = navigation.filter((item) =>
+    canAccessRole(user.roleName, item.roles),
   );
 
   const handleCampChange = async (campId: number) => {

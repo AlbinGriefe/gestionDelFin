@@ -1,7 +1,10 @@
 export type ApiErrorCode =
   | "UNAUTHORIZED"
   | "BAD_REQUEST"
+  | "FORBIDDEN"
   | "NOT_FOUND"
+  | "CONFLICT"
+  | "SERVER_ERROR"
   | "UNKNOWN";
 
 export class ApiError extends Error {
