@@ -410,136 +410,139 @@ export class DailyProcessesService {
       [];
     const rationRows: DailyProcessRunResult["rations"]["rations"] = [];
 
-    await prisma.$transaction(async (tx) => {
-      for (const assignment of assignments) {
-        const person = assignment.persons;
-        const profession = person.professions;
-        const isOutOfCamp = outOfCampIds.has(person.id_person);
-        if (!profession || isOutOfCamp) {
-          productionRows.push({
+    await prisma.$transaction(
+      async (tx) => {
+        for (const assignment of assignments) {
+          const person = assignment.persons;
+          const profession = person.professions;
+          const isOutOfCamp = outOfCampIds.has(person.id_person);
+          if (!profession || isOutOfCamp) {
+            productionRows.push({
+              personId: person.id_person,
+              fullName: `${person.prn_name} ${person.prn_lastname}`.trim(),
+              professionId: profession?.id_profession ?? 0,
+              professionName: profession?.pfs_name ?? "Sin oficio",
+              foodProduced: 0,
+              waterProduced: 0,
+              skipped: true,
+              skipReason: !profession
+                ? "Person does not have an assigned profession"
+                : "Person is currently out of camp",
+            });
+            await tx.daily_assignments.update({
+              where: { id_daily_assignment: assignment.id_daily_assignment },
+              data: {
+                das_was_successful: false,
+                das_result: { skipped: true },
+              },
+            });
+            continue;
+          }
+
+          const penalty = Number(profession.pfs_production_penalty);
+          let foodAmount = 0;
+          let waterAmount = 0;
+          if (assignment.das_task === "food_production") {
+            foodAmount = assignment.das_is_compatible
+              ? Number(profession.pfs_food_generated_per_day)
+              : -penalty;
+          } else if (assignment.das_task === "water_production") {
+            waterAmount = assignment.das_is_compatible
+              ? Number(profession.pfs_water_generated_per_day)
+              : -penalty;
+          }
+          const successful =
+            assignment.das_is_compatible &&
+            (assignment.das_task === "camp_support" ||
+              foodAmount > 0 ||
+              waterAmount > 0);
+          const applied = await applyPersonProduction(tx, {
+            campId,
             personId: person.id_person,
-            fullName: `${person.prn_name} ${person.prn_lastname}`.trim(),
-            professionId: profession?.id_profession ?? 0,
-            professionName: profession?.pfs_name ?? "Sin oficio",
-            foodProduced: 0,
-            waterProduced: 0,
-            skipped: true,
-            skipReason: !profession
-              ? "Person does not have an assigned profession"
-              : "Person is currently out of camp",
+            actorUserId: actor.id,
+            foodResourceId: resources.foodResourceId ?? 0,
+            waterResourceId: resources.waterResourceId,
+            foodAmount,
+            waterAmount,
+            now,
           });
           await tx.daily_assignments.update({
             where: { id_daily_assignment: assignment.id_daily_assignment },
             data: {
-              das_was_successful: false,
-              das_result: { skipped: true },
+              das_was_successful: successful,
+              das_result: {
+                foodProduced: applied.foodApplied,
+                waterProduced: applied.waterApplied,
+                penaltyApplied: !assignment.das_is_compatible,
+              },
             },
           });
-          continue;
+          if (successful) {
+            await applyPersonProgression(tx, {
+              personId: person.id_person,
+              sourceType: "daily_assignment",
+              referenceKey: `daily:${day.toISOString().slice(0, 10)}`,
+              actorUserId: actor.id,
+            });
+          }
+          productionRows.push({
+            personId: person.id_person,
+            fullName: `${person.prn_name} ${person.prn_lastname}`.trim(),
+            professionId: profession.id_profession,
+            professionName: profession.pfs_name,
+            foodProduced: applied.foodApplied,
+            waterProduced: applied.waterApplied,
+            skipped: false,
+            skipReason: null,
+          });
         }
 
-        const penalty = Number(profession.pfs_production_penalty);
-        let foodAmount = 0;
-        let waterAmount = 0;
-        if (assignment.das_task === "food_production") {
-          foodAmount = assignment.das_is_compatible
-            ? Number(profession.pfs_food_generated_per_day)
-            : -penalty;
-        } else if (assignment.das_task === "water_production") {
-          waterAmount = assignment.das_is_compatible
-            ? Number(profession.pfs_water_generated_per_day)
-            : -penalty;
+        const eligiblePersonCount = allActivePersons.filter(
+          (person) => !outOfCampIds.has(person.id_person),
+        ).length;
+        if (eligiblePersonCount > 0 && rationableStorage.length > 0) {
+          rationRows.push(
+            ...(await applyDailyRations(tx, {
+              campId,
+              actorUserId: actor.id,
+              eligiblePersonCount,
+              rationableStorage,
+              rationPerPerson,
+              now,
+            })),
+          );
         }
-        const successful =
-          assignment.das_is_compatible &&
-          (assignment.das_task === "camp_support" ||
-            foodAmount > 0 ||
-            waterAmount > 0);
-        const applied = await applyPersonProduction(tx, {
+
+        const rules = camp.camp_operational_rules;
+        await applyDiseaseEvents(tx, {
           campId,
-          personId: person.id_person,
           actorUserId: actor.id,
-          foodResourceId: resources.foodResourceId ?? 0,
-          waterResourceId: resources.waterResourceId,
-          foodAmount,
-          waterAmount,
+          people: allActivePersons,
+          diseaseProbability: Number(rules?.cor_disease_probability ?? 25),
+          diseaseThreshold: Number(rules?.cor_disease_threshold ?? 25),
+          sickHealthId: sickHealth?.id_person_health ?? null,
+        });
+
+        const summary = buildRunSummary({
+          campId,
+          campName: camp.cmp_name,
+          now,
+          productionRows,
+          rationRows,
+          alreadyRunToday: false,
+        });
+        await writeDailyProcessEvent(tx, {
+          campId,
+          actorUserId: actor.id,
+          summary,
           now,
         });
-        await tx.daily_assignments.update({
-          where: { id_daily_assignment: assignment.id_daily_assignment },
-          data: {
-            das_was_successful: successful,
-            das_result: {
-              foodProduced: applied.foodApplied,
-              waterProduced: applied.waterApplied,
-              penaltyApplied: !assignment.das_is_compatible,
-            },
-          },
-        });
-        if (successful) {
-          await applyPersonProgression(tx, {
-            personId: person.id_person,
-            sourceType: "daily_assignment",
-            referenceKey: `daily:${day.toISOString().slice(0, 10)}`,
-            actorUserId: actor.id,
-          });
-        }
-        productionRows.push({
-          personId: person.id_person,
-          fullName: `${person.prn_name} ${person.prn_lastname}`.trim(),
-          professionId: profession.id_profession,
-          professionName: profession.pfs_name,
-          foodProduced: applied.foodApplied,
-          waterProduced: applied.waterApplied,
-          skipped: false,
-          skipReason: null,
-        });
-      }
-
-      const eligiblePersonCount = allActivePersons.filter(
-        (person) => !outOfCampIds.has(person.id_person),
-      ).length;
-      if (eligiblePersonCount > 0 && rationableStorage.length > 0) {
-        rationRows.push(
-          ...(await applyDailyRations(tx, {
-            campId,
-            actorUserId: actor.id,
-            eligiblePersonCount,
-            rationableStorage,
-            rationPerPerson,
-            now,
-          })),
-        );
-      }
-
-      const rules = camp.camp_operational_rules;
-      await applyDiseaseEvents(tx, {
-        campId,
-        actorUserId: actor.id,
-        people: allActivePersons,
-        diseaseProbability: Number(rules?.cor_disease_probability ?? 25),
-        diseaseThreshold: Number(rules?.cor_disease_threshold ?? 25),
-        sickHealthId: sickHealth?.id_person_health ?? null,
-      });
-
-      const summary = buildRunSummary({
-        campId,
-        campName: camp.cmp_name,
-        now,
-        productionRows,
-        rationRows,
-        alreadyRunToday: false,
-      });
-      await writeDailyProcessEvent(tx, {
-        campId,
-        actorUserId: actor.id,
-        summary,
-        now,
-      });
-    }, {
-      timeout: 30_000,
-      maxWait: 15_000,
-    });
+      },
+      {
+        timeout: 30_000,
+        maxWait: 15_000,
+      },
+    );
 
     return buildRunSummary({
       campId,

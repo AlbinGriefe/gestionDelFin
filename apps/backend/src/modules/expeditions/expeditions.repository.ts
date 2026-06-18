@@ -244,49 +244,52 @@ export class ExpeditionsRepository {
     members: ExpeditionCreateInput["members"];
     auditEvents: ExpeditionAuditEventInput[];
   }) {
-    return prisma.$transaction(async (tx) => {
-      const expedition = await tx.expeditions.create({
-        data: input.data,
-      });
+    return prisma.$transaction(
+      async (tx) => {
+        const expedition = await tx.expeditions.create({
+          data: input.data,
+        });
 
-      for (const member of input.members) {
-        await tx.expedition_records.create({
-          data: {
+        for (const member of input.members) {
+          await tx.expedition_records.create({
+            data: {
+              id_expedition: expedition.id_expedition,
+              id_person: member.id_person,
+              id_resource: member.id_resource ?? null,
+              exr_role_in_expedition: member.roleInExpedition ?? null,
+              exr_rations_assigned: member.rationsAssigned ?? 0,
+              exr_notes: member.notes ?? null,
+            },
+          });
+        }
+
+        for (const event of input.auditEvents) {
+          await tx.events.create({
+            data: {
+              id_user: event.actorUserId ?? null,
+              id_camp: input.data.id_camp,
+              evt_entity: "expeditions",
+              evt_entity_id: expedition.id_expedition,
+              evt_action: event.action,
+              evt_old_value: toPrismaJsonValue(event.oldValue),
+              evt_new_value: toPrismaJsonValue(event.newValue),
+              evt_description: event.description ?? null,
+            },
+          });
+        }
+
+        return tx.expeditions.findUniqueOrThrow({
+          where: {
             id_expedition: expedition.id_expedition,
-            id_person: member.id_person,
-            id_resource: member.id_resource ?? null,
-            exr_role_in_expedition: member.roleInExpedition ?? null,
-            exr_rations_assigned: member.rationsAssigned ?? 0,
-            exr_notes: member.notes ?? null,
           },
+          include: expeditionDetailInclude,
         });
-      }
-
-      for (const event of input.auditEvents) {
-        await tx.events.create({
-          data: {
-            id_user: event.actorUserId ?? null,
-            id_camp: input.data.id_camp,
-            evt_entity: "expeditions",
-            evt_entity_id: expedition.id_expedition,
-            evt_action: event.action,
-            evt_old_value: toPrismaJsonValue(event.oldValue),
-            evt_new_value: toPrismaJsonValue(event.newValue),
-            evt_description: event.description ?? null,
-          },
-        });
-      }
-
-      return tx.expeditions.findUniqueOrThrow({
-        where: {
-          id_expedition: expedition.id_expedition,
-        },
-        include: expeditionDetailInclude,
-      });
-    }, {
-      timeout: 30_000,
-      maxWait: 15_000,
-    });
+      },
+      {
+        timeout: 30_000,
+        maxWait: 15_000,
+      },
+    );
   }
 
   async updateExpeditionState(input: {
@@ -300,260 +303,266 @@ export class ExpeditionsRepository {
     notes?: string | null;
     actorUserId: number;
   }) {
-    return prisma.$transaction(async (tx) => {
-      const expedition = await tx.expeditions.findUniqueOrThrow({
-        where: {
-          id_expedition: input.expeditionId,
-        },
-        include: expeditionDetailInclude,
-      });
-
-      const now = new Date();
-      const updateData: Prisma.expeditionsUncheckedUpdateInput = {
-        exe_state: input.nextState,
-        ...(input.notes !== undefined ? { exe_notes: input.notes } : {}),
-        ...(input.exe_resources_used !== undefined
-          ? { exe_resources_used: input.exe_resources_used }
-          : {}),
-      };
-
-      if (input.nextState === "in_progress") {
-        const rationsUsed = await this.deductExpeditionRations(tx, {
-          expedition,
-          actorUserId: input.actorUserId,
-        });
-        updateData.exe_resources_used = rationsUsed;
-
-        await tx.expedition_records.updateMany({
+    return prisma.$transaction(
+      async (tx) => {
+        const expedition = await tx.expeditions.findUniqueOrThrow({
           where: {
-            id_expedition: expedition.id_expedition,
+            id_expedition: input.expeditionId,
           },
-          data: {
-            exr_departure_confirmed: true,
-          },
+          include: expeditionDetailInclude,
         });
-      }
 
-      if (input.nextState === "returned") {
-        const arrivingDate = input.arrivingDate ?? now;
-        const memberUpdates = new Map(
-          (input.members ?? []).map((member) => [member.id_person, member]),
-        );
+        const now = new Date();
+        const updateData: Prisma.expeditionsUncheckedUpdateInput = {
+          exe_state: input.nextState,
+          ...(input.notes !== undefined ? { exe_notes: input.notes } : {}),
+          ...(input.exe_resources_used !== undefined
+            ? { exe_resources_used: input.exe_resources_used }
+            : {}),
+        };
 
-        let totalReturned = 0;
+        if (input.nextState === "in_progress") {
+          const rationsUsed = await this.deductExpeditionRations(tx, {
+            expedition,
+            actorUserId: input.actorUserId,
+          });
+          updateData.exe_resources_used = rationsUsed;
 
-        for (const record of expedition.expedition_records) {
-          const memberUpdate = memberUpdates.get(record.id_person);
-          const nextResourcesFound = Number(
-            (
-              memberUpdate?.resourcesFound ?? Number(record.exr_resources_found)
-            ).toFixed(2),
-          );
-
-          if (nextResourcesFound > 0 && record.id_resource === null) {
-            throw new AppError(
-              400,
-              `Expedition member ${record.id_person} does not have a resource assigned for return registration.`,
-              "EXPEDITION_MEMBER_RESOURCE_REQUIRED",
-            );
-          }
-
-          const nextNotes =
-            memberUpdate?.notes !== undefined
-              ? (memberUpdate.notes ?? null)
-              : record.exr_notes;
-
-          await tx.expedition_records.update({
+          await tx.expedition_records.updateMany({
             where: {
-              id_expedition_record: record.id_expedition_record,
+              id_expedition: expedition.id_expedition,
             },
             data: {
-              exr_resources_found: nextResourcesFound,
-              exr_return_confirmed: true,
-              exr_notes: nextNotes,
+              exr_departure_confirmed: true,
             },
           });
+        }
 
-          totalReturned += nextResourcesFound;
+        if (input.nextState === "returned") {
+          const arrivingDate = input.arrivingDate ?? now;
+          const memberUpdates = new Map(
+            (input.members ?? []).map((member) => [member.id_person, member]),
+          );
 
-          if (nextResourcesFound > 0 && record.id_resource !== null) {
+          let totalReturned = 0;
+
+          for (const record of expedition.expedition_records) {
+            const memberUpdate = memberUpdates.get(record.id_person);
+            const nextResourcesFound = Number(
+              (
+                memberUpdate?.resourcesFound ??
+                Number(record.exr_resources_found)
+              ).toFixed(2),
+            );
+
+            if (nextResourcesFound > 0 && record.id_resource === null) {
+              throw new AppError(
+                400,
+                `Expedition member ${record.id_person} does not have a resource assigned for return registration.`,
+                "EXPEDITION_MEMBER_RESOURCE_REQUIRED",
+              );
+            }
+
+            const nextNotes =
+              memberUpdate?.notes !== undefined
+                ? (memberUpdate.notes ?? null)
+                : record.exr_notes;
+
+            await tx.expedition_records.update({
+              where: {
+                id_expedition_record: record.id_expedition_record,
+              },
+              data: {
+                exr_resources_found: nextResourcesFound,
+                exr_return_confirmed: true,
+                exr_notes: nextNotes,
+              },
+            });
+
+            totalReturned += nextResourcesFound;
+
+            if (nextResourcesFound > 0 && record.id_resource !== null) {
+              await this.adjustStorageForExpeditionReturn(tx, {
+                campId: expedition.id_camp,
+                expeditionId: expedition.id_expedition,
+                expeditionName: expedition.exs_name,
+                resourceId: record.id_resource,
+                personId: record.id_person,
+                quantity: nextResourcesFound,
+                actorUserId: input.actorUserId,
+              });
+            }
+
+            if (record.persons.professions?.pfs_can_expedition) {
+              await applyPersonProgression(tx, {
+                personId: record.id_person,
+                sourceType: "expedition",
+                referenceKey: `expedition:${expedition.id_expedition}`,
+                actorUserId: input.actorUserId,
+              });
+            }
+          }
+
+          const foodResource = await this.findFoodResource(tx);
+          for (const reward of input.missionOutcome?.hunterRewards ?? []) {
+            if (reward.quantity <= 0 || !foodResource) continue;
+
             await this.adjustStorageForExpeditionReturn(tx, {
               campId: expedition.id_camp,
               expeditionId: expedition.id_expedition,
               expeditionName: expedition.exs_name,
-              resourceId: record.id_resource,
-              personId: record.id_person,
-              quantity: nextResourcesFound,
+              resourceId: foodResource.id_resource,
+              personId: reward.personId,
+              quantity: reward.quantity,
               actorUserId: input.actorUserId,
             });
+            totalReturned += reward.quantity;
           }
 
-          if (record.persons.professions?.pfs_can_expedition) {
-            await applyPersonProgression(tx, {
-              personId: record.id_person,
-              sourceType: "expedition",
-              referenceKey: `expedition:${expedition.id_expedition}`,
-              actorUserId: input.actorUserId,
-            });
-          }
-        }
-
-        const foodResource = await this.findFoodResource(tx);
-        for (const reward of input.missionOutcome?.hunterRewards ?? []) {
-          if (reward.quantity <= 0 || !foodResource) continue;
-
-          await this.adjustStorageForExpeditionReturn(tx, {
-            campId: expedition.id_camp,
-            expeditionId: expedition.id_expedition,
-            expeditionName: expedition.exs_name,
-            resourceId: foodResource.id_resource,
-            personId: reward.personId,
-            quantity: reward.quantity,
-            actorUserId: input.actorUserId,
+          updateData.exs_arriving_date = arrivingDate;
+          updateData.exs_extra_days = calculateExtraDays({
+            leavingDate: expedition.exs_leaving_date,
+            arrivingDate,
+            estimatedDays: expedition.exs_estimated_days,
           });
-          totalReturned += reward.quantity;
+          updateData.exe_resources_returned =
+            input.exe_resources_returned ?? Number(totalReturned.toFixed(2));
         }
 
-        updateData.exs_arriving_date = arrivingDate;
-        updateData.exs_extra_days = calculateExtraDays({
-          leavingDate: expedition.exs_leaving_date,
-          arrivingDate,
-          estimatedDays: expedition.exs_estimated_days,
-        });
-        updateData.exe_resources_returned =
-          input.exe_resources_returned ?? Number(totalReturned.toFixed(2));
-      }
+        if (input.nextState === "failed") {
+          const arrivingDate = input.arrivingDate ?? now;
+          updateData.exs_arriving_date = arrivingDate;
+          updateData.exs_extra_days = calculateExtraDays({
+            leavingDate: expedition.exs_leaving_date,
+            arrivingDate,
+            estimatedDays: expedition.exs_estimated_days,
+          });
+          updateData.exe_resources_returned = input.exe_resources_returned ?? 0;
+        }
 
-      if (input.nextState === "failed") {
-        const arrivingDate = input.arrivingDate ?? now;
-        updateData.exs_arriving_date = arrivingDate;
-        updateData.exs_extra_days = calculateExtraDays({
-          leavingDate: expedition.exs_leaving_date,
-          arrivingDate,
-          estimatedDays: expedition.exs_estimated_days,
-        });
-        updateData.exe_resources_returned = input.exe_resources_returned ?? 0;
-      }
-
-      await tx.expeditions.update({
-        where: {
-          id_expedition: expedition.id_expedition,
-        },
-        data: updateData,
-      });
-
-      await tx.events.create({
-        data: {
-          id_user: input.actorUserId,
-          id_camp: expedition.id_camp,
-          evt_entity: "expeditions",
-          evt_entity_id: expedition.id_expedition,
-          evt_action: "state_changed",
-          evt_old_value: toPrismaJsonValue({
-            exe_state: expedition.exe_state,
-          }),
-          evt_new_value: toPrismaJsonValue({
-            exe_state: input.nextState,
-            exs_arriving_date:
-              updateData.exs_arriving_date instanceof Date
-                ? updateData.exs_arriving_date.toISOString()
-                : (updateData.exs_arriving_date ?? null),
-            exe_resources_used:
-              input.exe_resources_used ?? Number(expedition.exe_resources_used),
-            exe_resources_returned:
-              updateData.exe_resources_returned ??
-              Number(expedition.exe_resources_returned),
-          }),
-          evt_description: `Expedition state changed from ${expedition.exe_state} to ${input.nextState}.`,
-        },
-      });
-
-      if (input.missionOutcome?.resolvedState === "failed") {
-        await tx.narrative_events.create({
-          data: {
-            id_camp: expedition.id_camp,
-            id_user: input.actorUserId,
-            nre_type: input.missionOutcome.failureEventType ?? "zombie_attack",
-            nre_status: "applied",
-            nre_source_type: "expedition",
-            nre_reference_id: expedition.id_expedition,
-            nre_probability: input.missionOutcome.probability,
-            nre_roll: input.missionOutcome.roll,
-            nre_participants: expedition.expedition_records.map((record) => ({
-              personId: record.id_person,
-              profession: record.persons.professions?.pfs_name ?? null,
-            })),
-            nre_effects: {
-              resolvedState: "failed",
-              resourcesReturned: 0,
-              zoneId: expedition.id_exploration_zone,
-            },
-            nre_description:
-              input.missionOutcome.failureEventType === "traveler_loss"
-                ? "The expedition failed after losing contact with its travelers."
-                : "The expedition failed after a zombie attack.",
+        await tx.expeditions.update({
+          where: {
+            id_expedition: expedition.id_expedition,
           },
+          data: updateData,
         });
-      }
 
-      const successfulHunterRewards =
-        input.missionOutcome?.hunterRewards.filter(
-          (reward) => reward.quantity > 0,
-        ) ?? [];
-      if (
-        input.missionOutcome?.resolvedState === "returned" &&
-        (input.missionOutcome.valuableTriggered ||
-          successfulHunterRewards.length > 0)
-      ) {
-        await tx.narrative_events.create({
+        await tx.events.create({
           data: {
-            id_camp: expedition.id_camp,
             id_user: input.actorUserId,
-            nre_type: "valuable_resources",
-            nre_status: "applied",
-            nre_source_type: "expedition",
-            nre_reference_id: expedition.id_expedition,
-            nre_probability: input.missionOutcome.valuableTriggered
-              ? input.missionOutcome.valuableProbability
-              : Math.max(
-                  ...successfulHunterRewards.map(
-                    (reward) => reward.probability,
-                  ),
-                ),
-            nre_roll: input.missionOutcome.valuableTriggered
-              ? input.missionOutcome.valuableRoll
-              : Math.min(
-                  ...successfulHunterRewards.map((reward) => reward.roll),
-                ),
-            nre_participants: expedition.expedition_records.map((record) => ({
-              personId: record.id_person,
-              profession: record.persons.professions?.pfs_name ?? null,
-            })),
-            nre_effects: {
-              valuableResources: input.missionOutcome.valuableTriggered,
-              hunterFoodRewards: successfulHunterRewards,
-              resourcesReturned: Number(
+            id_camp: expedition.id_camp,
+            evt_entity: "expeditions",
+            evt_entity_id: expedition.id_expedition,
+            evt_action: "state_changed",
+            evt_old_value: toPrismaJsonValue({
+              exe_state: expedition.exe_state,
+            }),
+            evt_new_value: toPrismaJsonValue({
+              exe_state: input.nextState,
+              exs_arriving_date:
+                updateData.exs_arriving_date instanceof Date
+                  ? updateData.exs_arriving_date.toISOString()
+                  : (updateData.exs_arriving_date ?? null),
+              exe_resources_used:
+                input.exe_resources_used ??
+                Number(expedition.exe_resources_used),
+              exe_resources_returned:
                 updateData.exe_resources_returned ??
-                  expedition.exe_resources_returned,
-              ),
-              zoneId: expedition.id_exploration_zone,
-            },
-            nre_description:
-              "The expedition returned with an exceptional resource discovery.",
+                Number(expedition.exe_resources_returned),
+            }),
+            evt_description: `Expedition state changed from ${expedition.exe_state} to ${input.nextState}.`,
           },
         });
-      }
 
-      return tx.expeditions.findUniqueOrThrow({
-        where: {
-          id_expedition: expedition.id_expedition,
-        },
-        include: expeditionDetailInclude,
-      });
-    }, {
-      timeout: 30_000,
-      maxWait: 15_000,
-    });
+        if (input.missionOutcome?.resolvedState === "failed") {
+          await tx.narrative_events.create({
+            data: {
+              id_camp: expedition.id_camp,
+              id_user: input.actorUserId,
+              nre_type:
+                input.missionOutcome.failureEventType ?? "zombie_attack",
+              nre_status: "applied",
+              nre_source_type: "expedition",
+              nre_reference_id: expedition.id_expedition,
+              nre_probability: input.missionOutcome.probability,
+              nre_roll: input.missionOutcome.roll,
+              nre_participants: expedition.expedition_records.map((record) => ({
+                personId: record.id_person,
+                profession: record.persons.professions?.pfs_name ?? null,
+              })),
+              nre_effects: {
+                resolvedState: "failed",
+                resourcesReturned: 0,
+                zoneId: expedition.id_exploration_zone,
+              },
+              nre_description:
+                input.missionOutcome.failureEventType === "traveler_loss"
+                  ? "The expedition failed after losing contact with its travelers."
+                  : "The expedition failed after a zombie attack.",
+            },
+          });
+        }
+
+        const successfulHunterRewards =
+          input.missionOutcome?.hunterRewards.filter(
+            (reward) => reward.quantity > 0,
+          ) ?? [];
+        if (
+          input.missionOutcome?.resolvedState === "returned" &&
+          (input.missionOutcome.valuableTriggered ||
+            successfulHunterRewards.length > 0)
+        ) {
+          await tx.narrative_events.create({
+            data: {
+              id_camp: expedition.id_camp,
+              id_user: input.actorUserId,
+              nre_type: "valuable_resources",
+              nre_status: "applied",
+              nre_source_type: "expedition",
+              nre_reference_id: expedition.id_expedition,
+              nre_probability: input.missionOutcome.valuableTriggered
+                ? input.missionOutcome.valuableProbability
+                : Math.max(
+                    ...successfulHunterRewards.map(
+                      (reward) => reward.probability,
+                    ),
+                  ),
+              nre_roll: input.missionOutcome.valuableTriggered
+                ? input.missionOutcome.valuableRoll
+                : Math.min(
+                    ...successfulHunterRewards.map((reward) => reward.roll),
+                  ),
+              nre_participants: expedition.expedition_records.map((record) => ({
+                personId: record.id_person,
+                profession: record.persons.professions?.pfs_name ?? null,
+              })),
+              nre_effects: {
+                valuableResources: input.missionOutcome.valuableTriggered,
+                hunterFoodRewards: successfulHunterRewards,
+                resourcesReturned: Number(
+                  updateData.exe_resources_returned ??
+                    expedition.exe_resources_returned,
+                ),
+                zoneId: expedition.id_exploration_zone,
+              },
+              nre_description:
+                "The expedition returned with an exceptional resource discovery.",
+            },
+          });
+        }
+
+        return tx.expeditions.findUniqueOrThrow({
+          where: {
+            id_expedition: expedition.id_expedition,
+          },
+          include: expeditionDetailInclude,
+        });
+      },
+      {
+        timeout: 30_000,
+        maxWait: 15_000,
+      },
+    );
   }
 
   private async findFoodResource(tx: Prisma.TransactionClient) {
