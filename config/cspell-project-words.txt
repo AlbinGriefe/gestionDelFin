@@ -278,3 +278,10 @@ vacio
 Albin
 Griefe
 Frauli
+Busqueda
+Lider
+devolvio
+dias
+ocupacion
+restriccion
+unico

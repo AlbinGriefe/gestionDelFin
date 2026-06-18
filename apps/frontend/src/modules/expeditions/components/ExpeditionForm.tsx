@@ -21,6 +21,13 @@ type DraftMember = {
   roleInExpedition: string;
 };
 
+function parseOptionalPositiveId(value: string) {
+  if (!value) return null;
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : Number.NaN;
+}
+
 export default function ExpeditionForm({
   onSubmit,
   onClose,
@@ -41,17 +48,19 @@ export default function ExpeditionForm({
 
   const availablePersons = useMemo(() => {
     const campId = user?.campId;
-    const usedIds = new Set(members.map((m) => m.id_person));
+    const usedIds = new Set(members.map((member) => member.id_person));
     return (catalogs?.persons ?? [])
-      .filter((p) => (campId ? p.campId === campId : true))
-      .filter((p) => !usedIds.has(p.id));
+      .filter((person) => (campId ? person.campId === campId : true))
+      .filter((person) => !usedIds.has(person.id));
   }, [catalogs, members, user]);
 
   const handleAddMember = () => {
     const personId = Number(personToAdd);
-    if (!personId) return;
-    const person = catalogs?.persons.find((p) => p.id === personId);
+    if (!Number.isInteger(personId) || personId <= 0) return;
+
+    const person = catalogs?.persons.find((item) => item.id === personId);
     if (!person) return;
+
     setMembers((prev) => [
       ...prev,
       {
@@ -66,38 +75,83 @@ export default function ExpeditionForm({
   };
 
   const handleRemoveMember = (personId: number) => {
-    setMembers((prev) => prev.filter((m) => m.id_person !== personId));
+    setMembers((prev) =>
+      prev.filter((member) => member.id_person !== personId),
+    );
   };
 
   const updateMember = (personId: number, patch: Partial<DraftMember>) => {
     setMembers((prev) =>
-      prev.map((m) => (m.id_person === personId ? { ...m, ...patch } : m)),
+      prev.map((member) =>
+        member.id_person === personId ? { ...member, ...patch } : member,
+      ),
     );
+  };
+
+  const buildMemberPayload = (): ExpeditionMemberInput[] | null => {
+    const payload: ExpeditionMemberInput[] = [];
+
+    for (const member of members) {
+      const rationsAssigned = Number(member.rationsAssigned);
+      if (!Number.isFinite(rationsAssigned) || rationsAssigned < 0) {
+        setError(`Revisa las raciones asignadas a ${member.fullName}.`);
+        return null;
+      }
+
+      const resourceId = parseOptionalPositiveId(member.resourceId);
+      if (Number.isNaN(resourceId)) {
+        setError(`Revisa el recurso asignado a ${member.fullName}.`);
+        return null;
+      }
+
+      payload.push({
+        id_person: member.id_person,
+        id_resource: resourceId,
+        rationsAssigned,
+        roleInExpedition: member.roleInExpedition.trim() || null,
+      });
+    }
+
+    return payload;
   };
 
   const handleSubmit = async () => {
     setError("");
 
-    if (name.trim().length < 3)
+    if (name.trim().length < 3) {
       return setError("El nombre debe tener al menos 3 caracteres.");
-    if (!leavingDate) return setError("La fecha de salida es obligatoria.");
-    const days = Number(estimatedDays);
-    if (!days || days < 1)
-      return setError("Los días estimados deben ser al menos 1.");
-    if (members.length === 0)
-      return setError("Agrega al menos un integrante a la expedición.");
+    }
 
-    const memberPayload: ExpeditionMemberInput[] = members.map((m) => ({
-      id_person: m.id_person,
-      id_resource: m.resourceId ? Number(m.resourceId) : null,
-      rationsAssigned: Number(m.rationsAssigned) || 0,
-      roleInExpedition: m.roleInExpedition.trim() || null,
-    }));
+    if (!leavingDate) {
+      return setError("La fecha de salida es obligatoria.");
+    }
+
+    const parsedLeavingDate = new Date(leavingDate);
+    if (Number.isNaN(parsedLeavingDate.getTime())) {
+      return setError("La fecha de salida no es valida.");
+    }
+
+    const days = Number(estimatedDays);
+    if (!Number.isInteger(days) || days < 1 || days > 365) {
+      return setError("Los dias estimados deben estar entre 1 y 365.");
+    }
+
+    if (members.length === 0) {
+      return setError("Agrega al menos un integrante a la expedicion.");
+    }
+
+    const zoneId = parseOptionalPositiveId(explorationZoneId);
+    if (Number.isNaN(zoneId)) {
+      return setError("La zona de exploracion no es valida.");
+    }
+
+    const memberPayload = buildMemberPayload();
+    if (!memberPayload) return;
 
     const payload: ExpeditionCreateInput = {
-      id_exploration_zone: explorationZoneId ? Number(explorationZoneId) : null,
+      id_exploration_zone: zoneId,
       exs_name: name.trim(),
-      exs_leaving_date: new Date(leavingDate),
+      exs_leaving_date: parsedLeavingDate,
       exs_estimated_days: days,
       exe_notes: notes.trim() || null,
       members: memberPayload,
@@ -106,7 +160,7 @@ export default function ExpeditionForm({
     try {
       setLoading(true);
       await onSubmit(payload);
-      toast.success("Expedición creada");
+      toast.success("Expedicion creada");
       onClose();
     } finally {
       setLoading(false);
@@ -117,14 +171,14 @@ export default function ExpeditionForm({
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <span className={styles.title}>Nueva expedición</span>
+          <span className={styles.title}>Nueva expedicion</span>
           <button className={styles.closeBtn} onClick={onClose}>
-            ✕
+            x
           </button>
         </div>
 
         <div className={styles.body}>
-          <p className={styles.sectionTitle}>Información general</p>
+          <p className={styles.sectionTitle}>Informacion general</p>
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Nombre</label>
@@ -132,7 +186,7 @@ export default function ExpeditionForm({
               className={styles.input}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ej. Búsqueda en el sector sur"
+              placeholder="ej. Busqueda en el sector sur"
             />
           </div>
 
@@ -147,7 +201,7 @@ export default function ExpeditionForm({
               />
             </div>
             <div>
-              <label className={styles.label}>Días estimados</label>
+              <label className={styles.label}>Dias estimados</label>
               <input
                 className={styles.input}
                 type="number"
@@ -185,7 +239,7 @@ export default function ExpeditionForm({
               className={styles.input}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Objetivo o detalles de la expedición"
+              placeholder="Objetivo o detalles de la expedicion"
             />
           </div>
 
@@ -198,9 +252,9 @@ export default function ExpeditionForm({
               onChange={(e) => setPersonToAdd(e.target.value)}
             >
               <option value="">Seleccionar persona...</option>
-              {availablePersons.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.fullName}
+              {availablePersons.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.fullName}
                 </option>
               ))}
             </select>
@@ -215,20 +269,20 @@ export default function ExpeditionForm({
           </div>
 
           {members.length === 0 ? (
-            <p className={styles.emptyMembers}>Aún no hay integrantes.</p>
+            <p className={styles.emptyMembers}>Aun no hay integrantes.</p>
           ) : (
             <div className={styles.memberList}>
-              {members.map((m) => (
-                <div key={m.id_person} className={styles.memberCard}>
-                  <div className={styles.memberName}>{m.fullName}</div>
+              {members.map((member) => (
+                <div key={member.id_person} className={styles.memberCard}>
+                  <div className={styles.memberName}>{member.fullName}</div>
                   <div className={styles.memberFields}>
                     <div>
                       <label className={styles.miniLabel}>Recurso</label>
                       <select
                         className={styles.miniSelect}
-                        value={m.resourceId}
+                        value={member.resourceId}
                         onChange={(e) =>
-                          updateMember(m.id_person, {
+                          updateMember(member.id_person, {
                             resourceId: e.target.value,
                           })
                         }
@@ -248,9 +302,9 @@ export default function ExpeditionForm({
                         type="number"
                         min={0}
                         step="any"
-                        value={m.rationsAssigned}
+                        value={member.rationsAssigned}
                         onChange={(e) =>
-                          updateMember(m.id_person, {
+                          updateMember(member.id_person, {
                             rationsAssigned: e.target.value,
                           })
                         }
@@ -260,22 +314,22 @@ export default function ExpeditionForm({
                       <label className={styles.miniLabel}>Rol</label>
                       <input
                         className={styles.miniInput}
-                        value={m.roleInExpedition}
+                        value={member.roleInExpedition}
                         onChange={(e) =>
-                          updateMember(m.id_person, {
+                          updateMember(member.id_person, {
                             roleInExpedition: e.target.value,
                           })
                         }
-                        placeholder="ej. Líder"
+                        placeholder="ej. Lider"
                       />
                     </div>
                   </div>
                   <button
                     type="button"
                     className={styles.removeBtn}
-                    onClick={() => handleRemoveMember(m.id_person)}
+                    onClick={() => handleRemoveMember(member.id_person)}
                   >
-                    ✕
+                    x
                   </button>
                 </div>
               ))}
@@ -294,7 +348,7 @@ export default function ExpeditionForm({
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? "Creando..." : "Crear expedición"}
+            {loading ? "Creando..." : "Crear expedicion"}
           </button>
         </div>
       </div>
