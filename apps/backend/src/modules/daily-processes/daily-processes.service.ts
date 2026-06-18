@@ -536,6 +536,9 @@ export class DailyProcessesService {
         summary,
         now,
       });
+    }, {
+      timeout: 30_000,
+      maxWait: 15_000,
     });
 
     return buildRunSummary({

@@ -283,6 +283,9 @@ export class ExpeditionsRepository {
         },
         include: expeditionDetailInclude,
       });
+    }, {
+      timeout: 30_000,
+      maxWait: 15_000,
     });
   }
 
@@ -547,6 +550,9 @@ export class ExpeditionsRepository {
         },
         include: expeditionDetailInclude,
       });
+    }, {
+      timeout: 30_000,
+      maxWait: 15_000,
     });
   }
 
