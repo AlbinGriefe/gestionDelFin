@@ -86,7 +86,11 @@ export default function AppRoutes() {
           path="/persons"
           element={
             <ProtectedRoute
-              allowedRoles={["administrador sistema", "gestion recursos"]}
+              allowedRoles={[
+                "SuperAdmin",
+                "administrador sistema",
+                "gestion recursos",
+              ]}
             >
               <PersonsProvider>
                 <PersonsPage />
@@ -105,7 +109,9 @@ export default function AppRoutes() {
         <Route
           path="/professions"
           element={
-            <ProtectedRoute allowedRoles={["SuperAdmin"]}>
+            <ProtectedRoute
+              allowedRoles={["SuperAdmin", "administrador sistema"]}
+            >
               <ProfessionsProvider>
                 <ProfessionsPage />
               </ProfessionsProvider>
@@ -115,7 +121,7 @@ export default function AppRoutes() {
         <Route
           path="/sessions"
           element={
-            <ProtectedRoute allowedRoles={["administrador sistema"]}>
+            <ProtectedRoute allowedRoles={["SuperAdmin"]}>
               <SessionsProvider>
                 <SessionsPage />
               </SessionsProvider>
@@ -126,7 +132,11 @@ export default function AppRoutes() {
           path="/daily-processes"
           element={
             <ProtectedRoute
-              allowedRoles={["administrador sistema", "gestion recursos"]}
+              allowedRoles={[
+                "SuperAdmin",
+                "administrador sistema",
+                "gestion recursos",
+              ]}
             >
               <InventoryProvider>
                 <DailyProcessesProvider>
@@ -141,6 +151,7 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute
               allowedRoles={[
+                "SuperAdmin",
                 "administrador sistema",
                 "encargado de viajes y comunicacion",
               ]}
@@ -156,6 +167,7 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute
               allowedRoles={[
+                "SuperAdmin",
                 "administrador sistema",
                 "gestion recursos",
                 "encargado de viajes y comunicacion",
@@ -174,6 +186,7 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute
               allowedRoles={[
+                "SuperAdmin",
                 "administrador sistema",
                 "gestion recursos",
                 "encargado de viajes y comunicacion",
@@ -188,6 +201,7 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute
               allowedRoles={[
+                "SuperAdmin",
                 "administrador sistema",
                 "encargado de viajes y comunicacion",
               ]}

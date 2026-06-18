@@ -33,6 +33,7 @@ Los endpoints protegidos requieren la cookie `httpOnly` de sesión establecida a
 Verifica conectividad con base de datos y retorna configuración de sesión.
 
 **Respuesta:**
+
 ```json
 {
   "status": "ok",
@@ -75,16 +76,17 @@ Cambia el campamento activo del usuario. Invalida la sesión anterior y genera u
 
 ## Campamentos — `/camps`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/camps` | Lista todos los campamentos |
-| `GET` | `/camps/:id` | Detalle de un campamento |
-| `POST` | `/camps` | Crear campamento |
-| `PUT` | `/camps/:id` | Actualizar campamento |
-| `GET` | `/camps/:id/rules` | Reglas operacionales del campamento |
-| `PUT` | `/camps/:id/rules` | Actualizar reglas operacionales |
+| Método | Ruta               | Descripción                         |
+| ------ | ------------------ | ----------------------------------- |
+| `GET`  | `/camps`           | Lista todos los campamentos         |
+| `GET`  | `/camps/:id`       | Detalle de un campamento            |
+| `POST` | `/camps`           | Crear campamento                    |
+| `PUT`  | `/camps/:id`       | Actualizar campamento               |
+| `GET`  | `/camps/:id/rules` | Reglas operacionales del campamento |
+| `PUT`  | `/camps/:id/rules` | Actualizar reglas operacionales     |
 
 **Body de creación:**
+
 ```json
 {
   "name": "string",
@@ -99,17 +101,18 @@ Cambia el campamento activo del usuario. Invalida la sesión anterior y genera u
 
 ## Personas — `/persons`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/persons` | Lista personas del campamento activo |
-| `GET` | `/persons/:id` | Detalle con stats, salud, profesión |
-| `POST` | `/persons` | Registrar nueva persona |
-| `PUT` | `/persons/:id` | Actualizar datos |
-| `PUT` | `/persons/:id/status` | Cambiar estado de admisión |
-| `PUT` | `/persons/:id/profession` | Asignar profesión |
-| `GET` | `/persons/:id/progressions` | Historial de subidas de nivel |
+| Método | Ruta                        | Descripción                          |
+| ------ | --------------------------- | ------------------------------------ |
+| `GET`  | `/persons`                  | Lista personas del campamento activo |
+| `GET`  | `/persons/:id`              | Detalle con stats, salud, profesión  |
+| `POST` | `/persons`                  | Registrar nueva persona              |
+| `PUT`  | `/persons/:id`              | Actualizar datos                     |
+| `PUT`  | `/persons/:id/status`       | Cambiar estado de admisión           |
+| `PUT`  | `/persons/:id/profession`   | Asignar profesión                    |
+| `GET`  | `/persons/:id/progressions` | Historial de subidas de nivel        |
 
 **Body de creación:**
+
 ```json
 {
   "name": "string",
@@ -124,13 +127,14 @@ Cambia el campamento activo del usuario. Invalida la sesión anterior y genera u
 
 ## Evaluaciones de admisión — `/admission-evaluations`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `POST` | `/admission-evaluations` | Solicitar evaluación IA para una persona |
-| `GET` | `/admission-evaluations/person/:personId` | Historial de evaluaciones de una persona |
-| `PUT` | `/admission-evaluations/:id/decide` | Registrar decisión humana final |
+| Método | Ruta                                      | Descripción                              |
+| ------ | ----------------------------------------- | ---------------------------------------- |
+| `POST` | `/admission-evaluations`                  | Solicitar evaluación IA para una persona |
+| `GET`  | `/admission-evaluations/person/:personId` | Historial de evaluaciones de una persona |
+| `PUT`  | `/admission-evaluations/:id/decide`       | Registrar decisión humana final          |
 
 **Body de solicitud de evaluación:**
+
 ```json
 {
   "personId": number,
@@ -139,6 +143,7 @@ Cambia el campamento activo del usuario. Invalida la sesión anterior y genera u
 ```
 
 **Body de decisión humana:**
+
 ```json
 {
   "userDecision": "accept | observe | reject",
@@ -150,37 +155,38 @@ Cambia el campamento activo del usuario. Invalida la sesión anterior y genera u
 
 ## Recomendaciones de profesión — `/profession-recommendations`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `POST` | `/profession-recommendations` | Solicitar recomendación IA de oficio |
-| `GET` | `/profession-recommendations/person/:personId` | Historial de recomendaciones |
-| `PUT` | `/profession-recommendations/:id/decide` | Seleccionar profesión final |
+| Método | Ruta                                           | Descripción                          |
+| ------ | ---------------------------------------------- | ------------------------------------ |
+| `POST` | `/profession-recommendations`                  | Solicitar recomendación IA de oficio |
+| `GET`  | `/profession-recommendations/person/:personId` | Historial de recomendaciones         |
+| `PUT`  | `/profession-recommendations/:id/decide`       | Seleccionar profesión final          |
 
 ---
 
 ## Profesiones — `/professions`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/professions` | Lista profesiones disponibles en el campamento |
-| `GET` | `/professions/:id` | Detalle |
-| `POST` | `/professions` | Crear profesión personalizada |
-| `PUT` | `/professions/:id` | Actualizar |
+| Método | Ruta               | Descripción                                    |
+| ------ | ------------------ | ---------------------------------------------- |
+| `GET`  | `/professions`     | Lista profesiones disponibles en el campamento |
+| `GET`  | `/professions/:id` | Detalle                                        |
+| `POST` | `/professions`     | Crear profesión personalizada                  |
+| `PUT`  | `/professions/:id` | Actualizar                                     |
 
 ---
 
 ## Expediciones — `/expeditions`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/expeditions` | Lista expediciones del campamento |
-| `GET` | `/expeditions/:id` | Detalle con participantes |
-| `POST` | `/expeditions` | Planificar expedición |
-| `PUT` | `/expeditions/:id/start` | Iniciar expedición |
-| `PUT` | `/expeditions/:id/return` | Registrar regreso |
-| `PUT` | `/expeditions/:id/cancel` | Cancelar |
+| Método | Ruta                      | Descripción                       |
+| ------ | ------------------------- | --------------------------------- |
+| `GET`  | `/expeditions`            | Lista expediciones del campamento |
+| `GET`  | `/expeditions/:id`        | Detalle con participantes         |
+| `POST` | `/expeditions`            | Planificar expedición             |
+| `PUT`  | `/expeditions/:id/start`  | Iniciar expedición                |
+| `PUT`  | `/expeditions/:id/return` | Registrar regreso                 |
+| `PUT`  | `/expeditions/:id/cancel` | Cancelar                          |
 
 **Body de creación:**
+
 ```json
 {
   "name": "string",
@@ -195,11 +201,11 @@ Cambia el campamento activo del usuario. Invalida la sesión anterior y genera u
 
 ## Zonas de exploración — `/exploration-zones`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/exploration-zones` | Lista zonas del campamento |
-| `POST` | `/exploration-zones` | Crear zona |
-| `PUT` | `/exploration-zones/:id` | Actualizar |
+| Método | Ruta                     | Descripción                |
+| ------ | ------------------------ | -------------------------- |
+| `GET`  | `/exploration-zones`     | Lista zonas del campamento |
+| `POST` | `/exploration-zones`     | Crear zona                 |
+| `PUT`  | `/exploration-zones/:id` | Actualizar                 |
 
 Riesgo posible: `low | medium | high | critical`.
 
@@ -207,36 +213,36 @@ Riesgo posible: `low | medium | high | critical`.
 
 ## Transferencias — `/transfers`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/transfers` | Lista transferencias |
-| `GET` | `/transfers/:id` | Detalle |
-| `POST` | `/transfers` | Solicitar transferencia |
-| `PUT` | `/transfers/:id/accept` | Aceptar solicitud |
-| `PUT` | `/transfers/:id/decline` | Rechazar |
-| `PUT` | `/transfers/:id/schedule` | Programar envío |
-| `PUT` | `/transfers/:id/dispatch` | Marcar en tránsito |
-| `PUT` | `/transfers/:id/deliver` | Confirmar llegada |
-| `PUT` | `/transfers/:id/complete` | Cerrar transferencia |
+| Método | Ruta                      | Descripción             |
+| ------ | ------------------------- | ----------------------- |
+| `GET`  | `/transfers`              | Lista transferencias    |
+| `GET`  | `/transfers/:id`          | Detalle                 |
+| `POST` | `/transfers`              | Solicitar transferencia |
+| `PUT`  | `/transfers/:id/accept`   | Aceptar solicitud       |
+| `PUT`  | `/transfers/:id/decline`  | Rechazar                |
+| `PUT`  | `/transfers/:id/schedule` | Programar envío         |
+| `PUT`  | `/transfers/:id/dispatch` | Marcar en tránsito      |
+| `PUT`  | `/transfers/:id/deliver`  | Confirmar llegada       |
+| `PUT`  | `/transfers/:id/complete` | Cerrar transferencia    |
 
 ---
 
 ## Inventario — `/inventory`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/inventory` | Stock completo del campamento |
-| `GET` | `/inventory/alerts` | Recursos bajo el mínimo |
-| `POST` | `/inventory/movement` | Registrar movimiento manual |
+| Método | Ruta                  | Descripción                   |
+| ------ | --------------------- | ----------------------------- |
+| `GET`  | `/inventory`          | Stock completo del campamento |
+| `GET`  | `/inventory/alerts`   | Recursos bajo el mínimo       |
+| `POST` | `/inventory/movement` | Registrar movimiento manual   |
 
 ---
 
 ## Procesos diarios — `/daily-processes`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `POST` | `/daily-processes/run` | Ejecutar ciclo del día |
-| `GET` | `/daily-processes/history` | Historial de días procesados |
+| Método | Ruta                       | Descripción                  |
+| ------ | -------------------------- | ---------------------------- |
+| `POST` | `/daily-processes/run`     | Ejecutar ciclo del día       |
+| `GET`  | `/daily-processes/history` | Historial de días procesados |
 
 El ciclo del día asigna tareas, produce recursos, aplica consumo de raciones y genera eventos narrativos aleatorios.
 
@@ -244,12 +250,13 @@ El ciclo del día asigna tareas, produce recursos, aplica consumo de raciones y 
 
 ## Acciones de cuidado médico — `/care-actions`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
+| Método | Ruta            | Descripción             |
+| ------ | --------------- | ----------------------- |
 | `POST` | `/care-actions` | Aplicar atención médica |
-| `GET` | `/care-actions` | Historial de atenciones |
+| `GET`  | `/care-actions` | Historial de atenciones |
 
 **Body:**
+
 ```json
 {
   "doctorId": number,
@@ -263,10 +270,10 @@ El costo en comida y la cantidad de salud restaurada se determinan por la profes
 
 ## Eventos narrativos — `/narrative-events`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/narrative-events` | Lista eventos del campamento |
-| `PUT` | `/narrative-events/:id/resolve` | Marcar como resuelto |
+| Método | Ruta                            | Descripción                  |
+| ------ | ------------------------------- | ---------------------------- |
+| `GET`  | `/narrative-events`             | Lista eventos del campamento |
+| `PUT`  | `/narrative-events/:id/resolve` | Marcar como resuelto         |
 
 ---
 
@@ -275,6 +282,7 @@ El costo en comida y la cantidad de salud restaurada se determinan por la profes
 ### `GET /dashboard`
 
 Devuelve métricas consolidadas del campamento activo:
+
 - Total de personas activas y pendientes
 - Stock de recursos críticos
 - Expediciones en curso
@@ -284,39 +292,39 @@ Devuelve métricas consolidadas del campamento activo:
 
 ## Usuarios — `/users`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/users` | Lista usuarios del campamento |
-| `POST` | `/users` | Crear usuario |
-| `PUT` | `/users/:id` | Actualizar |
-| `PUT` | `/users/:id/password` | Cambiar contraseña |
+| Método | Ruta                  | Descripción                   |
+| ------ | --------------------- | ----------------------------- |
+| `GET`  | `/users`              | Lista usuarios del campamento |
+| `POST` | `/users`              | Crear usuario                 |
+| `PUT`  | `/users/:id`          | Actualizar                    |
+| `PUT`  | `/users/:id/password` | Cambiar contraseña            |
 
 ---
 
 ## Sesiones — `/sessions`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/sessions` | Sesiones activas del usuario |
-| `DELETE` | `/sessions/:id` | Cerrar sesión específica |
+| Método   | Ruta            | Descripción                  |
+| -------- | --------------- | ---------------------------- |
+| `GET`    | `/sessions`     | Sesiones activas del usuario |
+| `DELETE` | `/sessions/:id` | Cerrar sesión específica     |
 
 ---
 
 ## Logros — `/achievements`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/achievements` | Lista de logros disponibles |
-| `GET` | `/achievements/user/:userId` | Logros desbloqueados por usuario |
+| Método | Ruta                         | Descripción                      |
+| ------ | ---------------------------- | -------------------------------- |
+| `GET`  | `/achievements`              | Lista de logros disponibles      |
+| `GET`  | `/achievements/user/:userId` | Logros desbloqueados por usuario |
 
 ---
 
 ## Configuración del sistema — `/settings`
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/settings` | Parámetros del sistema (públicos) |
-| `PUT` | `/settings/:key` | Actualizar parámetro (solo admin) |
+| Método | Ruta             | Descripción                       |
+| ------ | ---------------- | --------------------------------- |
+| `GET`  | `/settings`      | Parámetros del sistema (públicos) |
+| `PUT`  | `/settings/:key` | Actualizar parámetro (solo admin) |
 
 ---
 
@@ -325,6 +333,7 @@ Devuelve métricas consolidadas del campamento activo:
 ### `GET /events`
 
 Lista el log de auditoría del campamento. Parámetros de query:
+
 - `entity` — filtrar por entidad (ej. `persons`)
 - `entityId` — filtrar por id de entidad
 - `from` / `to` — rango de fechas

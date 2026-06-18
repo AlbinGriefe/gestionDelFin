@@ -168,6 +168,10 @@ export class AdmissionEvaluationsService {
         );
       }
       ensureEvaluationCampAccess(actor, existing.persons.id_camp);
+      if (existing.ade_is_final) {
+        return mapEvaluation(existing);
+      }
+
       const confirmed = await admissionEvaluationsRepository.confirm({
         evaluationId,
         actorUserId: actor.id,
@@ -178,13 +182,6 @@ export class AdmissionEvaluationsService {
           404,
           "Admission evaluation not found.",
           "ADMISSION_EVALUATION_NOT_FOUND",
-        );
-      }
-      if (confirmed.ade_is_final && confirmed.id_user_reviewer !== actor.id) {
-        throw new AppError(
-          409,
-          "Admission evaluation was already finalized.",
-          "ADMISSION_EVALUATION_FINAL",
         );
       }
       return mapEvaluation(confirmed);

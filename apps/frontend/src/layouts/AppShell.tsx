@@ -21,12 +21,12 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { useAuth } from "../modules/auth/context/useAuth";
 import { useIdleSession } from "../modules/auth/context/useIdleSession";
-import { normalizeRoleName, roleMatches } from "../shared/auth/roles";
+import { canAccessRole } from "../shared/auth/roles";
 import styles from "./AppShell.module.css";
 
 const navigation = [
@@ -146,16 +146,14 @@ export default function AppShell() {
   const { user, logout, switchCamp } = useAuth();
   const { remainingSeconds, isWarning } = useIdleSession();
   const location = useLocation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [changingCamp, setChangingCamp] = useState(false);
 
   if (!user) return null;
 
-  const role = normalizeRoleName(user.roleName);
-  const visibleNavigation = navigation.filter(
-    (item) =>
-      item.roles.includes("all") ||
-      item.roles.some((allowedRole) => roleMatches(role, allowedRole)),
+  const visibleNavigation = navigation.filter((item) =>
+    canAccessRole(user.roleName, item.roles),
   );
 
   const handleCampChange = async (campId: number) => {
@@ -163,6 +161,7 @@ export default function AppShell() {
     setChangingCamp(true);
     try {
       await switchCamp(campId);
+      navigate("/home", { replace: true });
       toast.success("Campamento activo actualizado");
     } finally {
       setChangingCamp(false);

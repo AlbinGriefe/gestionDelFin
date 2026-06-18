@@ -75,6 +75,15 @@ export async function httpClient<T>(
       case 401:
         code = "UNAUTHORIZED";
         break;
+      case 403:
+        code = "FORBIDDEN";
+        break;
+      case 409:
+        code = "CONFLICT";
+        break;
+      case 500:
+        code = "SERVER_ERROR";
+        break;
       default:
         code = "UNKNOWN";
     }

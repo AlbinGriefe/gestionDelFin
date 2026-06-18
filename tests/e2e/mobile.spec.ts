@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("Play and login remain usable on mobile", async ({ page }) => {
   await page.goto("/play");
   await expect(
-    page.getByRole("heading", { name: /decisiones claras/i }),
+    page.getByRole("heading", { name: /el juego que no es un juego/i }),
   ).toBeVisible();
   await page.getByRole("link", { name: /acceder al sistema/i }).click();
   await expect(

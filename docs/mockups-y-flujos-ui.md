@@ -134,6 +134,7 @@ La sidebar muestra los módulos disponibles según el rol del usuario.
 ## Gestión de estado
 
 No hay una librería de estado global (Redux, Zustand). El estado se maneja con:
+
 - **Context API**: autenticación (`AuthContext`), sesión idle (`IdleSessionContext`).
 - **useState / useEffect local**: datos de cada vista.
 - **API calls directos**: cada componente llama al API client de su módulo al montar.

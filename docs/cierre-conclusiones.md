@@ -118,14 +118,14 @@ Algunos endpoints de lista (personas, expediciones, eventos) no implementan pagi
 
 ## Métricas del proyecto
 
-| Métrica | Valor |
-|---------|-------|
-| Tablas en base de datos | 25+ |
-| Módulos backend | 20 |
-| Endpoints REST | ~80 |
-| Tests | 7 archivos de test |
-| PRs mergeados | 23+ |
-| Contribuidores | 3+ |
+| Métrica                 | Valor              |
+| ----------------------- | ------------------ |
+| Tablas en base de datos | 25+                |
+| Módulos backend         | 20                 |
+| Endpoints REST          | ~80                |
+| Tests                   | 7 archivos de test |
+| PRs mergeados           | 23+                |
+| Contribuidores          | 3+                 |
 
 ---
 

@@ -92,11 +92,24 @@ export default function PersonWorkflowPanel({ personId, onClose }: Props) {
     if (!admission) return;
     setBusy(true);
     try {
-      setAdmission(
-        await personWorkflowApi.confirmAdmission(admission.id, decision),
+      const confirmed = await personWorkflowApi.confirmAdmission(
+        admission.id,
+        decision,
+      );
+      setAdmission(confirmed);
+      setPerson((current) =>
+        current
+          ? {
+              ...current,
+              admissionStatus: confirmed.person.admissionStatus,
+              isAccepted: confirmed.person.admissionStatus === "accepted",
+            }
+          : current,
       );
       toast.success("Decision de admision confirmada");
-      await reload();
+      void reload().catch(() => {
+        toast.warning("Decision guardada; actualiza la lista para verla.");
+      });
     } finally {
       setBusy(false);
     }

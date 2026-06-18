@@ -22,3 +22,15 @@ export function roleMatches(roleName: string, allowedRole: string) {
 
   return normalizeRoleName(roleName) === normalizeRoleName(allowedRole);
 }
+
+export function canAccessRole(roleName: string, allowedRoles?: string[]) {
+  if (!allowedRoles || allowedRoles.length === 0) {
+    return true;
+  }
+
+  if (allowedRoles.some((role) => normalizeRoleName(role) === "all")) {
+    return true;
+  }
+
+  return allowedRoles.some((role) => roleMatches(roleName, role));
+}
