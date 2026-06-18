@@ -1,4 +1,5 @@
 import prisma, { Prisma } from "../../lib/prisma.js";
+import { logger } from "../../lib/logger.js";
 import type { AdmissionAiResult } from "../text-ai/text-ai.types.js";
 
 function json(value: unknown) {
@@ -22,6 +23,19 @@ const evaluationInclude = {
 export type AdmissionEvaluationRecord = Prisma.admission_evaluationsGetPayload<{
   include: typeof evaluationInclude;
 }>;
+
+type AdmissionConfirmationStatus = "accepted" | "observe" | "rejected";
+
+type AdmissionConfirmationAuditInput = {
+  evaluationId: number;
+  personId: number;
+  campId: number;
+  actorUserId: number;
+  userDecision: "accept" | "observe" | "reject";
+  oldStatus: string;
+  status: AdmissionConfirmationStatus;
+  userObservation?: string | null;
+};
 
 export class AdmissionEvaluationsRepository {
   async findPerson(personId: number) {
@@ -127,13 +141,15 @@ export class AdmissionEvaluationsRepository {
     userDecision: "accept" | "observe" | "reject";
     userObservation?: string | null;
   }) {
-    return prisma.$transaction(async (tx) => {
+    const { confirmed, auditInput } = await prisma.$transaction(async (tx) => {
       const evaluation = await tx.admission_evaluations.findUnique({
         where: { id_admission_evaluation: input.evaluationId },
         include: evaluationInclude,
       });
-      if (!evaluation) return null;
-      if (evaluation.ade_is_final) return evaluation;
+      if (!evaluation) return { confirmed: null, auditInput: null };
+      if (evaluation.ade_is_final) {
+        return { confirmed: evaluation, auditInput: null };
+      }
 
       const status =
         input.userDecision === "accept"
@@ -174,41 +190,79 @@ export class AdmissionEvaluationsRepository {
             `Admission decision: ${input.userDecision}.`,
         },
       });
+
+      const auditInput: AdmissionConfirmationAuditInput = {
+        evaluationId: input.evaluationId,
+        personId: evaluation.id_person,
+        campId: evaluation.persons.id_camp,
+        actorUserId: input.actorUserId,
+        userDecision: input.userDecision,
+        oldStatus: evaluation.persons.prn_admission_status,
+        status,
+        userObservation: input.userObservation,
+      };
+
+      const confirmed = await tx.admission_evaluations.findUniqueOrThrow({
+        where: { id_admission_evaluation: input.evaluationId },
+        include: evaluationInclude,
+      });
+
+      return { confirmed, auditInput };
+    });
+
+    if (auditInput) {
+      try {
+        await this.writeConfirmationAudit(auditInput);
+      } catch (error) {
+        logger.warn("Admission confirmation audit write failed.", {
+          evaluationId: auditInput.evaluationId,
+          personId: auditInput.personId,
+          campId: auditInput.campId,
+          actorUserId: auditInput.actorUserId,
+          error:
+            error instanceof Error
+              ? { name: error.name, message: error.message }
+              : { value: String(error) },
+        });
+      }
+    }
+
+    return confirmed;
+  }
+
+  private async writeConfirmationAudit(input: AdmissionConfirmationAuditInput) {
+    await prisma.$transaction(async (tx) => {
       await tx.person_records.create({
         data: {
-          id_person: evaluation.id_person,
+          id_person: input.personId,
           id_user: input.actorUserId,
           prr_event_type:
-            status === "accepted"
+            input.status === "accepted"
               ? "accepted"
-              : status === "rejected"
+              : input.status === "rejected"
                 ? "rejected"
                 : "admission_evaluated",
           prr_old_value: json({
-            admissionStatus: evaluation.persons.prn_admission_status,
+            admissionStatus: input.oldStatus,
           }),
-          prr_new_value: json({ admissionStatus: status }),
+          prr_new_value: json({ admissionStatus: input.status }),
           prr_notes: input.userObservation?.trim() || null,
         },
       });
       await tx.events.create({
         data: {
           id_user: input.actorUserId,
-          id_camp: evaluation.persons.id_camp,
+          id_camp: input.campId,
           evt_entity: "admission_evaluations",
           evt_entity_id: input.evaluationId,
           evt_action: "confirmed",
           evt_new_value: json({
-            personId: evaluation.id_person,
+            personId: input.personId,
             userDecision: input.userDecision,
-            admissionStatus: status,
+            admissionStatus: input.status,
           }),
           evt_description: "Admission evaluation confirmed by administrator.",
         },
-      });
-      return tx.admission_evaluations.findUniqueOrThrow({
-        where: { id_admission_evaluation: input.evaluationId },
-        include: evaluationInclude,
       });
     });
   }
