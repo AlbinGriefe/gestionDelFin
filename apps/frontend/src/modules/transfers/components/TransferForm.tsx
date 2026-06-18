@@ -21,6 +21,7 @@ type DraftPerson = {
   fullName: string;
   assignedRations: string;
 };
+
 type DraftResource = {
   id_resource: number;
   name: string;
@@ -34,6 +35,11 @@ const TYPE_OPTIONS: { value: TransferType; label: string }[] = [
   { value: "people", label: "Personas" },
   { value: "mixed", label: "Mixta (personas y recursos)" },
 ];
+
+function parsePositiveId(value: string) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : Number.NaN;
+}
 
 export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
   const { catalogs } = useTransfers();
@@ -54,31 +60,38 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
   const originCampId = user?.campId;
 
   const destinyCamps = useMemo(
-    () => (catalogs?.camps ?? []).filter((c) => c.id !== originCampId),
+    () => (catalogs?.camps ?? []).filter((camp) => camp.id !== originCampId),
     [catalogs, originCampId],
   );
 
   const availablePersons = useMemo(() => {
-    const used = new Set(persons.map((p) => p.id_person));
+    const used = new Set(persons.map((person) => person.id_person));
     return (catalogs?.persons ?? [])
-      .filter((p) => (originCampId ? p.campId === originCampId : true))
-      .filter((p) => !used.has(p.id));
+      .filter((person) =>
+        originCampId ? person.campId === originCampId : true,
+      )
+      .filter((person) => !used.has(person.id));
   }, [catalogs, persons, originCampId]);
 
   const availableResources = useMemo(() => {
-    const used = new Set(resources.map((r) => r.id_resource));
+    const used = new Set(resources.map((resource) => resource.id_resource));
     return (catalogs?.resources ?? [])
-      .filter((r) => (originCampId ? r.campId === originCampId : true))
-      .filter((r) => !used.has(r.id));
+      .filter((resource) =>
+        originCampId ? resource.campId === originCampId : true,
+      )
+      .filter((resource) => !used.has(resource.id));
   }, [catalogs, resources, originCampId]);
 
   const showPersons = type === "people" || type === "mixed";
   const showResources = type === "resources" || type === "mixed";
 
   const handleAddPerson = () => {
-    const id = Number(personToAdd);
-    const person = catalogs?.persons.find((p) => p.id === id);
+    const id = parsePositiveId(personToAdd);
+    if (Number.isNaN(id)) return;
+
+    const person = catalogs?.persons.find((item) => item.id === id);
     if (!person) return;
+
     setPersons((prev) => [
       ...prev,
       { id_person: person.id, fullName: person.fullName, assignedRations: "0" },
@@ -87,9 +100,12 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
   };
 
   const handleAddResource = () => {
-    const id = Number(resourceToAdd);
-    const resource = catalogs?.resources.find((r) => r.id === id);
+    const id = parsePositiveId(resourceToAdd);
+    if (Number.isNaN(id)) return;
+
+    const resource = catalogs?.resources.find((item) => item.id === id);
     if (!resource) return;
+
     setResources((prev) => [
       ...prev,
       {
@@ -103,38 +119,76 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
     setResourceToAdd("");
   };
 
+  const buildPersonPayload = (): TransferPersonItemInput[] | null => {
+    const payload: TransferPersonItemInput[] = [];
+
+    for (const person of persons) {
+      const assignedRations = Number(person.assignedRations);
+      if (!Number.isFinite(assignedRations) || assignedRations < 0) {
+        setError(`Revisa las raciones asignadas a ${person.fullName}.`);
+        return null;
+      }
+
+      payload.push({
+        id_person: person.id_person,
+        assignedRations,
+      });
+    }
+
+    return payload;
+  };
+
+  const buildResourcePayload = (): TransferResourceItemInput[] | null => {
+    const payload: TransferResourceItemInput[] = [];
+
+    for (const resource of resources) {
+      const quantity = Number(resource.quantity);
+
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        setError(`Indica una cantidad valida para "${resource.name}".`);
+        return null;
+      }
+
+      if (quantity > resource.available) {
+        setError(
+          `No hay suficiente "${resource.name}" (disponible: ${resource.available}).`,
+        );
+        return null;
+      }
+
+      payload.push({
+        id_resource: resource.id_resource,
+        quantity,
+      });
+    }
+
+    return payload;
+  };
+
   const handleSubmit = async () => {
     setError("");
 
-    if (!destinyCampId) return setError("Selecciona el campamento de destino.");
-
-    if (showPersons && persons.length === 0)
-      return setError("Agrega al menos una persona.");
-    if (showResources && resources.length === 0)
-      return setError("Agrega al menos un recurso.");
-
-    for (const r of resources) {
-      const qty = Number(r.quantity);
-      if (!qty || qty <= 0)
-        return setError(`Indica una cantidad válida para "${r.name}".`);
-      if (qty > r.available)
-        return setError(
-          `No hay suficiente "${r.name}" (disponible: ${r.available}).`,
-        );
+    const destinationId = parsePositiveId(destinyCampId);
+    if (Number.isNaN(destinationId)) {
+      return setError("Selecciona el campamento de destino.");
     }
 
-    const personPayload: TransferPersonItemInput[] = persons.map((p) => ({
-      id_person: p.id_person,
-      assignedRations: Number(p.assignedRations) || 0,
-    }));
+    if (showPersons && persons.length === 0) {
+      return setError("Agrega al menos una persona.");
+    }
 
-    const resourcePayload: TransferResourceItemInput[] = resources.map((r) => ({
-      id_resource: r.id_resource,
-      quantity: Number(r.quantity),
-    }));
+    if (showResources && resources.length === 0) {
+      return setError("Agrega al menos un recurso.");
+    }
+
+    const personPayload = buildPersonPayload();
+    if (!personPayload) return;
+
+    const resourcePayload = buildResourcePayload();
+    if (!resourcePayload) return;
 
     const payload: TransferCreateInput = {
-      id_destiny_camp: Number(destinyCampId),
+      id_destiny_camp: destinationId,
       tfs_type: type,
       tfs_comments: comments.trim() || null,
       persons: showPersons ? personPayload : [],
@@ -157,12 +211,12 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
         <div className={styles.header}>
           <span className={styles.title}>Nueva solicitud de traslado</span>
           <button className={styles.closeBtn} onClick={onClose}>
-            ✕
+            x
           </button>
         </div>
 
         <div className={styles.body}>
-          <p className={styles.sectionTitle}>Información general</p>
+          <p className={styles.sectionTitle}>Informacion general</p>
 
           <div className={styles.formRow}>
             <div>
@@ -173,9 +227,9 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                 onChange={(e) => setDestinyCampId(e.target.value)}
               >
                 <option value="">Seleccionar...</option>
-                {destinyCamps.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
+                {destinyCamps.map((camp) => (
+                  <option key={camp.id} value={camp.id}>
+                    {camp.name}
                   </option>
                 ))}
               </select>
@@ -187,9 +241,9 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                 value={type}
                 onChange={(e) => setType(e.target.value as TransferType)}
               >
-                {TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                {TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>
@@ -218,9 +272,9 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                   onChange={(e) => setPersonToAdd(e.target.value)}
                 >
                   <option value="">Seleccionar persona...</option>
-                  {availablePersons.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.fullName}
+                  {availablePersons.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.fullName}
                     </option>
                   ))}
                 </select>
@@ -237,9 +291,9 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                 <p className={styles.emptyItems}>Sin personas asignadas.</p>
               ) : (
                 <div className={styles.itemList}>
-                  {persons.map((p) => (
-                    <div key={p.id_person} className={styles.itemCard}>
-                      <span className={styles.itemName}>{p.fullName}</span>
+                  {persons.map((person) => (
+                    <div key={person.id_person} className={styles.itemCard}>
+                      <span className={styles.itemName}>{person.fullName}</span>
                       <div className={styles.itemField}>
                         <label className={styles.miniLabel}>Raciones</label>
                         <input
@@ -247,13 +301,13 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                           type="number"
                           min={0}
                           step="any"
-                          value={p.assignedRations}
+                          value={person.assignedRations}
                           onChange={(e) =>
                             setPersons((prev) =>
-                              prev.map((x) =>
-                                x.id_person === p.id_person
-                                  ? { ...x, assignedRations: e.target.value }
-                                  : x,
+                              prev.map((item) =>
+                                item.id_person === person.id_person
+                                  ? { ...item, assignedRations: e.target.value }
+                                  : item,
                               ),
                             )
                           }
@@ -264,11 +318,13 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                         className={styles.removeBtn}
                         onClick={() =>
                           setPersons((prev) =>
-                            prev.filter((x) => x.id_person !== p.id_person),
+                            prev.filter(
+                              (item) => item.id_person !== person.id_person,
+                            ),
                           )
                         }
                       >
-                        ✕
+                        x
                       </button>
                     </div>
                   ))}
@@ -287,9 +343,10 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                   onChange={(e) => setResourceToAdd(e.target.value)}
                 >
                   <option value="">Seleccionar recurso...</option>
-                  {availableResources.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} (disp. {r.availableQuantity} {r.unit})
+                  {availableResources.map((resource) => (
+                    <option key={resource.id} value={resource.id}>
+                      {resource.name} (disp. {resource.availableQuantity}{" "}
+                      {resource.unit})
                     </option>
                   ))}
                 </select>
@@ -306,12 +363,12 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                 <p className={styles.emptyItems}>Sin recursos asignados.</p>
               ) : (
                 <div className={styles.itemList}>
-                  {resources.map((r) => (
-                    <div key={r.id_resource} className={styles.itemCard}>
+                  {resources.map((resource) => (
+                    <div key={resource.id_resource} className={styles.itemCard}>
                       <span className={styles.itemName}>
-                        {r.name}{" "}
+                        {resource.name}{" "}
                         <span className={styles.itemHint}>
-                          · disp. {r.available} {r.unit}
+                          - disp. {resource.available} {resource.unit}
                         </span>
                       </span>
                       <div className={styles.itemField}>
@@ -320,15 +377,15 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                           className={styles.miniInput}
                           type="number"
                           min={0}
-                          max={r.available}
+                          max={resource.available}
                           step="any"
-                          value={r.quantity}
+                          value={resource.quantity}
                           onChange={(e) =>
                             setResources((prev) =>
-                              prev.map((x) =>
-                                x.id_resource === r.id_resource
-                                  ? { ...x, quantity: e.target.value }
-                                  : x,
+                              prev.map((item) =>
+                                item.id_resource === resource.id_resource
+                                  ? { ...item, quantity: e.target.value }
+                                  : item,
                               ),
                             )
                           }
@@ -339,11 +396,14 @@ export default function TransferForm({ onSubmit, onClose }: TransferFormProps) {
                         className={styles.removeBtn}
                         onClick={() =>
                           setResources((prev) =>
-                            prev.filter((x) => x.id_resource !== r.id_resource),
+                            prev.filter(
+                              (item) =>
+                                item.id_resource !== resource.id_resource,
+                            ),
                           )
                         }
                       >
-                        ✕
+                        x
                       </button>
                     </div>
                   ))}

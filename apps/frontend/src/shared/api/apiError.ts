@@ -11,6 +11,7 @@ export class ApiError extends Error {
   code: ApiErrorCode;
   serverCode?: string;
   details?: unknown;
+  requestId?: string;
 
   constructor(
     code: ApiErrorCode,
@@ -18,12 +19,14 @@ export class ApiError extends Error {
     options?: {
       serverCode?: string;
       details?: unknown;
+      requestId?: string | null;
     },
   ) {
     super(message);
     this.code = code;
     this.serverCode = options?.serverCode;
     this.details = options?.details;
+    this.requestId = options?.requestId ?? undefined;
     this.name = "ApiError";
   }
 }
